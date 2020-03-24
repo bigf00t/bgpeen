@@ -55,12 +55,6 @@ class MeasureForm extends Component {
         };
     }
 
-    renderGames = () => {
-        return _.map(this.props.data, (game, id) => {
-            return <MenuItem key={id} value={game.name}>{game.name}</MenuItem >;
-          });
-    }
-
     getGames = () => {
         return _.sortBy(_.map(this.props.data, (game, id) => {
             return {
@@ -78,18 +72,26 @@ class MeasureForm extends Component {
         if (!this.state.game.id) {
             // fetch("http://localhost:5001/bgpeen-1fc16/us-central1/addGame", {
             fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
-                method: "POST",
+                method: 'POST',
+                mode: 'cors',
                 headers: {
                     // 'Access-Control-Allow-Origin': '*',
-                    // 'Content-Type': 'application/json'
+                    // 'Content-Type': 'application/json',
                 },
                 body: this.state.game.name
             })
-            .then(function(responseBody){
-                // TODO
-                console.log(responseBody);
+            .then((response) => {
+                // console.log(response);
+                return response.json();
             })
-            .catch(function(error) {
+            .then((json) => {
+                // console.log(json);
+                this.state.game = json;
+                this.toggle();
+                // TODO: Maybe don't call this everytime?
+                // this.props.fetchGames();
+            })
+            .catch((error) => {
                 console.log("Request failed", error);
             });
         } else {

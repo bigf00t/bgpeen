@@ -30,18 +30,24 @@ function renderInputComponent(inputProps) {
 }
 
 function renderSuggestion(suggestion, { query, isHighlighted }) {
-  const matches = match(suggestion.name, query);
-  const parts = parse(suggestion.name, matches);
+  // const matches = match(suggestion.name, query);
+  // const parts = parse(suggestion.name, matches);
+  // console.log(parts);
 
+  // return (
+  //   <MenuItem selected={isHighlighted} component="div">
+  //     <div>
+  //       {parts.map(part => (
+  //         <span key={part.text} style={{ fontWeight: part.highlight ? 500 : 400 }}>
+  //           {part.text}
+  //         </span>
+  //       ))}
+  //     </div>
+  //   </MenuItem>
+  // );
   return (
-    <MenuItem selected={isHighlighted} component="div">
-      <div>
-        {parts.map(part => (
-          <span key={part.text} style={{ fontWeight: part.highlight ? 500 : 400 }}>
-            {part.text}
-          </span>
-        ))}
-      </div>
+    <MenuItem component="div">
+      {suggestion.name}
     </MenuItem>
   );
 }
