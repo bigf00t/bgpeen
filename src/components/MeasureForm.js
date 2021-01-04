@@ -69,13 +69,15 @@ class MeasureForm extends Component {
     }
 
     measure = () => {
+        // Does this game already exist in our database
         if (!this.state.game.id) {
-            // fetch("http://localhost:5001/bgpeen-1fc16/us-central1/addGame", {
-            fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
+            // If not, let's add it
+            fetch("http://localhost:5001/bgpeen-1fc16/us-central1/addGame", {
+            //fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
                 method: 'POST',
                 mode: 'cors',
                 headers: {
-                    // 'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Origin': '*',
                     // 'Content-Type': 'application/json',
                 },
                 body: this.state.game.name
@@ -95,6 +97,23 @@ class MeasureForm extends Component {
                 console.log("Request failed", error);
             });
         } else {
+            // If yes, let's look for new plays
+            fetch("http://localhost:5001/bgpeen-1fc16/us-central1/markForUpdate", {
+            //fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    // 'Content-Type': 'application/json',
+                },
+                body: this.state.game.id
+            })
+            .then((response) => {
+                console.log(response);
+            })
+            .catch((error) => {
+                console.log("Request failed", error);
+            });
             this.toggle();
         }
     }
