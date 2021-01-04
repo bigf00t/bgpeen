@@ -26,8 +26,8 @@ class MeasureResult extends Component {
                 onClose={this.props.handleClose}>
                 <div className={this.props.classes.modal}>
                     <p id="simple-modal-description">
-                        Your score was {this.props.score}, but the average score for {this.props.game.name} is {this.props.game.average}.<br />
-                        {parseInt(this.props.score) > this.props.game.average ? "You're amazing!" : "You're terrible!"}
+                        Your score was {this.props.score}, but the average score for {this.props.game.name} is {this.props.stats.mean}.<br />
+                        {parseInt(this.props.score) > this.props.stats.mean ? "You're amazing!" : "You're terrible!"}
                     </p>
                 </div>
             </Modal>
