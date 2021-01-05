@@ -46,7 +46,7 @@ function renderSuggestion(suggestion, { query, isHighlighted }) {
   //   </MenuItem>
   // );
   return (
-    <MenuItem component="div">
+    <MenuItem selected={isHighlighted} component="div">
       {suggestion.name}
     </MenuItem>
   );
@@ -121,7 +121,8 @@ export default function GameSelect(props) {
     return suggestion.name;
   }
 
-  const shouldRenderSuggestions= () => {
+  const shouldRenderSuggestions= (value, reason) => {
+    // return value.trim().length > 0;
     return true;
   }
 
@@ -131,9 +132,20 @@ export default function GameSelect(props) {
       [name]: newValue,
     });
     if (state.suggestion && newValue == state.suggestion.name) {
+      console.log(newValue);
       props.handleGameChange(state.suggestion);
     } else {
       props.handleGameChange({name: newValue});
+    }
+  };
+
+  const handleBlur = name => (event, { highlightedSuggestion  }) => {
+    if (highlightedSuggestion) {
+      setState({
+        ...state,
+        [name]: highlightedSuggestion.name,
+      });
+      props.handleGameChange(highlightedSuggestion);
     }
   };
 
@@ -145,6 +157,7 @@ export default function GameSelect(props) {
     getSuggestionValue,
     renderSuggestion,
     shouldRenderSuggestions: shouldRenderSuggestions,
+    highlightFirstSuggestion: true,
   };
 
   return (
@@ -158,6 +171,7 @@ export default function GameSelect(props) {
           placeholder: '',
           value: state.popper,
           onChange: handleChange('popper'),
+          onBlur: handleBlur('popper'),
           inputRef: node => {
             setAnchorEl(node);
           },
