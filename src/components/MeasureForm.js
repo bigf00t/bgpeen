@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 
 import MeasureResult from './MeasureResult';
 import GameSelect from './GameSelect';
@@ -6,19 +6,11 @@ import {connect} from 'react-redux';
 import _ from 'lodash';
 import * as actions from '../actions';
 import { withStyles } from '@material-ui/core/styles';
-
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Paper from '@material-ui/core/Paper';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import InputLabel from '@material-ui/core/InputLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControl from '@material-ui/core/FormControl';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import OutlinedInput from '@material-ui/core/OutlinedInput';
-import { relative } from 'path';
-import { Checkbox } from '@material-ui/core';
+import AlertDialog from './AlertDialog';
 
 const styles = theme => ({
     root: {
@@ -52,26 +44,19 @@ const styles = theme => ({
 class MeasureForm extends Component {
     constructor(props) {    
         super(props);
-        // this.state = {
-        //     game: {},
-        //     id: null,
-        //     score: "",
-        //     open: false,
-        //     players: "",
-        //     position: "",
-        //     average: 0,
-        //     graphData: {}
-        // };
         this.state = {
             game: {},
-            id: null,
-            score: "50",
-            open: false,
-            players: "4",
-            position: "1",
+            score: "",
+            resultOpen: false,
+            players: "",
+            position: "",
             average: 0,
             percentile: 0,
-            graphData: {}
+            graphData: {},
+            errorOpen: false,
+            errorTitle: "",
+            errorMessage: "",
+            scoreCount: 0,
         };
     }
 
@@ -79,83 +64,43 @@ class MeasureForm extends Component {
         return _.sortBy(this.props.data, ['name'], ['desc']);
     }
 
-    toggle = () => {
-        this.setState({open: !this.state.open});
-    }
-
-    measure = () => {
+    handleSubmit = (e) => {
+        e.preventDefault();
         // Does this game already exist in our database
-        if (!this.state.game.id) {
-            // If not, let's add it
-            fetch("http://localhost:5001/bgpeen-1fc16/us-central1/addGame", {
-            //fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    // 'Content-Type': 'application/json',
-                },
-                body: this.state.game.name
-            })
-            .then((response) => {
-                // console.log(response);
-                return response.json();
-            })
-            .then((json) => {
-                // console.log(json);
-                this.state.game = json;
-                // this.toggle();
-                // TODO: Maybe don't call this everytime?
-                // this.props.fetchGames();
-            })
-            .catch((error) => {
-                console.log("Request failed", error);
-            });
+        if (!this.state.game.name) {
+            this.showError("Um", "Are you even trying?");
+        } else if (!this.state.game.id) {
+            // TODO: Consider adding to newgames?
+            this.showError("Oops!", <Fragment>Sorry dawg, I don't have any stats for <strong>{this.state.game.name}</strong>. I've added it to the list, though, so check back soon!</Fragment>);
         } else {
-            // // If yes, let's look for new plays
-            // fetch("http://localhost:5001/bgpeen-1fc16/us-central1/getGameStats", {
-            // // fetch("http://localhost:5001/bgpeen-1fc16/us-central1/markForUpdate", {
-            // //fetch("https://us-central1-bgpeen-1fc16.cloudfunctions.net/addGame", {
-            //     method: 'POST',
-            //     mode: 'cors',
-            //     headers: {
-            //         'Access-Control-Allow-Origin': '*',
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({
-            //         game: this.state.game.id,
-            //         count: this.state.players,
-            //         winner: this.state.winner
-            //     })
-            // })
-            // .then((response) => {
-            //     // console.log(response);
-            //     return response.json();
-            // })
-            // .then((json) => {
-            //     // console.log(json);
-            //     this.state.stats = json;
-            //     console.log(this.state.stats);
-            // })
-            // .catch((error) => {
-            //     console.log("Request failed", error);
-            // });
+            // TODO: Consider flagging for update?
+            // TODO: Pull into function
+            this.setState({graphData: this.getGraphData()});
+            this.setState({resultOpen: true});
+            this.setStats();
         }
-
-        this.setState({average: this.getAverage()});
-        this.setState({percentile: this.getPercentile()});
-        this.setState({graphData: this.getGraphData()});
-        this.setState({open: true});
     }
 
     handleChange = (event) => {
+        this.setState({resultOpen: false});
         this.setState({[event.target.name]: event.target.value});
     }
 
     handleGameChange = (newGame) => {
         if (newGame) {
+            this.setState({resultOpen: false});
             this.setState({game: newGame});
         }
+    }
+
+    showError = (title, message) => {
+        this.setState({errorTitle: title});
+        this.setState({errorMessage: message});
+        this.setErrorOpen(true);
+    }
+
+    setErrorOpen = (open) => {
+        this.setState({errorOpen: open});
     }
 
     getExplodedScores = () => {
@@ -176,37 +121,36 @@ class MeasureForm extends Component {
         .flatten()
         .value();
 
-        console.log(explodedScores);
-
         return explodedScores;
     }
 
-    getAverage = () => {
-        var explodedScores = this.getExplodedScores();
+    setStats = () => {
+        var scores = this.getExplodedScores();
 
-        if (explodedScores.length == 0) {
-            return null;
+        if (scores.length == 0) {
+            return;
         }
-
-        return parseInt(_.mean(explodedScores));
+        
+        this.setState({average: this.getAverage(scores)});
+        this.setState({percentile: this.getPercentile(scores)});
+        this.setState({scoreCount: scores.length});
     }
 
-    getPercentile = () => {
+    getAverage = (scores) => {
+        return parseInt(_.mean(scores));
+    }
+
+    getPercentile = (scores) => {
         if (! this.state.score) {
             return null;
         }
 
         var score = this.state.score;
-        var explodedScores = this.getExplodedScores();
-
-        if (explodedScores.length == 0) {
-            return null;
-        }
 
         // Based on https://www.30secondsofcode.org/js/s/percentile
-        var percentile = (100 * _.reduce(explodedScores, 
+        var percentile = (100 * _.reduce(scores, 
             (result, value) => result + (value < score ? 1 : 0) + (value === score ? 0.5 : 0), 0)
-            ) / explodedScores.length;
+            ) / scores.length;
 
         return parseInt(percentile);
     }
@@ -224,15 +168,9 @@ class MeasureForm extends Component {
         }, {})
         .value();
 
-        console.log(mergedScores);
-        console.log(_.keys(mergedScores));
         if (_.keys(mergedScores).length == 0) {
             return null;
         }
-
-        // console.log(mergedScores);
-        // console.log(_.keys(mergedScores));
-        // 'rgba(255, 99, 132, 1)'
         
         if (this.state.score) {
             // Add our score if it doesn't exist
@@ -252,24 +190,22 @@ class MeasureForm extends Component {
         var graphData = {
             labels: labels,
             datasets: [
-            {
-                data: allData,
-                label: ["All Scores"],
-                backgroundColor: 'rgba(63, 81, 181, 0.5)',
-                borderColor: 'rgba(63, 81, 181, 1)',
-                borderWidth: 1,
-            },
-            {
-                data: yourData,
-                label: ["Your Score"],
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-            },
-        ]
+                {
+                    data: allData,
+                    label: ["Scores"],
+                    backgroundColor: 'rgba(63, 81, 181, 0.5)',
+                    borderColor: 'rgba(63, 81, 181, 1)',
+                    borderWidth: 1,
+                },
+                {
+                    data: yourData,
+                    label: ["Your Score"],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                },
+            ]
         };
-
-        // console.log(graphData);
 
         return graphData;
     }
@@ -278,64 +214,10 @@ class MeasureForm extends Component {
         const classes = this.props.classes;
 
         return (
-                <form className={classes.root}>
+                <form className={classes.root} onSubmit={this.handleSubmit}>
                     <FormGroup row className={classes.formGroup}>
                         <FormControl variant="outlined" className={classes.formControl}>
                             <GameSelect games={this.getGames()} handleGameChange={this.handleGameChange} />
-                        </FormControl>
-                        {/* <FormControl className={classes.formControl}>
-                            <InputLabel 
-                                htmlFor="players"
-                                className={classes.inputLabel}>Players</InputLabel>
-                            <Select 
-                                className={classes.select}
-                                id="players"
-                                name="players"
-                                value={this.state.players}
-                                onChange={this.handleChange}>
-                                    <MenuItem value="1">1</MenuItem>
-                                    <MenuItem value="2">2</MenuItem>
-                                    <MenuItem value="3">3</MenuItem>
-                                    <MenuItem value="4">4</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <InputLabel 
-                                htmlFor="position"
-                                className={classes.inputLabel}>Your Position</InputLabel>
-                            <Select 
-                                className={classes.select}
-                                id="position"
-                                name="position"
-                                value={this.state.position}
-                                onChange={this.handleChange}>
-                                    <MenuItem value="1">1st</MenuItem>
-                                    <MenuItem value="2">2nd</MenuItem>
-                                    <MenuItem value="3">3rd</MenuItem>
-                                    <MenuItem value="4">4th</MenuItem>
-                            </Select>
-                        </FormControl> */}
-                        <FormControl className={classes.formControl}>
-                            <TextField 
-                                className={classes.textField}
-                                id="players" 
-                                name="players" 
-                                label="Player Count"
-                                value={this.state.players}
-                                onChange={this.handleChange}
-                                // variant="outlined" 
-                                />
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <TextField 
-                                className={classes.textField}
-                                id="position" 
-                                name="position" 
-                                label="Your Position"
-                                value={this.state.position}
-                                onChange={this.handleChange}
-                                // variant="outlined" 
-                                />
                         </FormControl>
                         <FormControl className={classes.formControl}>
                             <TextField 
@@ -345,7 +227,26 @@ class MeasureForm extends Component {
                                 label="Your Score"
                                 value={this.state.score}
                                 onChange={this.handleChange}
-                                // variant="outlined" 
+                                />
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <TextField 
+                                className={classes.textField}
+                                id="position" 
+                                name="position" 
+                                label="Your Place"
+                                value={this.state.position}
+                                onChange={this.handleChange}
+                                />
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <TextField 
+                                className={classes.textField}
+                                id="players" 
+                                name="players" 
+                                label="Number of Players"
+                                value={this.state.players}
+                                onChange={this.handleChange}
                                 />
                         </FormControl>
                         <FormControl className={classes.formControl}>
@@ -353,20 +254,27 @@ class MeasureForm extends Component {
                                 className={classes.button}
                                 variant="contained" 
                                 color="primary" 
-                                onClick={this.measure}>
+                                type="submit">
                                 Measure!
                             </Button>
                         </FormControl>
                     </FormGroup>
                     <MeasureResult 
-                        open={this.state.open}
-                        game={this.state.game}
+                        open={this.state.resultOpen}
+                        gameName={this.state.game.name}
                         score={this.state.score}
                         position={this.state.position}
                         players={this.state.players}
                         average={this.state.average}
                         percentile={this.state.percentile}
                         graphData={this.state.graphData}
+                        scoreCount={this.state.scoreCount}
+                    />
+                    <AlertDialog 
+                        title={this.state.errorTitle}
+                        content={this.state.errorMessage}
+                        open={this.state.errorOpen}
+                        setOpen={this.setErrorOpen}
                     />
                 </form>
         );

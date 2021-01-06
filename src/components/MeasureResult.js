@@ -9,16 +9,7 @@ var ordinal = require('ordinal');
 
 const styles = theme => ({
     paper: {
-        // position: 'absolute',
-        // maxWidth: 400,
-        // backgroundColor: theme.palette.background.paper,
-        // border: '2px solid #000',
-        // boxShadow: theme.shadows[5],
         padding: theme.spacing(2, 4, 4),
-        // outline: 'none',
-        // top: `50%`,
-        // left: `50%`,
-        // transform: `translate(-50%, -50%)`,
     },
   });
 
@@ -31,16 +22,11 @@ class MeasureResult extends Component {
                 return (
                     <Paper className={classes.paper}>
                         <h3>
-                            Showing scores for {this.props.game.name} with Player Count {this.props.players} and Position {this.props.position}
+                            Your score compared to other {ordinal(parseInt(this.props.position))} place scores in {this.props.players} player games of {this.props.gameName}
                         </h3>
                         <p>
-                            The average for the current player count and position is {this.props.average}.
-                            {this.props.score ? " Your score was " + this.props.score + "." : ""}
-                            {this.props.percentile ? " This is in the " + ordinal(this.props.percentile) + " percentile for the current player count and position." : ""}
-                            {/* {this.props.score ? "Your score was" + this.props.score + "." : "You didn't enter a score."}
-                            {this.props.average ? "The average score for" + this.props.game.name + " is " + this.props.average + "." : ""}
-                            <br />
-                            {parseInt(this.props.score) > this.props.average ? "You're amazing!" : "You're terrible!"} */}
+                            There are {this.props.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with an average value of {this.props.average}.<br/>
+                            {this.props.score ? ` Your score of ${this.props.score} places you in the ${ordinal(this.props.percentile)} percentile of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
                         </p>
                         <VerticalBar data={this.props.graphData}></VerticalBar>
                     </Paper>
@@ -62,6 +48,18 @@ class MeasureResult extends Component {
 
 const mapStateToProps = ({data}) => {
   return { data }
+}
+
+const getPercentileQuip = (percentile) => {
+  if (percentile < 10) {
+    return "You're terrible!";
+  } else if (percentile > 45 && percentile < 55) {
+    return "You're boring.";
+  } else if (percentile > 90) {
+    return "You're amazing!";
+  } else {
+    return "";
+  }
 }
 
 export default withStyles(styles)(MeasureResult);

@@ -1,9 +1,23 @@
+To run site locally:
+- npm start
+- browse to http://localhost:3000/
 
-npm start - to get local site running
+To run emulators:
+- firebase emulators:start --only functions
+- firebase emulators:start --only firestore
 
-$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
-firebase emulators:start --only functions
+To test emulated functions in postman:
+- POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames
 
+To deploy site:
+- npm run-script build
+- firebase deploy --only hosting
+
+To deploy functions:
+- firebase deploy --only functions
+
+To test production functions in postman:
+- POST to https://us-central1-bgpeen-1fc16.cloudfunctions.net/getGames
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

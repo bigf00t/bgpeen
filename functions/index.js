@@ -50,6 +50,23 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
         });
 });
 
+exports.addGames = functions.https.onRequest(async (req, res) => {
+    return cors(req, res, () => {
+        const games = req.body["games"];
+
+        var batch = db.batch();
+
+        lodash.forEach(games, function(game) {
+            var newGameRef = db.collection('newgames').doc();
+            batch.set(newGameRef, {name: game});
+        });
+
+        batch.commit().then(function() {
+            res.status(200).send({});
+        });
+    });
+});
+
 exports.getGame = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
         const gameID = req.body["game"];
@@ -67,7 +84,7 @@ exports.getGames = functions.https.onRequest(async (req, res) => {
         console.log('getGames');
         db.collection('games').get().then((snapshot) => {
             var games = util.docsToArray(snapshot);
-            // console.log(games);
+            console.log(games);
             return res.json( games );
         });
     });
@@ -106,6 +123,6 @@ exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
     });
 });
 
-exports.scheduledPlaysUpdate = functions.pubsub.schedule('every 5 minutes').onRun((context) => {
+exports.scheduledPlaysUpdate = functions.pubsub.schedule('every 24 hours').onRun((context) => {
     util.updatePlays();
 });

@@ -1,8 +1,6 @@
 import React from 'react';
 import deburr from 'lodash/deburr';
 import Autosuggest from 'react-autosuggest';
-import match from 'autosuggest-highlight/match';
-import parse from 'autosuggest-highlight/parse';
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -30,21 +28,6 @@ function renderInputComponent(inputProps) {
 }
 
 function renderSuggestion(suggestion, { query, isHighlighted }) {
-  // const matches = match(suggestion.name, query);
-  // const parts = parse(suggestion.name, matches);
-  // console.log(parts);
-
-  // return (
-  //   <MenuItem selected={isHighlighted} component="div">
-  //     <div>
-  //       {parts.map(part => (
-  //         <span key={part.text} style={{ fontWeight: part.highlight ? 500 : 400 }}>
-  //           {part.text}
-  //         </span>
-  //       ))}
-  //     </div>
-  //   </MenuItem>
-  // );
   return (
     <MenuItem selected={isHighlighted} component="div">
       {suggestion.name}
@@ -132,7 +115,6 @@ export default function GameSelect(props) {
       [name]: newValue,
     });
     if (state.suggestion && newValue == state.suggestion.name) {
-      console.log(newValue);
       props.handleGameChange(state.suggestion);
     } else {
       props.handleGameChange({name: newValue});

@@ -9,8 +9,11 @@ class Menu extends Component {
         return (
         <AppBar position="static" color="default">
             <Toolbar>
-            <Typography variant="h6" color="inherit">
+            <Typography variant="h5" color="inherit">
                 BGPeen
+            </Typography>
+            <Typography variant="subtitle2" color="inherit">
+                &nbsp;beta
             </Typography>
             </Toolbar>
         </AppBar>
