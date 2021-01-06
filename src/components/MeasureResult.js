@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
 import _ from 'lodash';
 
+import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
+
 import VerticalBar from './VerticalBar';
 
 var ordinal = require('ordinal');

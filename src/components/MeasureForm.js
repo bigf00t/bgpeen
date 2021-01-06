@@ -1,16 +1,21 @@
 import React, { Component, Fragment } from 'react';
 
-import MeasureResult from './MeasureResult';
-import GameSelect from './GameSelect';
 import {connect} from 'react-redux';
 import _ from 'lodash';
 import * as actions from '../actions';
+
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControl from '@material-ui/core/FormControl';
+import Tooltip from '@material-ui/core/Tooltip';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+
+import MeasureResult from './MeasureResult';
+import GameSelect from './GameSelect';
 import AlertDialog from './AlertDialog';
+import { red } from '@material-ui/core/colors';
 
 const styles = theme => ({
     root: {
@@ -23,6 +28,13 @@ const styles = theme => ({
     },
     textField: {
 
+    },
+    tooltip: {
+        backgroundColor: theme.palette.common.white
+    },
+    helpIcon: {
+        color: "rgba(0, 0, 0, 0.5)",
+        height: 20
     },
     button: {
         marginTop: theme.spacing(1),
@@ -40,6 +52,15 @@ const styles = theme => ({
         justifyContent: 'center',
     }
 });
+
+const HelpTooltip = withStyles((theme) => ({
+    tooltip: {
+      backgroundColor: theme.palette.common.white,
+      color: 'rgba(0, 0, 0, 0.87)',
+      boxShadow: theme.shadows[1],
+      fontSize: 12,
+    },
+  }))(Tooltip);
 
 class MeasureForm extends Component {
     constructor(props) {    
@@ -237,6 +258,15 @@ class MeasureForm extends Component {
                                 label="Your Place"
                                 value={this.state.position}
                                 onChange={this.handleChange}
+                                InputProps={{
+                                    endAdornment: (
+                                        <HelpTooltip 
+                                            placement="top"
+                                            title="Your place in the standings relative to other players. e.g. 2 for 2nd">
+                                                <HelpOutlineIcon className={classes.helpIcon} />
+                                        </HelpTooltip>
+                                    ),
+                                  }}
                                 />
                         </FormControl>
                         <FormControl className={classes.formControl}>

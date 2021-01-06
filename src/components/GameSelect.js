@@ -1,6 +1,8 @@
 import React from 'react';
+
 import deburr from 'lodash/deburr';
 import Autosuggest from 'react-autosuggest';
+
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import MenuItem from '@material-ui/core/MenuItem';
