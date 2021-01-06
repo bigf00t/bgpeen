@@ -55,6 +55,8 @@ const getPercentileQuip = (percentile) => {
     return "You're terrible!";
   } else if (percentile > 45 && percentile < 55) {
     return "You're boring.";
+  } else if (percentile == 69) {
+    return "Nice.";
   } else if (percentile > 90) {
     return "You're amazing!";
   } else {
