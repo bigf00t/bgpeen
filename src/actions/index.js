@@ -17,7 +17,7 @@ const getFunctionUrl = (functionName) => {
 }
 
 export const fetchGames = () => async dispatch => {
-  fetch(getFunctionUrl("getGames"), {
+  return fetch(getFunctionUrl("getGames"), {
       method: 'POST',
       mode: 'cors',
       headers: isLocal() ? {

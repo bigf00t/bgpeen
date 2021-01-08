@@ -6,6 +6,7 @@
     "@material-ui/core": "^4.3.0",
     "autosuggest-highlight": "^3.1.1",
     "chart.js": "^2.9.4",
+    "chartjs-plugin-annotation": "^0.5.7",
     "firebase": "^7.24.0",
     "mathjs": "^6.0.3",
     "moment": "^2.24.0",
@@ -17,7 +18,8 @@
     "react-redux": "^7.1.0",
     "react-scripts": "^3.4.1",
     "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "regression": "^2.0.1"
   },
   "scripts": {
     "start": "react-scripts start",

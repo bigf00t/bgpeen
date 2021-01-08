@@ -92,7 +92,7 @@ export default function GameSelect(props) {
   const [stateSuggestions, setSuggestions] = React.useState([]);
 
   const handleSuggestionsFetchRequested = ({ value }) => {
-    setSuggestions(getSuggestions(props.games, value));
+    setSuggestions(getSuggestions(props.data, value));
   };
 
   const handleSuggestionsClearRequested = () => {
@@ -151,7 +151,7 @@ export default function GameSelect(props) {
           id: 'react-autosuggest-popper',
           label: 'Game',
           placeholder: '',
-          value: state.popper,
+          value: props.game ? props.game.name : '',
           onChange: handleChange('popper'),
           onBlur: handleBlur('popper'),
           inputRef: node => {

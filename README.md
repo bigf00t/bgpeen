@@ -3,8 +3,8 @@ To run site locally:
 - browse to http://localhost:3000/
 
 To run emulators:
-- firebase emulators:start --only functions
-- firebase emulators:start --only firestore
+- firebase emulators:start --only functions,firestore --import=./data
+
 
 To test emulated functions in postman:
 - POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames

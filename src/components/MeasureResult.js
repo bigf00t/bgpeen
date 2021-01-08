@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import _ from 'lodash';
 
 import Paper from '@material-ui/core/Paper';
-import VerticalBar from './VerticalBar';
+import Graph from './Graph';
 
 var ordinal = require('ordinal');
 
@@ -12,6 +12,12 @@ const styles = theme => ({
         padding: theme.spacing(2, 4, 4),
     },
   });
+
+const getOrdinal = (percentile) => {
+  if (percentile) {
+    return percentile ? ordinal(percentile) : 'N/A';
+  }
+}
 
 class MeasureResult extends Component {
     render () {
@@ -22,32 +28,29 @@ class MeasureResult extends Component {
                 return (
                     <Paper className={classes.paper}>
                         <h3>
-                            Your score compared to other {ordinal(parseInt(this.props.position))} place scores in {this.props.players} player games of {this.props.gameName}
+                            Your score compared to other {ordinal(parseInt(this.props.place))} place scores in {this.props.players} player games of {this.props.gameName}
                         </h3>
                         <p>
                             There are {this.props.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with an average value of {this.props.average}.<br/>
-                            {this.props.score ? ` Your score of ${this.props.score} places you in the ${ordinal(this.props.percentile)} percentile of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
+                            {this.props.score ? ` Your score of ${this.props.score} places you in the ${getOrdinal(this.props.percentile)} percentile of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
                         </p>
-                        <VerticalBar data={this.props.graphData}></VerticalBar>
+                        <Graph data={this.props.graphData} score={this.props.score} percentile={this.props.percentile}></Graph>
                     </Paper>
                 );
             } else {
-                return (
-                    <Paper className={classes.paper}>
-                        <p>
-                            No data found. Please check your inputs and try again.
-                        </p>
-                    </Paper>
-                );
+                // return (
+                //     <Paper className={classes.paper}>
+                //         <p>
+                //             No data found. Please check your inputs and try again.
+                //         </p>
+                //     </Paper>
+                // );
+                return "";
             }
         } else {
             return "";
         }
     }
-}
-
-const mapStateToProps = ({data}) => {
-  return { data }
 }
 
 const getPercentileQuip = (percentile) => {

@@ -119,9 +119,8 @@ exports.markForUpdate = functions.https.onRequest(async (req, res) => {
 exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
     return cors(req, res, async () => {
         const gameID = req.body["game"];
-        const gameID = req.body["startDate"];
-        const gameID = req.body["endDate"];
-        const gameID = req.body["game"];
+        const minDate = req.body["minDate"];
+        const maxDate = req.body["maxDate"];
         util.updatePlays();
         res.status(200).send('Updating');
     });
