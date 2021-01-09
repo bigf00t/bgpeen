@@ -24,11 +24,11 @@ class MeasureResult extends Component {
         const classes = this.props.classes;
 
         if (this.props.open) {
-            if (this.props.graphData != null) {
+            if (!_.isEmpty(this.props.graphData)) {
                 return (
                     <Paper className={classes.paper}>
                         <h3>
-                            Your score compared to other {ordinal(parseInt(this.props.place))} place scores in {this.props.players} player games of {this.props.gameName}
+                            Your score compared to other {ordinal(parseInt(this.props.place))} place scores in {this.props.players.join(",")} player games of {this.props.gameName}
                         </h3>
                         <p>
                             There are {this.props.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with an average value of {this.props.average}.<br/>

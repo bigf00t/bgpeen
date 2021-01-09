@@ -2,16 +2,22 @@ import React, { Component, Fragment } from 'react';
 
 import MeasureResult from './MeasureResult';
 import GameSelect from './GameSelect';
+import AlertDialog from './AlertDialog';
+import * as actions from '../actions';
+
 import {connect} from 'react-redux';
 import _ from 'lodash';
-import * as actions from '../actions';
+
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControl from '@material-ui/core/FormControl';
-import AlertDialog from './AlertDialog';
-import regression from 'regression';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import Select from '@material-ui/core/Select';
+import Checkbox from '@material-ui/core/Checkbox';
 
 const styles = theme => ({
     root: {
@@ -42,14 +48,28 @@ const styles = theme => ({
     }
 });
 
+const allPlayerCounts = [1, 2, 3, 4];
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
 class MeasureForm extends Component {
     constructor(props) {  
         super(props);
         this.state = {
-            game: null,
-            score: "100",
+            game: {},
+            gameId: {},
+            score: "",
             place: "1",
-            players: "2",
+            players: [2],
             resultOpen: true,
             average: 0,
             percentile: 0,
@@ -58,48 +78,14 @@ class MeasureForm extends Component {
             errorTitle: "",
             errorMessage: "",
             scoreCount: 0,
+            loading: true
         };
     }
 
-    getSortedGames = () => {
-        return _.sortBy(this.props.data, ['name']);
-    }
-
-    handleSubmit = (e) => {
-        e.preventDefault();
-        // Does this game already exist in our database
-        if (!this.state.game.name) {
-            this.showError("Um", "Are you even trying?");
-        } else if (!this.state.game.id) {
-            // TODO: Consider adding to newgames?
-            this.showError("Oops!", <Fragment>Sorry dawg, I don't have any stats for <strong>{this.state.game.name}</strong>. I've added it to the list, though, so check back soon!</Fragment>);
-        } else {
-            // TODO: Consider flagging for update?
-            // TODO: Pull into function
-            this.setState({graphData: this.getGraphData()});
-            this.setStats();
-            this.setState({resultOpen: true});
-        }
-    }
-
     handleChange = (event) => {
-        // this.setState({resultOpen: false});
         this.setState({[event.target.name]: event.target.value}, () => {
-            // console.log(this.state.place);
-            this.setState({graphData: this.getGraphData()});
-            this.setStats();
+            this.setResults();
         });
-    }
-
-    handleGameChange = (newGame) => {
-        if (newGame) {
-            // this.setState({resultOpen: false});
-            this.setState({game: newGame}, () => {
-                console.log(this.state.game);
-                this.setState({graphData: this.getGraphData()});
-                this.setStats();
-            });
-        }
     }
 
     showError = (title, message) => {
@@ -112,118 +98,40 @@ class MeasureForm extends Component {
         this.setState({errorOpen: open});
     }
 
-    getExplodedScores = () => {
+    getFilteredScores = () => {
+        // TODO: Extend to work with multiple players and positions
+        return _(this.state.game.scoreGroups)
+            .filter(group => {
+                return this.state.players.indexOf(group.playerCount) > -1 && group.playerPosition == this.state.place;
+            })
+            .reduce((result, group) => {
+                return _.mergeWith(result, group.scores, (val1, val2) => {
+                    return (val1 || 0) + val2;
+                });
+            }, {});
+    }
+
+    setResults = () => {
         // TODO: Extend to work with multiple players and positions
         // TODO: Don't re-evaluate as often
-        var explodedScores = 
-        _.chain(this.state.game.scores)
-        .filter(score => {
-            return score.playerCount == this.state.players && score.playerPosition == this.state.place;
-        })
-        .reduce((result, score) => {
-            return _.merge(result, score.scores);
-        }, {})
-        .reduce((result, count, score) => {
-            result.push(_.fill(Array(count), parseInt(score)));
-            return result;
-        }, [])
-        .flatten()
-        .value();
-
-        return explodedScores;
-    }
-
-    setStats = () => {
-        var scores = this.getExplodedScores();
-
-        if (scores.length == 0) {
-            return;
-        }
-        
-        this.setState({average: this.getAverage(scores)});
-        this.setState({percentile: this.getPercentile(scores)});
-        this.setState({scoreCount: scores.length});
-    }
-
-    getAverage = (scores) => {
-        return parseInt(_.mean(scores));
-    }
-
-    getPercentile = (scores) => {
-        if (! this.state.score) {
-            return null;
-        }
-
-        var score = this.state.score;
-
-        // Based on https://www.30secondsofcode.org/js/s/percentile
-        var percentile = (100 * _.reduce(scores, 
-            (result, value) => result + (value < score ? 1 : 0) + (value === score ? 0.5 : 0), 0)
-            ) / scores.length;
-
-        return parseInt(percentile);
-    }
-
-    getGraphData = () => {
-        // TODO: Extend to work with multiple players and positions
-        // TODO: Don't re-evaluate as often
-        var mergedScores = 
-        _.chain(this.state.game.scores)
-        .filter(score => {
-            return score.playerCount == this.state.players && score.playerPosition == this.state.place;
-        })
-        .reduce((result, score) => {
-            return _.merge(result, score.scores);
-        }, {})
-        .value();
+        var mergedScores = this.getFilteredScores();
 
         if (_.keys(mergedScores).length == 0) {
             return null;
         }
-        
-        // if (this.state.score) {
-        //     // Add our score if it doesn't exist
-        //     mergedScores[this.state.score] = mergedScores[this.state.score] ? mergedScores[this.state.score] : 1;
-        // }
 
-        // var labels = _.keys(mergedScores);
-        // var data = _.values(mergedScores);
-        
-        // if (this.state.score) {
-        //     // Add our score if it doesn't exist
-        //     data[labels.indexOf(this.state.score)] = 0;
-        //     var yourData = _.fill(Array(labels.length), 0);
-        //     yourData[labels.indexOf(this.state.score)] = mergedScores[this.state.score];
-        // }
-
-        var data = _.reduce(mergedScores, (r, v, k) => { 
+        var scoreData = _.reduce(mergedScores, (r, v, k) => { 
             r.push({x: parseInt(k), y: v});
             return r;
         }, []);
 
-        // var yourData = [
-        //     {x: this.state.score, y: 0}, 
-        //     {x: this.state.score, y: _.max(_.values(mergedScores))}
-        // ];
-
         // console.log(result);
-        console.log(data);
+        // console.log(data);
 
         var graphData = {
-            // labels: labels,
             datasets: [
-                // {
-                //     data: yourData,
-                //     label: ["Your Score"],
-                //     // color: 'rgba(255, 99, 132, 1)',
-                //     backgroundColor: 'rgba(255, 99, 132, 1)',
-                //     borderColor: 'rgba(255, 99, 132, 1)',
-                //     borderWidth: 2,
-                //     fill: false,
-                //     // showLine: false,
-                // },
                 {
-                    data: data,
+                    data: scoreData,
                     label: ["Score"],
                     // color: 'rgba(63, 81, 181, 1)',
                     backgroundColor: 'rgba(63, 81, 181, 0.25)',
@@ -245,16 +153,57 @@ class MeasureForm extends Component {
                 },
             ]
         };
+        
+        var explodedScores = _.chain(mergedScores)
+        .reduce((result, count, score) => {
+            result.push(_.fill(Array(count), parseInt(score)));
+            return result;
+        }, [])
+        .flatten()
+        .value();
+        
+        this.setState({average: this.getAverage(explodedScores)});
+        this.setState({percentile: this.getPercentile(explodedScores)});
+        this.setState({scoreCount: explodedScores.length});
 
-        return graphData;
+        this.setState({graphData: graphData});
+    }
+
+    getAverage = (scores) => {
+        return parseInt(_.mean(scores));
+    }
+
+    getPercentile = (scores) => {
+        if (! this.state.score) {
+            return null;
+        }
+
+        var score = this.state.score;
+
+        // Based on https://www.30secondsofcode.org/js/s/percentile
+        var percentile = (100 * _.reduce(scores, 
+            (result, value) => result + (value < score ? 1 : 0) + (value === score ? 0.5 : 0), 0)
+            ) / scores.length;
+
+        return parseInt(percentile);
+    }
+
+    getPlayerCountsInData = () => {
+        return _(this.state.game.scoreGroups)
+        .map((group) => {
+            return group.playerCount;
+        })
+        .uniq()
+        .sort()
+        .value();
     }
 
     componentDidMount() {
-        console.log(this.state.game);
-        // this.setState({game: this.getGames()[0]});
         this.props.fetchGames().then(() => {
             if (this.props.data) {
-                this.handleGameChange(this.getSortedGames()[0]);
+                this.setState({game: this.props.data[0]}, () => {
+                    this.setResults();
+                });
             }
         });
     }
@@ -265,8 +214,22 @@ class MeasureForm extends Component {
         return (
                 <form className={classes.root} onSubmit={this.handleSubmit}>
                     <FormGroup row className={classes.formGroup}>
-                        <FormControl variant="outlined" className={classes.formControl}>
+                        {/* <FormControl variant="outlined" className={classes.formControl}>
                             <GameSelect game={this.state.game} data={this.getSortedGames()} handleGameChange={this.handleGameChange} />
+                        </FormControl> */}
+                        <FormControl className={classes.formControl}>
+                            <InputLabel id="game-label">Game</InputLabel>
+                            <Select
+                                labelid="game-label"
+                                id="game"
+                                name="game"
+                                value={this.state.game}
+                                onChange={this.handleChange}
+                            >
+                            {this.props.data.length > 0 ? this.props.data.map((game) => (
+                                <MenuItem value={game} key={game.id}>{game.name}</MenuItem>
+                            )) : ''}
+                            </Select>
                         </FormControl>
                         <FormControl className={classes.formControl}>
                             <TextField 
@@ -288,7 +251,7 @@ class MeasureForm extends Component {
                                 onChange={this.handleChange}
                                 />
                         </FormControl>
-                        <FormControl className={classes.formControl}>
+                        {/* <FormControl className={classes.formControl}>
                             <TextField 
                                 className={classes.textField}
                                 id="players" 
@@ -297,6 +260,27 @@ class MeasureForm extends Component {
                                 value={this.state.players}
                                 onChange={this.handleChange}
                                 />
+                        </FormControl> */}
+                        <FormControl className={classes.formControl}>
+                            <InputLabel id="players-label">Players</InputLabel>
+                            <Select
+                                labelid="players-label"
+                                id="players"
+                                name="players" 
+                                multiple
+                                value={this.state.players}
+                                onChange={this.handleChange}
+                                input={<Input />}
+                                renderValue={(selected) => selected.join(', ')}
+                                MenuProps={MenuProps}
+                            >
+                            {this.getPlayerCountsInData().map((count) => (
+                                <MenuItem key={count} value={count}>
+                                    <Checkbox checked={this.state.players.indexOf(count) > -1} />
+                                    <ListItemText primary={count} />
+                                </MenuItem>
+                            ))}
+                            </Select>
                         </FormControl>
                         {/* <FormControl className={classes.formControl}>
                             <Button 

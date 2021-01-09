@@ -19,6 +19,11 @@ To deploy functions:
 To test production functions in postman:
 - POST to https://us-central1-bgpeen-1fc16.cloudfunctions.net/getGames
 
+Troubleshooting:
+- If emulator won't close
+-- netstat -ano | findstr :<PORT>
+-- taskkill /PID <PID> /F
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

@@ -1,24 +1,18 @@
-// The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require('firebase-functions');
-
-// The Firebase Admin SDK to access the Firebase Realtime Database.
 const admin = require('firebase-admin');
-// admin.initializeApp();
-
 const db = admin.firestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
-const lodash = require('lodash');
-
 const moment = require('moment');
-const { ceil, floor } = require('lodash');
+
+var _ = require('lodash');
 
 exports.docsToArray = (snapshot) => {
     let array = [];
 
     snapshot.forEach(doc => {
-        if (! lodash.isEmpty(doc.data())) {
+        if (! _.isEmpty(doc.data())) {
             array.push(doc.data());
         }
     });
@@ -26,138 +20,136 @@ exports.docsToArray = (snapshot) => {
     return array;
 }
 
-exports.updatePlays = () => {
+exports.updatePlays = (games, maxPages, minDate, maxDate, flush) => {
+    console.log(games);
     db.collection('games')
-        .where("needsUpdate", "==", true)
+        // .where("needsUpdate", "==", true)
+        .where('id', 'in', games)
         .get().then(function(gamesSnapshot) {
             gamesSnapshot.forEach(gameDoc => {
                 var gameRef = db.collection('games').doc(gameDoc.id);
+
                 var game = gameDoc.data();
                 var playsUrl = getPlaysUrl(game);
-                updateGamePlays(gameRef, game, playsUrl, 1);
+                updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, 1).then(function() {
+                    console.log('Finished updatePlaysPagesRecursively');
+                });
             });
         });
 }
 
-function getScores(plays, existingScores) {
-    var deepScores = getDeepScores(plays, existingScores);
-
-    var flatScores = getFlatScores(deepScores);
-
-    return flatScores;
-}
-
-function getDeepScores(plays, existingScores) {
-    var scores = existingScores;
-
-    lodash.forEach(plays, play => {
-        var playerScores = getCleanPlayerScores(play.players);
-        var playerCount = play.playerCount;
-        if (playerScores.length > 0) {
-            lodash.forEach(playerScores,
+function addToScoreGroups(dirtyPlays, scoreGroups) {
+    var cleanPlays = getCleanPlays(dirtyPlays);
+    _.forEach(cleanPlays, play => {
+        var cleanPlayerScores = getCleanPlayerScores(play.players);
+        if (cleanPlayerScores.length > 0) {
+            _.forEach(cleanPlayerScores,
                 function(score, i) {
                     var playerPosition = i + 1
-                    scores[playerCount] = scores[playerCount] || {};
-                    scores[playerCount][playerPosition] = scores[playerCount][playerPosition] || {}
-                    scores[playerCount][playerPosition][score] = (scores[playerCount][playerPosition][score] ? scores[playerCount][playerPosition][score] : 0) + 1;
+                    // Find an existing scoreGroup or create a new one
+                    var scoreGroupIndex = _.findIndex(scoreGroups, function(scoreGroup) {
+                        return scoreGroup.playerCount == play.playerCount && scoreGroup.playerPosition == playerPosition;
+                    });
+                    
+                    if (scoreGroupIndex == -1) {
+                        scoreGroupIndex = scoreGroups.length;
+                        scoreGroups.push({
+                            scores:{}, 
+                            playerCount: parseInt(play.playerCount), 
+                            playerPosition: playerPosition
+                        });
+                    };
+
+                    scoreGroups[scoreGroupIndex].scores[score] = _.defaultTo(scoreGroups[scoreGroupIndex].scores[score], 0) + 1
                 });
         }
     });
 
-    return scores;
+    return scoreGroups;
+}
+
+function getCleanPlays(plays) {
+    return _.filter(plays, function(play) {
+        // TODO: Exclude plays where winner isn't person with highest score
+        // Exclude plays where not every player has a score
+        return _.every(play.players, function(player) {
+            return player.score;
+        });
+    })
 }
 
 function getCleanPlayerScores(players) {
-    return lodash
-    .chain(players)
-    .filter(function(player) { 
+    return _(players)
+    .filter(function(player) {
         // Exclude bogus scores, as well as 0
         return ! (isNaN(player.score) || player.score == "" || player.score == "0")
     })
     .orderBy([function(player) { 
-        return parseInt(player.score); 
-    }], ['desc'])
-    .map(function(player) { 
-        // Handle ties
-        return parseInt(player.score) + parseInt(player.win);
+        return parseInt(player.score)
+    }, 
+    function(player) { 
+        // TODO: Verify that this works with a test
+        return player.win 
+    }], 
+    ['desc', 'desc'])
+    .map(function(player) {
+        return parseInt(player.score);
     })
     .value();
 }
 
-function getFlatScores(deepScores) {
-    var flatScores = [];
-    var maxPlayerCount = lodash.max(lodash.keys(deepScores));
-    console.log();
-
-    for (var playerCount = 1; playerCount <= maxPlayerCount; playerCount++) {
-        var playerCountScores = deepScores[playerCount];
-        if (playerCountScores) {
-            for (var playerPosition = 1; playerPosition <= maxPlayerCount; playerPosition++) {
-                var playerPositionScores = playerCountScores[playerPosition];
-                if (playerPositionScores) {
-                    flatScores.push({
-                        playerCount: playerCount,
-                        playerPosition: playerPosition,
-                        scores: playerPositionScores
-                    })
-                } 
-            } 
-        }
-    } 
-
-    return flatScores;
+// From https://stackoverflow.com/questions/22707475/how-to-make-a-promise-from-settimeout
+function delay(delay, value) {
+    return new Promise(resolve => setTimeout(resolve, delay, value));
 }
 
-function updateGamePlays(gameRef, game, playsUrl, page) {
-    updatePlaysPage(gameRef, game, playsUrl, page).then(function (remainingPages) {
-        console.log("Remaining pages: " + remainingPages);
-        if (remainingPages > 0) {
-            // TODO: Timeout not working right
-            setTimeout(function(){
-                updateGamePlays(gameRef, game, playsUrl, page + 1);
-            }, 2000);
+function updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, page) {
+    return updatePlaysPage(gameRef, game, playsUrl, flush, page).then(function (remainingPages) {
+        console.log("Page: " + page);
+        console.log("Remaining pages: " + (remainingPages > (maxPages - page) ? maxPages - page : remainingPages));
+        if (page >= maxPages || remainingPages == 0) {
+            return Promise.resolve(0);
         }
+        // TODO: Timeout not working right
+        return delay(2000, page + 1).then(function(nextPage){
+            return updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, nextPage);
+        });
     });
 }
 
 function getPlaysUrl(game) {
-    // TODO: Move into function
-    // console.log(game);
-    // TODO: Remove default date
-    var minDate = game.lastUpdated != undefined ? game.lastUpdated : '2021-01-01';
+    var minDate = _.defaultTo(game.lastUpdated, '');
     return 'https://api.geekdo.com/xmlapi2/plays?id=' + game.id + '&mindate=' + minDate + '&page=';
 }
 
-function updatePlaysPage(gameRef, game, playsUrl, page) {
+function updatePlaysPage(gameRef, game, playsUrl, flush, page) {
     console.log(playsUrl + page);
     return axios.get(playsUrl + page)
         .then(function (result) {
             var json = convert.xml2js(result.data, {compact: true, attributesKey: '$'});
-            
-            // TODO: Total plays
-            var totalPlays = json.plays.$.total;
-            // console.log(totalPlays);
 
             if (json.plays.play != undefined) {
                 var plays = getCleanPlaysFromJson(json.plays.play);
+                // console.log(plays);
 
                 var batch = db.batch();
                 
-                lodash.forEach(plays, function(play) {
+                _.forEach(plays, function(play) {
                     var playRef = gameRef.collection('plays').doc(play.id);
                     batch.set(playRef, play);
                 });
 
-                var scores = getScores(plays, game.scores);
-                // console.log(scores);
-
-                batch.update(gameRef, {
-                    scores: scores
-                });
-
+                // If we're flushing scoreGroups, don't use the existing ones on the first page
+                var existingScoreGroups = (flush && page == 1) ? [] : _.defaultTo(game.scoreGroups, []);
+                var scoreGroups = addToScoreGroups(plays, existingScoreGroups);
+                // console.log(scoreGroups);
+                
+                // TODO: Consider doing this after all pages have been udpated
+                batch.update(gameRef, {scoreGroups: scoreGroups});
                 batch.commit();
 
-                var remainingPages = ceil(totalPlays / 100) - page;
+                var totalPlays = json.plays.$.total;
+                var remainingPages = _.ceil(totalPlays / 100) - page;
 
                 return remainingPages;
             }
@@ -167,8 +159,7 @@ function updatePlaysPage(gameRef, game, playsUrl, page) {
 }
 
 function getCleanPlaysFromJson(plays) {
-    return lodash
-    .chain(plays)
+    return _(plays)
     .filter(function(play) { 
         return play.players != undefined
     })
@@ -184,18 +175,20 @@ function getCleanPlaysFromJson(plays) {
 }
 
 function getCleanPlayersFromJson(players) {
-    return lodash
-    .map(players, function(player) {
+    return _(players)
+    .map(function(player) {
         return { ...player.$ }
-    });
+    })
+    .value();
 }
 
 function getPlayerUserIds(players) {
-    return lodash.map(
-        lodash.filter(players, function(player) { 
-            return player.userid != undefined
-        }), 
-        function(player) {
-            return player.userid
-        });
+    return _(players)
+    .filter(function(player) { 
+        return player.userid != undefined
+    })
+    .map(function(player) {
+        return player.userid
+    })
+    .value();
 }

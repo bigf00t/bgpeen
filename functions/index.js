@@ -69,9 +69,8 @@ exports.addGames = functions.https.onRequest(async (req, res) => {
 
 exports.getGame = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
-        const gameID = req.body["game"];
         db.collection('games')
-        .doc(gameID)
+        .doc(req.body.game)
         .get().then((gameSnapshot) => {
             var game = gameSnapshot.data();
             return res.json(game);
@@ -81,10 +80,12 @@ exports.getGame = functions.https.onRequest(async (req, res) => {
 
 exports.getGames = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
-        console.log('getGames');
-        db.collection('games').get().then((snapshot) => {
+        // console.log('getGames');
+        db.collection('games')
+        .orderBy("name")
+        .get().then((snapshot) => {
             var games = util.docsToArray(snapshot);
-            console.log(games);
+            // console.log(games);
             return res.json( games );
         });
     });
@@ -94,9 +95,8 @@ exports.getUserPlays = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
         console.log('getUserPlays');
         // console.log(req.body["game"]);
-        const gameID = req.body["game"];
-        db.collection('games').doc(gameID).collection('plays')
-        .where('playerUserIds', 'array-contains', req.body["user"])
+        db.collection('games').doc(req.body.game).collection('plays')
+        .where('playerUserIds', 'array-contains', req.body.user)
         .get().then((snapshot) => {
             return res.json(util.docsToArray(snapshot));
         });
@@ -118,10 +118,7 @@ exports.markForUpdate = functions.https.onRequest(async (req, res) => {
 
 exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
     return cors(req, res, async () => {
-        const gameID = req.body["game"];
-        const minDate = req.body["minDate"];
-        const maxDate = req.body["maxDate"];
-        util.updatePlays();
+        util.updatePlays(req.body.games, req.body.maxPages, req.body.minDate, req.body.maxDate, req.body.flush);
         res.status(200).send('Updating');
     });
 });
