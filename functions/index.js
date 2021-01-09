@@ -103,26 +103,38 @@ exports.getUserPlays = functions.https.onRequest(async (req, res) => {
     });
 });
 
-exports.markForUpdate = functions.https.onRequest(async (req, res) => {
+// exports.markForUpdate = functions.https.onRequest(async (req, res) => {
+//     return cors(req, res, async () => {
+//         const gameID = req.body;
+//         const gameRef = db.collection('games').doc(gameID);
+
+//         gameRef.update({
+//             needsUpdate: true
+//         });
+
+//         res.status(200).send('Added to update queue');
+//     });
+// });
+
+const runtimeOpts = {
+    timeoutSeconds: 300,
+    memory: '1GB'
+}
+
+exports.manualPlaysUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
+    console.log('manualPlaysUpdate');
     return cors(req, res, async () => {
-        const gameID = req.body;
-        const gameRef = db.collection('games').doc(gameID);
-
-        gameRef.update({
-            needsUpdate: true
-        });
-
-        res.status(200).send('Added to update queue');
+        util.updatePlays(
+            req.body.games, 
+            req.body.maxPages, 
+            req.body.minDate, 
+            req.body.maxDate, 
+            req.body.flush).then(function() {
+                res.status(200).send('Finished Updating Plays');
+            });
     });
 });
 
-exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
-    return cors(req, res, async () => {
-        util.updatePlays(req.body.games, req.body.maxPages, req.body.minDate, req.body.maxDate, req.body.flush);
-        res.status(200).send('Updating');
-    });
-});
-
-exports.scheduledPlaysUpdate = functions.pubsub.schedule('every 24 hours').onRun((context) => {
-    util.updatePlays();
-});
+// exports.scheduledPlaysUpdate = functions.pubsub.schedule('every 24 hours').onRun((context) => {
+//     util.updatePlays();
+// });

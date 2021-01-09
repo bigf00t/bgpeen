@@ -22,19 +22,19 @@ exports.docsToArray = (snapshot) => {
 
 exports.updatePlays = (games, maxPages, minDate, maxDate, flush) => {
     console.log(games);
-    db.collection('games')
+    return db.collection('games')
         // .where("needsUpdate", "==", true)
         .where('id', 'in', games)
-        .get().then(function(gamesSnapshot) {
-            gamesSnapshot.forEach(gameDoc => {
-                var gameRef = db.collection('games').doc(gameDoc.id);
-
-                var game = gameDoc.data();
+        .get()
+        .then(function(gamesSnapshot) {
+            return Promise.all(_.map(exports.docsToArray(gamesSnapshot), game => {
+                var gameRef = db.collection('games').doc(game.id);
+                console.log('Started updating game plays for: ' + game.name);
                 var playsUrl = getPlaysUrl(game);
-                updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, 1).then(function() {
-                    console.log('Finished updatePlaysPagesRecursively');
-                });
-            });
+                return updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, 1);
+            }));
+        }).then(function() {
+            console.log('Finished updatePlaysPagesRecursively');
         });
 }
 
@@ -104,16 +104,21 @@ function delay(delay, value) {
 }
 
 function updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, page) {
-    return updatePlaysPage(gameRef, game, playsUrl, flush, page).then(function (remainingPages) {
-        console.log("Page: " + page);
+    console.log("Loading plays page: " + page);
+    return updatePlaysPage(gameRef, game, playsUrl, flush, page)
+    .then(function (remainingPages) {
         console.log("Remaining pages: " + (remainingPages > (maxPages - page) ? maxPages - page : remainingPages));
         if (page >= maxPages || remainingPages == 0) {
             return Promise.resolve(0);
         }
-        // TODO: Timeout not working right
-        return delay(2000, page + 1).then(function(nextPage){
-            return updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, nextPage);
-        });
+        return delay(2000, page + 1);
+    })
+    .then(function(nextPage){
+        console.log('nextPage = ' + nextPage);
+        if (nextPage == 0) {
+            return Promise.resolve(0);
+        }
+        return updatePlaysPagesRecursively(gameRef, game, playsUrl, flush, maxPages, nextPage);
     });
 }
 
@@ -123,30 +128,35 @@ function getPlaysUrl(game) {
 }
 
 function updatePlaysPage(gameRef, game, playsUrl, flush, page) {
-    console.log(playsUrl + page);
+    console.log("Starting BGG call: " + playsUrl + page);
     return axios.get(playsUrl + page)
         .then(function (result) {
+            console.log("Finished BGG call");
             var json = convert.xml2js(result.data, {compact: true, attributesKey: '$'});
 
             if (json.plays.play != undefined) {
                 var plays = getCleanPlaysFromJson(json.plays.play);
                 // console.log(plays);
+                
+                console.log("Starting scoreGroup calculation");
+                // If we're flushing scoreGroups, don't use the existing ones on the first page
+                var existingScoreGroups = (flush && page == 1) ? [] : _.defaultTo(game.scoreGroups, []);
+                var scoreGroups = addToScoreGroups(plays, existingScoreGroups);
+                // console.log(scoreGroups);
+                console.log("Finished scoreGroup calculation");
 
+                console.log("Started db batch updates");
                 var batch = db.batch();
                 
                 _.forEach(plays, function(play) {
                     var playRef = gameRef.collection('plays').doc(play.id);
                     batch.set(playRef, play);
                 });
-
-                // If we're flushing scoreGroups, don't use the existing ones on the first page
-                var existingScoreGroups = (flush && page == 1) ? [] : _.defaultTo(game.scoreGroups, []);
-                var scoreGroups = addToScoreGroups(plays, existingScoreGroups);
-                // console.log(scoreGroups);
                 
                 // TODO: Consider doing this after all pages have been udpated
                 batch.update(gameRef, {scoreGroups: scoreGroups});
                 batch.commit();
+                console.log("Committed db batch updates");
 
                 var totalPlays = json.plays.$.total;
                 var remainingPages = _.ceil(totalPlays / 100) - page;
