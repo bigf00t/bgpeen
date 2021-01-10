@@ -7,6 +7,8 @@ import * as actions from '../actions';
 
 import {connect} from 'react-redux';
 import _ from 'lodash';
+import ordinal from 'ordinal';
+import {mean, mode, median, std} from 'mathjs';
 
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
@@ -48,8 +50,6 @@ const styles = theme => ({
     }
 });
 
-const allPlayerCounts = [1, 2, 3, 4];
-
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -68,10 +68,13 @@ class MeasureForm extends Component {
             game: {},
             gameId: {},
             score: "",
-            place: "1",
-            players: [2],
+            places: [],
+            players: [],
             resultOpen: true,
-            average: 0,
+            mean: 0,
+            median: 0,
+            mode: 0,
+            std: 0,
             percentile: 0,
             graphData: {},
             errorOpen: false,
@@ -102,7 +105,8 @@ class MeasureForm extends Component {
         // TODO: Extend to work with multiple players and positions
         return _(this.state.game.scoreGroups)
             .filter(group => {
-                return this.state.players.indexOf(group.playerCount) > -1 && group.playerPosition == this.state.place;
+                return (this.state.players.length == 0 || this.state.players.indexOf(group.playerCount) > -1) && 
+                (this.state.places.length == 0 || this.state.places.indexOf(group.playerPosition) > -1);
             })
             .reduce((result, group) => {
                 return _.mergeWith(result, group.scores, (val1, val2) => {
@@ -161,31 +165,38 @@ class MeasureForm extends Component {
         }, [])
         .flatten()
         .value();
-        
-        this.setState({average: this.getAverage(explodedScores)});
-        this.setState({percentile: this.getPercentile(explodedScores)});
+
+        this.setState({mean: parseInt(mean(explodedScores))});
+        this.setState({median: parseInt(median(explodedScores))});
+        this.setState({mode: parseInt(mode(explodedScores))});
+        this.setState({std: parseInt(std(explodedScores))});
         this.setState({scoreCount: explodedScores.length});
+        
+        if (this.state.score) {
+            this.setState({percentile: this.getPercentile(explodedScores)});
+        }
 
         this.setState({graphData: graphData});
     }
 
-    getAverage = (scores) => {
-        return parseInt(_.mean(scores));
-    }
-
     getPercentile = (scores) => {
-        if (! this.state.score) {
-            return null;
-        }
-
         var score = this.state.score;
 
         // Based on https://www.30secondsofcode.org/js/s/percentile
         var percentile = (100 * _.reduce(scores, 
             (result, value) => result + (value < score ? 1 : 0) + (value === score ? 0.5 : 0), 0)
             ) / scores.length;
-
         return parseInt(percentile);
+    }
+
+    getPlayerPlacesInData = () => {
+        return _(this.state.game.scoreGroups)
+        .map((group) => {
+            return group.playerPosition;
+        })
+        .uniq()
+        .sort()
+        .value();
     }
 
     getPlayerCountsInData = () => {
@@ -241,7 +252,7 @@ class MeasureForm extends Component {
                                 onChange={this.handleChange}
                                 />
                         </FormControl>
-                        <FormControl className={classes.formControl}>
+                        {/* <FormControl className={classes.formControl}>
                             <TextField 
                                 className={classes.textField}
                                 id="place" 
@@ -250,6 +261,28 @@ class MeasureForm extends Component {
                                 value={this.state.place}
                                 onChange={this.handleChange}
                                 />
+                        </FormControl> */}
+                        <FormControl className={classes.formControl}>
+                            <InputLabel id="places-label" shrink={true}>Places</InputLabel>
+                            <Select
+                                labelid="places-label"
+                                id="places"
+                                name="places" 
+                                multiple
+                                value={this.state.places}
+                                onChange={this.handleChange}
+                                input={<Input />}
+                                renderValue={(selected) => selected.length > 0 ? selected.sort().join(', ') : "Any"}
+                                displayEmpty
+                                MenuProps={MenuProps}
+                            >
+                            {this.getPlayerPlacesInData().map((count) => (
+                                <MenuItem key={count} value={count}>
+                                    <Checkbox checked={this.state.places.indexOf(count) > -1} />
+                                    <ListItemText primary={ordinal(count)} />
+                                </MenuItem>
+                            ))}
+                            </Select>
                         </FormControl>
                         {/* <FormControl className={classes.formControl}>
                             <TextField 
@@ -262,7 +295,7 @@ class MeasureForm extends Component {
                                 />
                         </FormControl> */}
                         <FormControl className={classes.formControl}>
-                            <InputLabel id="players-label">Players</InputLabel>
+                            <InputLabel id="players-label" shrink={true}>Players</InputLabel>
                             <Select
                                 labelid="players-label"
                                 id="players"
@@ -271,7 +304,8 @@ class MeasureForm extends Component {
                                 value={this.state.players}
                                 onChange={this.handleChange}
                                 input={<Input />}
-                                renderValue={(selected) => selected.join(', ')}
+                                renderValue={(selected) => selected.length > 0 ? selected.sort().join(', ') : "Any"}
+                                displayEmpty
                                 MenuProps={MenuProps}
                             >
                             {this.getPlayerCountsInData().map((count) => (
@@ -296,9 +330,12 @@ class MeasureForm extends Component {
                         open={this.state.resultOpen}
                         gameName={this.state.game?.name}
                         score={this.state.score}
-                        place={this.state.place}
+                        places={this.state.places}
                         players={this.state.players}
-                        average={this.state.average}
+                        mean={this.state.mean}
+                        mode={this.state.mode}
+                        median={this.state.median}
+                        std={this.state.std}
                         percentile={this.state.percentile}
                         graphData={this.state.graphData}
                         scoreCount={this.state.scoreCount}
