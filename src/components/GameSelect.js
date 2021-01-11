@@ -114,7 +114,7 @@ export default function GameSelect(props) {
       ...state,
       [name]: newValue,
     });
-    if (state.suggestion && newValue == state.suggestion.name) {
+    if (state.suggestion && newValue === state.suggestion.name) {
       props.handleGameChange(state.suggestion);
     } else {
       props.handleGameChange({name: newValue});

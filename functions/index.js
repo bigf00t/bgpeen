@@ -29,7 +29,8 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
                         name: item.name.$.value,
                         lastUpdated: null,
                         needsUpdate: true,
-                        scores: []
+                        scoreGroups: [],
+                        stats: {}
                     };
 
                     // console.log(game);
@@ -122,9 +123,8 @@ const runtimeOpts = {
 }
 
 exports.manualPlaysUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
-    console.log('manualPlaysUpdate');
     return cors(req, res, async () => {
-        util.updatePlays(
+        util.manualPlaysUpdate(
             req.body.games, 
             req.body.maxPages, 
             req.body.minDate, 
@@ -132,6 +132,14 @@ exports.manualPlaysUpdate = functions.runWith(runtimeOpts).https.onRequest(async
             req.body.flush).then(function() {
                 res.status(200).send('Finished Updating Plays');
             });
+    });
+});
+
+exports.manualStatsUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
+    return cors(req, res, async () => {
+        util.manualStatsUpdate(req.body.games).then(function() {
+            res.status(200).send('Finished Updating Stats');
+        });
     });
 });
 

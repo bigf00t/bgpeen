@@ -27,12 +27,13 @@ class MeasureResult extends Component {
                 return (
                     <Paper className={classes.paper}>
                         <h3>
-                            Your score compared to other {this.props.places.length > 0 ? `${_.map(this.props.places, (place) => {return ordinal(place)}).join(", ")} place` : ''} scores 
-                            in {this.props.players.length > 0 ? `${this.props.players.join(", ")} player` : ''} games of {this.props.gameName}
+                            Your score compared to other {this.props.place ? `${ordinal(this.props.place)} place` : ''} scores 
+                            in {this.props.players ? `${this.props.players} player` : ''} games of {this.props.gameName}. 
                         </h3>
                         <p>
-                            There are {this.props.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with a mean (average) value of {this.props.mean}.<br/>
-                            The mode is {this.props.mode}, the median is {this.props.median} and the standard deviation is {this.props.std}.<br/>
+                            There are {this.props.result.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with a mean (average) value of {this.props.result.mean}.<br/>
+                            The mode is {this.props.result.mode}, the median is {this.props.result.median} and the standard deviation is {this.props.result.std}.<br/>
+                            {this.props.result.trimmedScoreCount} outliers were not graphed.<br/>
                             {this.props.score ? ` Your score of ${this.props.score} places you in the ${getOrdinalDesc(this.props.percentile)} of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
                         </p>
                         <Graph data={this.props.graphData} score={this.props.score} percentile={this.props.percentile}></Graph>
@@ -59,7 +60,7 @@ const getPercentileQuip = (percentile) => {
     return "You're terrible!";
   } else if (percentile > 45 && percentile < 55) {
     return "You're boring.";
-  } else if (percentile == 69) {
+  } else if (percentile === 69) {
     return "Nice.";
   } else if (percentile > 90) {
     return "You're amazing!";
