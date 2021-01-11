@@ -31,9 +31,9 @@ class MeasureResult extends Component {
                             in {this.props.players ? `${this.props.players} player` : ''} games of {this.props.gameName}. 
                         </h3>
                         <p>
-                            There are {this.props.result.scoreCount} recorded scores for {this.props.gameName} with the same place(s) and player count(s), with a mean (average) value of {this.props.result.mean}.<br/>
-                            The mode is {this.props.result.mode}, the median is {this.props.result.median} and the standard deviation is {this.props.result.std}.<br/>
-                            {this.props.result.trimmedScoreCount} outliers were not graphed.<br/>
+                            There are {this.props.result.scoreCount} valid scores for {this.props.gameName} with the same place(s) and player count(s).<br/>
+                            {this.props.result.trimmedScoreCount} scores were excluded for being outliers (too many standard deviations away from the mean).<br/>
+                            The mean (average) of valid scores is {this.props.result.mean}, the mode (most common) is {this.props.result.mode}, the median (middle) is {this.props.result.median} and the standard deviation is {this.props.result.std}.<br/>
                             {this.props.score ? ` Your score of ${this.props.score} places you in the ${getOrdinalDesc(this.props.percentile)} of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
                         </p>
                         <Graph data={this.props.graphData} score={this.props.score} percentile={this.props.percentile}></Graph>
