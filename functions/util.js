@@ -20,7 +20,7 @@ exports.manualPlaysUpdate = (games, maxPages, minDate, maxDate, flush) => {
                 var gameRef = db.collection('games').doc(game.id);
                 console.log('Started updating plays for: ' + game.name);
                 var playsUrl = getPlaysUrl(game);
-                return updatePlaysRecursively(gameRef, game, playsUrl, maxPages, 1);
+                return updatePlaysRecursively(gameRef, playsUrl, maxPages, 1);
             }));
         }).then(function() {
             console.log('Finished updatePlaysPagesRecursively');
@@ -64,7 +64,7 @@ function updatePlaysRecursively(gameRef, playsUrl, maxPages, page) {
         if (nextPage == 0) {
             return Promise.resolve(0);
         }
-        return updatePlaysPagesRecursively(gameRef, playsUrl, maxPages, nextPage);
+        return updatePlaysRecursively(gameRef, playsUrl, maxPages, nextPage);
     });
 }
 
@@ -137,7 +137,7 @@ function getPlayerUserIds(players) {
     .value();
 }
 
-exports.manualStatsUpdate = (games) => {
+exports.manualStatsUpdate = (games, flushScores) => {
     // console.log(games);
     return db.collection('games')
         // .where("needsUpdate", "==", true)
@@ -147,28 +147,39 @@ exports.manualStatsUpdate = (games) => {
             return Promise.all(_.map(exports.docsToArray(gamesSnapshot), game => {
                 var gameRef = db.collection('games').doc(game.id);
                 console.log('Started updating stats for: ' + game.name);
-                return updateResults(gameRef);
+                return updateResults(gameRef, flushScores);
             }));
         }).then(function() {
             console.log('Finished updatePlaysPagesRecursively');
         });
 }
 
-function updateResults(gameRef) {
-    return gameRef
-    .collection('plays')
+function updateResults(gameRef, flushScores) {
+    var playsRef = gameRef.collection('plays');
+
+    if (flushScores) {
+        playsRef = playsRef.where();
+    }
+
+    return playsRef
     .get()
     .then(function(playsSnapshot) {
         console.log("Starting result calculation");
         var plays = exports.docsToArray(playsSnapshot);
-        var results = addToResults(plays, []);
+        var rawResults = addToPlaysResults(plays, []);
         // console.log(results);
         console.log("Finished result calculation");
 
         console.log("Starting stats calculation");
-        var results = _.map(results, (result) => {
+        var results = _(rawResults)
+        .filter((result) => {
+            // We only want results with scores
+            return ! _.isEmpty(result.scores);
+        })
+        .map((result) => {
             return addStatsToResult(result);
-        });
+        })
+        .value();
         console.log("Finished stats calculation");
 
         var playerCounts = getPlayersCounts(results);
@@ -180,9 +191,7 @@ function updateResults(gameRef) {
         results.push(getGroupedResultsForPlayerCount(results, ""));
     
         gameRef.update({
-            scores: [], // Temporary
-            scoreGroups: [], // Temporary
-            data: [], // Temporary
+            // stats: admin.firestore.FieldValue.delete(), // Temporary
             playerCounts: playerCounts,
             results: results,
         });
@@ -210,10 +219,15 @@ function getGroupedResultsForPlayerCount(results, playerCount) {
         })
     }, {});
 
-    var groupedResult = getStats(allScores);
-    groupedResult.trimmedScoreCount = _.reduce(playerCountResults, (count, result) => { 
-        return count + result.trimmedScoreCount;
-    }, 0);
+    var groupedResult = {};
+
+    if (_.keys(allScores).length !== 0) {
+        groupedResult = getStats(allScores);
+        groupedResult.trimmedScoreCount = _.reduce(playerCountResults, (count, result) => { 
+            return count + result.trimmedScoreCount;
+        }, 0);
+    }
+
     groupedResult.playerCount = playerCount;
     groupedResult.scores = allScores;
 
@@ -223,15 +237,20 @@ function getGroupedResultsForPlayerCount(results, playerCount) {
 function getTrimmedScores(explodedScores, scores) {
     var meanVal = mean(explodedScores);
     var stdVal = std(explodedScores);
+    var stdToRemove = 3;
 
-    return explodedScores, _.pickBy(scores, (count, score) => {
+    return _.pickBy(scores, (count, score) => {
         // Three standard deviations from the mean is a common cut-off in practice
-        return score > (meanVal - (stdVal * 3)) && score < (meanVal + (stdVal * 3));
+        return score > (meanVal - (stdVal * stdToRemove)) && score < (meanVal + (stdVal * stdToRemove));
     });
 }
 
 function getStats(scores) {
     var explodedScores = getExplodedScores(scores);
+
+    if (explodedScores.length === 0) {
+        return {scoreCount: explodedScores.length};
+    }
     
     return {
         // TODO: Don't parse int, parse dec
@@ -250,6 +269,7 @@ function addStatsToResult(result) {
     
     var explodedScores = getExplodedScores(result.scores);
     var trimmedScores = getTrimmedScores(explodedScores, result.scores);
+    result.scores = trimmedScores;
     
     var stats = getStats(trimmedScores);
     stats.trimmedScoreCount = explodedScores.length - stats.scoreCount;
@@ -266,7 +286,7 @@ function getExplodedScores(scores) {
     }, []);
 }
 
-function addToResults(dirtyPlays, results) {
+function addToPlaysResults(dirtyPlays, results) {
     var cleanPlays = getCleanPlays(dirtyPlays);
     _.forEach(cleanPlays, play => {
         var cleanPlayerScores = getCleanPlayerScores(play.players);

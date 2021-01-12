@@ -9,8 +9,8 @@ const db = admin.firestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
-const lodash = require('lodash');
 const cors = require('cors')({origin: true});
+var _ = require('lodash');
 
 const util = require('./util');
 
@@ -28,9 +28,7 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
                         id: item.$.id,
                         name: item.name.$.value,
                         lastUpdated: null,
-                        needsUpdate: true,
-                        scoreGroups: [],
-                        stats: {}
+                        needsUpdate: true
                     };
 
                     // console.log(game);
@@ -57,7 +55,7 @@ exports.addGames = functions.https.onRequest(async (req, res) => {
 
         var batch = db.batch();
 
-        lodash.forEach(games, function(game) {
+        _.forEach(games, function(game) {
             var newGameRef = db.collection('newgames').doc();
             batch.set(newGameRef, {name: game});
         });
@@ -69,6 +67,8 @@ exports.addGames = functions.https.onRequest(async (req, res) => {
 });
 
 exports.getGame = functions.https.onRequest(async (req, res) => {
+    console.log(req.body);
+    console.log(req.body.game);
     return cors(req, res, () => {
         db.collection('games')
         .doc(req.body.game)
@@ -85,7 +85,9 @@ exports.getGames = functions.https.onRequest(async (req, res) => {
         db.collection('games')
         .orderBy("name")
         .get().then((snapshot) => {
-            var games = util.docsToArray(snapshot);
+            var games = _.map(util.docsToArray(snapshot), (game) => {
+                return _.omit(game, 'results');
+            });
             // console.log(games);
             return res.json( games );
         });

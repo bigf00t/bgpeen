@@ -7,8 +7,9 @@ import * as actions from '../actions';
 import {connect} from 'react-redux';
 import _ from 'lodash';
 import ordinal from 'ordinal';
+import {DebounceInput} from 'react-debounce-input';
 
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles, withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControl from '@material-ui/core/FormControl';
@@ -114,7 +115,7 @@ class MeasureForm extends Component {
         this.setState({[event.target.name]: event.target.value}, () => {
             this.setState({players: ""}, () => {
                 this.setState({place: ""}, () => {
-                    this.setResult();
+                    this.getGameAndSetResults(this.state.game.id);
                 });
             });
         });
@@ -156,6 +157,10 @@ class MeasureForm extends Component {
     }
 
     setGraphData = () => {
+        if (!this.state.result) {
+            return
+        }
+
         var graphPoints =_.reduce(this.state.result.scores, (points, count, score) => { 
             return points.concat([{x: parseInt(score), y: count}]);
         }, []);
@@ -164,11 +169,11 @@ class MeasureForm extends Component {
             datasets: [
                 {
                     data: graphPoints,
-                    label: ["Score"],
+                    label: ["Scores"],
                     // color: 'rgba(63, 81, 181, 1)',
-                    backgroundColor: 'rgba(63, 81, 181, 0.25)',
-                    borderColor: 'rgba(63, 81, 181, 0.5)',
-                    pointBackgroundColor: 'rgba(63, 81, 181, 1)',
+                    // backgroundColor: 'rgba(63, 81, 181, 0.25)',
+                    // borderColor: 'rgba(63, 81, 181, 0.5)',
+                    // pointBackgroundColor: 'rgba(63, 81, 181, 1)',
                     // borderWidth: 1,
                     fill: true,
                     // showLine: false,
@@ -188,12 +193,20 @@ class MeasureForm extends Component {
         this.setState({graphData: graphData});
     }
 
+    getGameAndSetResults = (gameId) => {
+        this.props.fetchGame(gameId).then(() => {
+            // console.log(this.props.data.games);
+            var loadedGame = _.find(this.props.data.games, (game) => game.id === gameId);
+            this.setState({game: loadedGame}, () => {
+                this.setResult();
+            });
+        });
+    };
+
     componentDidMount() {
         this.props.fetchGames().then(() => {
-            if (this.props.data) {
-                this.setState({game: this.props.data[0]}, () => {
-                    this.setResult();
-                });
+            if (this.props.data.games) {
+                this.getGameAndSetResults(this.props.data.games[0].id);
             }
         });
     }
@@ -202,89 +215,90 @@ class MeasureForm extends Component {
         const classes = this.props.classes;
 
         return (
-                <form className={classes.root} onSubmit={this.handleSubmit}>
-                    <FormGroup row className={classes.formGroup}>
-                        {/* <FormControl variant="outlined" className={classes.formControl}>
-                            <GameSelect game={this.state.game} data={this.getSortedGames()} handleGameChange={this.handleGameChange} />
-                        </FormControl> */}
-                        <FormControl className={classes.formControl}>
-                            <InputLabel id="game-label">Game</InputLabel>
-                            <Select
-                                labelid="game-label"
-                                id="game"
-                                name="game"
-                                value={this.state.game}
-                                onChange={this.handleGameChange}
-                            >
-                            {this.props.data.length > 0 ? this.props.data.map((game) => (
-                                <MenuItem value={game} key={game.id}>{game.name}</MenuItem>
-                            )) : ''}
-                            </Select>
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <InputLabel id="players-label" shrink={true}>Players</InputLabel>
-                            <Select
-                                labelid="players-label"
-                                id="players"
-                                name="players"
-                                // multiple
-                                value={this.state.players}
-                                onChange={this.handlePlayersChange}
-                                displayEmpty
-                                MenuProps={MenuProps}
-                            >
+            <form className={classes.root} onSubmit={this.handleSubmit}>
+                <FormGroup row className={classes.formGroup}>
+                    {/* <FormControl variant="outlined" className={classes.formControl}>
+                        <GameSelect game={this.state.game} data={this.getSortedGames()} handleGameChange={this.handleGameChange} />
+                    </FormControl> */}
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id="game-label">Game</InputLabel>
+                        <Select
+                            labelid="game-label"
+                            id="game"
+                            name="game"
+                            value={this.state.game}
+                            onChange={this.handleGameChange}
+                        >
+                        {this.props.data.games.length > 0 ? this.props.data.games.map((game) => (
+                            <MenuItem value={game} key={game.id}>{game.name}</MenuItem>
+                        )) : ''}
+                        </Select>
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id="players-label" shrink={true}>Players</InputLabel>
+                        <Select
+                            labelid="players-label"
+                            id="players"
+                            name="players"
+                            // multiple
+                            value={this.state.players}
+                            onChange={this.handlePlayersChange}
+                            displayEmpty
+                            MenuProps={MenuProps}
+                        >
+                        <MenuItem key="" value="">Any</MenuItem>
+                        {this.state.game.playerCounts ? this.state.game.playerCounts.map((count) => (
+                            <MenuItem key={count} value={count}>{count}</MenuItem>
+                        )) : ""}
+                        </Select>
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <DebounceInput
+                            element={TextField}
+                            debounceTimeout={300}
+                            className={classes.textField}
+                            id="score" 
+                            name="score" 
+                            label="Your Score"
+                            value={this.state.score}
+                            onChange={this.handleScoreChange} />
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id="place-label" shrink={true}>Place</InputLabel>
+                        <Select
+                            labelid="place-label"
+                            id="place"
+                            name="place" 
+                            value={this.state.place}
+                            onChange={this.handlePlaceChange}
+                            input={<Input />}
+                            displayEmpty
+                            MenuProps={MenuProps}
+                        >
                             <MenuItem key="" value="">Any</MenuItem>
-                            {this.state.game.playerCounts ? this.state.game.playerCounts.map((count) => (
-                                <MenuItem key={count} value={count}>{count}</MenuItem>
-                            )) : ""}
-                            </Select>
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <TextField 
-                                className={classes.textField}
-                                id="score" 
-                                name="score" 
-                                label="Your Score"
-                                value={this.state.score}
-                                onChange={this.handleScoreChange}
-                                />
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <InputLabel id="place-label" shrink={true}>Place</InputLabel>
-                            <Select
-                                labelid="place-label"
-                                id="place"
-                                name="place" 
-                                value={this.state.place}
-                                onChange={this.handlePlaceChange}
-                                input={<Input />}
-                                displayEmpty
-                                MenuProps={MenuProps}
-                            >
-                                <MenuItem key="" value="">Any</MenuItem>
-                            {this.state.validPlayerPlaces.map((count) => (
-                                <MenuItem key={count} value={count}>{ordinal(count)}</MenuItem>
-                            ))}
-                            </Select>
-                        </FormControl>
-                    </FormGroup>
-                    <MeasureResult 
-                        open={this.state.resultOpen}
-                        gameName={this.state.game?.name}
-                        score={this.state.score}
-                        place={this.state.place}
-                        players={this.state.players}
-                        result={this.state.result}
-                        graphData={this.state.graphData}
-                        percentile={this.state.percentile}
-                    />
-                    <AlertDialog 
-                        title={this.state.errorTitle}
-                        content={this.state.errorMessage}
-                        open={this.state.errorOpen}
-                        setOpen={this.setErrorOpen}
-                    />
-                </form>
+                        {this.state.validPlayerPlaces.map((count) => (
+                            <MenuItem key={count} value={count}>{ordinal(count)}</MenuItem>
+                        ))}
+                        </Select>
+                    </FormControl>
+                </FormGroup>
+                <MeasureResult 
+                    open={this.state.resultOpen}
+                    gameName={this.state.game?.name}
+                    score={this.state.score}
+                    place={this.state.place}
+                    players={this.state.players}
+                    result={this.state.result}
+                    graphData={this.state.graphData}
+                    percentile={this.state.percentile}
+                />
+                <AlertDialog 
+                    title={this.state.errorTitle}
+                    content={this.state.errorMessage}
+                    open={this.state.errorOpen}
+                    setOpen={this.setErrorOpen}
+                />
+            </form>
         );
     }
 }
@@ -293,4 +307,4 @@ const mapStateToProps = ({data}) => {
   return { data }
 }
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(MeasureForm));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(MeasureForm)));

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import _ from 'lodash';
 import ordinal from 'ordinal';
@@ -18,6 +18,14 @@ const getOrdinalDesc = (percentile) => {
   return `${position} ${percentile > 50 ? 100 - percentile : percentile}% (${percentile > 0 ? ordinal(percentile) : "0th"} percentile)`;
 }
 
+const getTitle = (percentile) => {
+  if (window.location.toString().includes('bgpeen')) {
+    return `Your bgpeen is ${percentile < 50 ? 'small': 'big'}!`
+  } else {
+    return `You're ${percentile < 50 ? 'bad': 'good'} at game!`;
+  }
+}
+
 class MeasureResult extends Component {
     render () {
         const classes = this.props.classes;
@@ -26,18 +34,26 @@ class MeasureResult extends Component {
             if (!_.isEmpty(this.props.graphData)) {
                 return (
                     <Paper className={classes.paper}>
-                        <h3>
-                            Your score compared to other {this.props.place ? `${ordinal(this.props.place)} place` : ''} scores 
-                            in {this.props.players ? `${this.props.players} player` : ''} games of {this.props.gameName}. 
-                        </h3>
-                        <p>
-                            There are {this.props.result.scoreCount} valid scores for {this.props.gameName} with the same place(s) and player count(s).<br/>
-                            {this.props.result.trimmedScoreCount} scores were excluded for being outliers (too many standard deviations away from the mean).<br/>
-                            The mean (average) of valid scores is {this.props.result.mean}, the mode (most common) is {this.props.result.mode}, the median (middle) is {this.props.result.median} and the standard deviation is {this.props.result.std}.<br/>
-                            {this.props.score ? ` Your score of ${this.props.score} places you in the ${getOrdinalDesc(this.props.percentile)} of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
-                        </p>
-                        <Graph data={this.props.graphData} score={this.props.score} percentile={this.props.percentile}></Graph>
-                    </Paper>
+                      <Fragment>{this.props.score ? <h1>{getTitle(this.props.percentile)}</h1> : ""}</Fragment>
+                      {/* <h3>
+                          Your score compared to other {this.props.place ? `${ordinal(this.props.place)} place` : ''} scores 
+                          in {this.props.players ? `${this.props.players} player` : ''} games of {this.props.gameName}. 
+                      </h3> */}
+                      <p>
+                          There are {this.props.result.scoreCount} valid {this.props.place ? `${ordinal(this.props.place)} place ` : ''} 
+                          scores {this.props.players ? ` for ${this.props.players} player games of` : 'for'} {this.props.gameName}.<br/>
+                          {this.props.result.trimmedScoreCount} scores were excluded for being outliers (too many standard deviations away from the mean).<br/>
+                          The mean (average) of valid scores is {this.props.result.mean}, the mode (most common) is {this.props.result.mode}, the median (middle) is {this.props.result.median} and the standard deviation is {this.props.result.std}.<br/>
+                          {this.props.score ? ` Your score of ${this.props.score} places you in the ${getOrdinalDesc(this.props.percentile)} of these scores. ${getPercentileQuip(this.props.percentile)}` : ""}
+                      </p>
+                      <Graph 
+                        data={this.props.graphData}
+                        score={this.props.score}
+                        percentile={this.props.percentile}
+                        mean={this.props.result.mean}
+                        std={this.props.result.std}>
+                      </Graph>
+                  </Paper>
                 );
             } else {
                 // return (

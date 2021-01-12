@@ -10,7 +10,7 @@ class Menu extends Component {
         <AppBar position="static" color="default">
             <Toolbar>
             <Typography variant="h5" color="inherit">
-                bgpeen
+                {window.location.toString().includes('bgpeen') ? "bgpeen" : "amigoodat.games"}
             </Typography>
             <Typography variant="subtitle2" color="inherit">
                 &nbsp;beta

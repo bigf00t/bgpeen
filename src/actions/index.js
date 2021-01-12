@@ -1,7 +1,7 @@
-import {FETCH_GAMES} from '../actions/types';
+import {FETCH_GAME, FETCH_GAMES} from '../actions/types';
 
 const isLocal = () => {
-  return (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  return window.location.hostname.includes("localhost");
 }
 
 // TODO: This could be cleaner
@@ -16,13 +16,39 @@ const getFunctionUrl = (functionName) => {
   return host + functionName
 }
 
+export const fetchGame = (gameId) => async dispatch => {
+  return fetch(getFunctionUrl("getGame"), {
+      method: 'POST',
+      mode: 'cors',
+      headers:  {
+          'Access-Control-Allow-Origin': isLocal() ? '*' : '',
+          'Content-Type': 'application/json'
+      },
+      body: `{"game": "${gameId}"}`
+    })
+    .then((response) => {
+        // console.log(response);
+        return response.json();
+    })
+    .then((json) => {
+      dispatch({
+        type: FETCH_GAME,
+        payload: json
+      });
+      // console.log(json);
+    })
+    .catch((error) => {
+        console.log("Request failed", error);
+    });
+};
+
 export const fetchGames = () => async dispatch => {
   return fetch(getFunctionUrl("getGames"), {
       method: 'POST',
       mode: 'cors',
-      headers: isLocal() ? {
-          'Access-Control-Allow-Origin': '*'
-      } : {}
+      headers:  {
+          'Access-Control-Allow-Origin': isLocal() ? '*' : ''
+      },
     })
     .then((response) => {
         // console.log(response);
