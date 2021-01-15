@@ -194,13 +194,16 @@ class MeasureForm extends Component {
     }
 
     getGameAndSetResults = (gameId) => {
-        this.props.fetchGame(gameId).then(() => {
-            // console.log(this.props.data.games);
-            var loadedGame = _.find(this.props.data.games, (game) => game.id === gameId);
-            this.setState({game: loadedGame}, () => {
-                this.setResult();
+        var loadedGame = _.find(this.props.data.games, (game) => game.id === gameId);
+        if (loadedGame.results) {
+            this.setState({game: loadedGame}, () => this.setResult());
+        } else {
+            this.props.fetchGame(gameId).then(() => {
+                // console.log(this.props.data.games);
+                loadedGame = _.find(this.props.data.games, (game) => game.id === gameId);
+                this.setState({game: loadedGame}, () => this.setResult());
             });
-        });
+        }
     };
 
     componentDidMount() {

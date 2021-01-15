@@ -1,41 +1,34 @@
 import {FETCH_GAME, FETCH_GAMES} from '../actions/types';
+import FireStoreParser from 'firestore-parser';
+import _ from 'lodash';
 
 const isLocal = () => {
   return window.location.hostname.includes("localhost");
 }
 
 // TODO: This could be cleaner
-const getFunctionUrl = (functionName) => {
-  var host = "https://us-central1-bgpeen-1fc16.cloudfunctions.net/";
-
+const getHost = () => {
   // If this is running locally, use the function emulator host
-  if (isLocal()) {
-    host = "http://localhost:5001/bgpeen-1fc16/us-central1/";
-  }
-
-  return host + functionName
+  return isLocal() ? 
+  "http://localhost:5002/v1/projects/bgpeen-1fc16/databases/(default)/documents/" :
+  "https://firestore.googleapis.com/v1/projects/bgpeen-1fc16/databases/(default)/documents/";
 }
 
 export const fetchGame = (gameId) => async dispatch => {
-  return fetch(getFunctionUrl("getGame"), {
-      method: 'POST',
+  return fetch(`${getHost()}games/${gameId}`, {
+      method: 'GET',
       mode: 'cors',
-      headers:  {
-          'Access-Control-Allow-Origin': isLocal() ? '*' : '',
-          'Content-Type': 'application/json'
-      },
-      body: `{"game": "${gameId}"}`
+      headers: {}
     })
     .then((response) => {
-        // console.log(response);
         return response.json();
     })
+    .then(json => FireStoreParser(json))
     .then((json) => {
       dispatch({
         type: FETCH_GAME,
-        payload: json
+        payload: json.fields
       });
-      // console.log(json);
     })
     .catch((error) => {
         console.log("Request failed", error);
@@ -43,23 +36,29 @@ export const fetchGame = (gameId) => async dispatch => {
 };
 
 export const fetchGames = () => async dispatch => {
-  return fetch(getFunctionUrl("getGames"), {
-      method: 'POST',
+  var mask = "?mask.fieldPaths=name&mask.fieldPaths=id&mask.fieldPaths=playerCounts";
+  return fetch(`${getHost()}games${mask}`, {
+      method: 'GET',
       mode: 'cors',
-      headers:  {
-          'Access-Control-Allow-Origin': isLocal() ? '*' : ''
-      },
+      headers: {},
     })
     .then((response) => {
-        // console.log(response);
         return response.json();
     })
+    .then(json => {
+      return FireStoreParser(json)
+    })
     .then((json) => {
+      var gamesJson = _(json.documents)
+        .filter(doc => ! _.isEmpty(doc.fields))
+        .map(doc => doc.fields)
+        .sortBy(["name"])
+        .value();
+      
       dispatch({
         type: FETCH_GAMES,
-        payload: json
+        payload: gamesJson
       });
-      // console.log(json);
     })
     .catch((error) => {
         console.log("Request failed", error);

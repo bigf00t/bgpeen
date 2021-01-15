@@ -16,37 +16,14 @@ const util = require('./util');
 
 exports.addGame = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
-        // TODO: Pull into function
-        axios.get('https://api.geekdo.com/xmlapi2/search?query=' + req.body + '&exact=1&type=boardgame')
-            .then(function (result) {
-                var json = convert.xml2js(result.data, {compact: true, attributesKey: '$'});
-                if (json.items.item != undefined) {
-                    var item = json.items.item.length > 1 ? json.items.item[0] : json.items.item;
-                    const gameRef = db.collection('games').doc(item.$.id);
-                            
-                    var game = {
-                        id: item.$.id,
-                        name: item.name.$.value,
-                        lastUpdated: null,
-                        needsUpdate: true
-                    };
-
-                    // console.log(game);
-                    gameRef.set(game).then(function() {
-                        res.status(200).send({
-                            id: item.$.id,
-                            ...game
-                        });
-                    })
-                } else {
-                    res.send(json); 
-                }
-            })
-            .catch(function (e) {
-                console.log(e);
-                res.send({error: e});
-            });
+        util
+        .addGame(req.body.name)
+        .then((newGame) => res.status(200).send(newGame))
+        .catch(function (e) {
+            console.log(e);
+            res.send({error: e});
         });
+    });
 });
 
 exports.addGames = functions.https.onRequest(async (req, res) => {
@@ -62,34 +39,6 @@ exports.addGames = functions.https.onRequest(async (req, res) => {
 
         batch.commit().then(function() {
             res.status(200).send({});
-        });
-    });
-});
-
-exports.getGame = functions.https.onRequest(async (req, res) => {
-    console.log(req.body);
-    console.log(req.body.game);
-    return cors(req, res, () => {
-        db.collection('games')
-        .doc(req.body.game)
-        .get().then((gameSnapshot) => {
-            var game = gameSnapshot.data();
-            return res.json(game);
-        });
-    });
-});
-
-exports.getGames = functions.https.onRequest(async (req, res) => {
-    return cors(req, res, () => {
-        // console.log('getGames');
-        db.collection('games')
-        .orderBy("name")
-        .get().then((snapshot) => {
-            var games = _.map(util.docsToArray(snapshot), (game) => {
-                return _.omit(game, 'results');
-            });
-            // console.log(games);
-            return res.json( games );
         });
     });
 });

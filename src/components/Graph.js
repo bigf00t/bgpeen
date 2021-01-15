@@ -73,7 +73,6 @@ var getOptions = (props) => {
           zeroLineColor: props.theme.palette.text.secondary
         },
         ticks: {
-          beginAtZero: true,
           fontColor: props.theme.palette.text.secondary
         },
       }]

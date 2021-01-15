@@ -9,6 +9,56 @@ const {mean, mode, median, std} = require('mathjs');
 
 var _ = require('lodash');
 
+exports.addGame = (name) => {
+    return axios.get(`https://api.geekdo.com/xmlapi2/search?query=${name}&exact=1&type=boardgame`)
+        .then(function (result) {
+            var json = convert.xml2js(result.data, {compact: true, attributesKey: '$'});
+            if (json.items.item === undefined) {
+                return Promise.resolve("No search results found");
+            }
+            
+            var item = json.items.item.length > 1 ? json.items.item[0] : json.items.item;
+
+            return delay(2000, item.$.id)
+            .then(function (id) {
+                return axios.get(`https://api.geekdo.com/xmlapi2/things?id=${id}`)
+            })
+            .then(function (result) {
+                var item = convert.xml2js(result.data, {compact: true, attributesKey: '$'}).items.item;
+                var name = Array.isArray(item.name) ? _.find(item.name, (name) => name.$.type === "primary").$.value : item.name.$.value;
+                var suggestedplayerspoll = _.find(item.poll, (poll) => poll.$.name === "suggested_numplayers");
+                var suggestedplayers = _.reduce(suggestedplayerspoll.results, (redPoll, results) => {
+                    redPoll[results.$.numplayers] = _.reduce(results.result, (redResults, result) => {
+                        redResults[result.$.value] = parseInt(result.$.numvotes);
+                        return redResults;
+                    }, {})
+                    return redPoll;
+                }, {});
+                        
+                var newGame = {
+                    id: item.$.id,
+                    name: name,
+                    thumbnail: item.thumbnail._text,
+                    image: item.image._text,
+                    description: item.description._text,
+                    yearpublished: parseInt(item.yearpublished.$.value),
+                    minplayers: parseInt(item.minplayers.$.value),
+                    maxplayers: parseInt(item.maxplayers.$.value),
+                    playingtime: parseInt(item.playingtime.$.value),
+                    suggestedplayers: suggestedplayers,
+                    lastUpdated: null,
+                    oldestPlay: null,
+                    newestPlay: null,
+                    needsUpdate: true
+                };
+    
+                return db.collection('games').doc(newGame.id).set(newGame, { merge: true }).then(() => {
+                    return newGame;
+                });
+            });
+    });
+}
+
 exports.manualPlaysUpdate = (games, maxPages, minDate, maxDate, flush) => {
     // console.log(games);
     return db.collection('games')
@@ -20,10 +70,15 @@ exports.manualPlaysUpdate = (games, maxPages, minDate, maxDate, flush) => {
                 var gameRef = db.collection('games').doc(game.id);
                 console.log('Started updating plays for: ' + game.name);
                 var playsUrl = getPlaysUrl(game);
-                return updatePlaysRecursively(gameRef, playsUrl, maxPages, 1);
+                return updatePlaysRecursively(gameRef, playsUrl, maxPages, 1)
+                .then(function(plays) {
+                    console.log('Finished updatePlaysPagesRecursively');
+                    return updateResults(gameRef, game, plays, false);
+                });
             }));
-        }).then(function() {
-            console.log('Finished updatePlaysPagesRecursively');
+        }).then(function(allResults) {
+            console.log('Finished all updates');
+            return Promise.resolve(allResults);
         });
 }
 
@@ -41,7 +96,7 @@ exports.docsToArray = (snapshot) => {
 
 function getPlaysUrl(game) {
     var minDate = _.defaultTo(game.lastUpdated, '');
-    return 'https://api.geekdo.com/xmlapi2/plays?id=' + game.id + '&mindate=' + minDate + '&page=';
+    return `https://api.geekdo.com/xmlapi2/plays?id=${game.id}&mindate=${minDate}&page=`;
 }
 
 // From https://stackoverflow.com/questions/22707475/how-to-make-a-promise-from-settimeout
@@ -52,19 +107,19 @@ function delay(delay, value) {
 function updatePlaysRecursively(gameRef, playsUrl, maxPages, page) {
     console.log("Loading plays page: " + page);
     return updatePlaysPage(gameRef, playsUrl, page)
-    .then(function (remainingPages) {
-        console.log("Remaining pages: " + (remainingPages > (maxPages - page) ? maxPages - page : remainingPages));
-        if (page >= maxPages || remainingPages == 0) {
-            return Promise.resolve(0);
+    .then(function (pageResult) {
+        console.log("Remaining pages: " + (pageResult.remainingPages > (maxPages - page) ? maxPages - page : pageResult.remainingPages));
+        if (page >= maxPages || pageResult.remainingPages == 0) {
+            //Hit the bottom of the stack
+            return Promise.resolve(pageResult.plays);
         }
-        return delay(2000, page + 1);
-    })
-    .then(function(nextPage){
-        console.log('nextPage = ' + nextPage);
-        if (nextPage == 0) {
-            return Promise.resolve(0);
-        }
-        return updatePlaysRecursively(gameRef, playsUrl, maxPages, nextPage);
+        return delay(2000, page + 1)
+        .then(function(nextPage){
+            return updatePlaysRecursively(gameRef, playsUrl, maxPages, nextPage).then(function(plays) {
+                // Returning plays back up the stack
+                return Promise.resolve(plays.concat(pageResult.plays));
+            });
+        });
     });
 }
 
@@ -95,7 +150,7 @@ function updatePlaysPage(gameRef, playsUrl, page) {
                 var totalPlays = json.plays.$.total;
                 var remainingPages = _.ceil(totalPlays / 100) - page;
 
-                return remainingPages;
+                return {remainingPages: remainingPages, plays: plays};
             }
 
             return null;
@@ -105,7 +160,7 @@ function updatePlaysPage(gameRef, playsUrl, page) {
 function getCleanPlaysFromJson(plays) {
     return _(plays)
     .filter(function(play) { 
-        return play.players != undefined
+        return _.get(play, 'players.player[0]');
     })
     .map(function(play) {
         var players = getCleanPlayersFromJson(play.players.player);
@@ -147,59 +202,70 @@ exports.manualStatsUpdate = (games, flushScores) => {
             return Promise.all(_.map(exports.docsToArray(gamesSnapshot), game => {
                 var gameRef = db.collection('games').doc(game.id);
                 console.log('Started updating stats for: ' + game.name);
-                return updateResults(gameRef, flushScores);
+
+                var playsRef = gameRef.collection('plays');
+
+                if (flushScores) {
+                    playsRef = playsRef.where();
+                }
+            
+                return playsRef
+                .get()
+                .then(function(playsSnapshot) {
+                    var plays = exports.docsToArray(playsSnapshot);
+                    return updateResults(gameRef, game, plays, true);
+                });
             }));
         }).then(function() {
-            console.log('Finished updatePlaysPagesRecursively');
+            console.log('Finished manualStatsUpdate');
         });
 }
 
-function updateResults(gameRef, flushScores) {
-    var playsRef = gameRef.collection('plays');
+function updateResults(gameRef, game, plays, flush) {
+    console.log("Starting result calculation");
+    var existingResults = flush || game.results === undefined ? [] : game.results;
+    var rawResults = addToPlaysResults(plays, existingResults);
+    // console.log(rawResults);
+    // console.log(results);
+    // console.log(game);
+    console.log("Finished result calculation");
 
-    if (flushScores) {
-        playsRef = playsRef.where();
-    }
+    console.log("Starting stats calculation");
+    var results = _(rawResults)
+    .filter((result) => {
+        // We only want results with scores and valid player counts
+        return ! _.isEmpty(result.scores) && result.playerCount >= game.minplayers && result.playerCount <= game.maxplayers && result.playerPlace;
+    })
+    .map((result) => {
+        return addStatsToResult(result);
+    })
+    .value();
+    console.log("Finished stats calculation");
 
-    return playsRef
-    .get()
-    .then(function(playsSnapshot) {
-        console.log("Starting result calculation");
-        var plays = exports.docsToArray(playsSnapshot);
-        var rawResults = addToPlaysResults(plays, []);
-        // console.log(results);
-        console.log("Finished result calculation");
+    var playerCounts = getPlayersCounts(results);
+    // console.log(results);
 
-        console.log("Starting stats calculation");
-        var results = _(rawResults)
-        .filter((result) => {
-            // We only want results with scores
-            return ! _.isEmpty(result.scores);
-        })
-        .map((result) => {
-            return addStatsToResult(result);
-        })
-        .value();
-        console.log("Finished stats calculation");
-
-        var playerCounts = getPlayersCounts(results);
-
-        _.forEach(playerCounts, (playerCount) => {
-            results.push(getGroupedResultsForPlayerCount(results, playerCount));
-        });
-
-        results.push(getGroupedResultsForPlayerCount(results, ""));
-    
-        gameRef.update({
-            // stats: admin.firestore.FieldValue.delete(), // Temporary
-            playerCounts: playerCounts,
-            results: results,
-        });
+    _.forEach(playerCounts, (playerCount) => {
+        results.push(getGroupedResultsForPlayerCount(results, playerCount));
     });
+
+    results.push(getGroupedResultsForPlayerCount(results, ""));
+    // console.log(results);
+
+    gameRef.update({
+        // stats: admin.firestore.FieldValue.delete(), // Temporary
+        playerCounts: playerCounts,
+        results: results,
+    });
+
+    return Promise.resolve(results);
 }
 
 function getPlayersCounts(results) {
     return _(results)
+    .filter((group) => {
+        return ! _.isEmpty(group.scores);
+    })
     .map((group) => {
         return group.playerCount;
     })
@@ -219,14 +285,10 @@ function getGroupedResultsForPlayerCount(results, playerCount) {
         })
     }, {});
 
-    var groupedResult = {};
-
-    if (_.keys(allScores).length !== 0) {
-        groupedResult = getStats(allScores);
-        groupedResult.trimmedScoreCount = _.reduce(playerCountResults, (count, result) => { 
-            return count + result.trimmedScoreCount;
-        }, 0);
-    }
+    var groupedResult = getStats(allScores);
+    groupedResult.trimmedScoreCount = _.reduce(playerCountResults, (count, result) => { 
+        return count + result.trimmedScoreCount;
+    }, 0);
 
     groupedResult.playerCount = playerCount;
     groupedResult.scores = allScores;
@@ -241,16 +303,12 @@ function getTrimmedScores(explodedScores, scores) {
 
     return _.pickBy(scores, (count, score) => {
         // Three standard deviations from the mean is a common cut-off in practice
-        return score > (meanVal - (stdVal * stdToRemove)) && score < (meanVal + (stdVal * stdToRemove));
+        return score >= (meanVal - (stdVal * stdToRemove)) && score <= (meanVal + (stdVal * stdToRemove));
     });
 }
 
 function getStats(scores) {
     var explodedScores = getExplodedScores(scores);
-
-    if (explodedScores.length === 0) {
-        return {scoreCount: explodedScores.length};
-    }
     
     return {
         // TODO: Don't parse int, parse dec
@@ -263,10 +321,6 @@ function getStats(scores) {
 }
 
 function addStatsToResult(result) {
-    if (_.keys(result.scores).length === 0) {
-        return null;
-    }
-    
     var explodedScores = getExplodedScores(result.scores);
     var trimmedScores = getTrimmedScores(explodedScores, result.scores);
     result.scores = trimmedScores;
