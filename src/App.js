@@ -9,7 +9,7 @@ import Menu from './components/Menu';
 import MeasureForm from './components/MeasureForm';
 
 function App() {
-  document.title = window.location.toString().includes('bgpeen') ? "bgpeen - measure your scores" : "amigoodat.games - well are you?";
+  document.title = window.location.toString().includes('bgpeen') ? "bgpeen - measure your scores" : "good at games? how do you know?";
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const theme = React.useMemo(

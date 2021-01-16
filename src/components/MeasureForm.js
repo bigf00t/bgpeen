@@ -198,7 +198,7 @@ class MeasureForm extends Component {
         if (loadedGame.results) {
             this.setState({game: loadedGame}, () => this.setResult());
         } else {
-            this.props.fetchGame(gameId).then(() => {
+            this.props.fetchGameResults(gameId).then(() => {
                 // console.log(this.props.data.games);
                 loadedGame = _.find(this.props.data.games, (game) => game.id === gameId);
                 this.setState({game: loadedGame}, () => this.setResult());

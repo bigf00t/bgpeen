@@ -1,4 +1,4 @@
-import {FETCH_GAME, FETCH_GAMES} from '../actions/types';
+import {FETCH_GAME_RESULTS, FETCH_GAMES} from '../actions/types';
 
 const gamesState = {
   games: []
@@ -6,7 +6,7 @@ const gamesState = {
 
 export default (state = gamesState, action) => {
     switch(action.type) {
-      case FETCH_GAME:
+      case FETCH_GAME_RESULTS:
         return {
           ...state,
           games: [
@@ -17,7 +17,7 @@ export default (state = gamesState, action) => {
 
               return {
                 ...game,
-                results: action.payload.results
+                ...action.payload
               }
             })
           ]};

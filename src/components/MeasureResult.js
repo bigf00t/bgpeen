@@ -31,14 +31,10 @@ class MeasureResult extends Component {
         const classes = this.props.classes;
 
         if (this.props.open) {
-            if (!_.isEmpty(this.props.graphData)) {
+            if (!_.isEmpty(this.props.graphData) && this.props.result) {
                 return (
                     <Paper className={classes.paper}>
                       <Fragment>{this.props.score ? <h1>{getTitle(this.props.percentile)}</h1> : ""}</Fragment>
-                      {/* <h3>
-                          Your score compared to other {this.props.place ? `${ordinal(this.props.place)} place` : ''} scores 
-                          in {this.props.players ? `${this.props.players} player` : ''} games of {this.props.gameName}. 
-                      </h3> */}
                       <p>
                           There are {this.props.result.scoreCount} valid {this.props.place ? `${ordinal(this.props.place)} place ` : ''} 
                           scores {this.props.players ? ` for ${this.props.players} player games of` : 'for'} {this.props.gameName}.<br/>

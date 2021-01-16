@@ -1,5 +1,7 @@
 import firebase from 'firebase/app';
 import 'firebase/analytics';
+import "firebase/performance";
+import "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAYdGDedLLPfXINfadAJiALOrmZLRaToH8",
@@ -13,4 +15,8 @@ const firebaseConfig = {
 
 export const fire = firebase.initializeApp(firebaseConfig);
 fire.analytics();
-firebase.performance();
+export const perf = fire.performance();
+export const db = fire.firestore();
+if (window.location.hostname === "localhost") {
+  db.useEmulator("localhost", 5002);
+}

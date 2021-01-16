@@ -46,10 +46,10 @@ exports.addGame = (name) => {
                     maxplayers: parseInt(item.maxplayers.$.value),
                     playingtime: parseInt(item.playingtime.$.value),
                     suggestedplayers: suggestedplayers,
-                    lastUpdated: null,
-                    oldestPlay: null,
-                    newestPlay: null,
-                    needsUpdate: true
+                    // lastUpdated: null,
+                    // oldestPlay: null,
+                    // newestPlay: null,
+                    // needsUpdate: true
                 };
     
                 return db.collection('games').doc(newGame.id).set(newGame, { merge: true }).then(() => {
@@ -73,7 +73,8 @@ exports.manualPlaysUpdate = (games, maxPages, minDate, maxDate, flush) => {
                 return updatePlaysRecursively(gameRef, playsUrl, maxPages, 1)
                 .then(function(plays) {
                     console.log('Finished updatePlaysPagesRecursively');
-                    return updateResults(gameRef, game, plays, false);
+                    var resultsRef = db.collection('games').doc(game.id);
+                    return updateResults(resultsRef, game, plays, false)
                 });
             }));
         }).then(function(allResults) {
@@ -200,65 +201,58 @@ exports.manualStatsUpdate = (games, flushScores) => {
         .get()
         .then(function(gamesSnapshot) {
             return Promise.all(_.map(exports.docsToArray(gamesSnapshot), game => {
-                var gameRef = db.collection('games').doc(game.id);
                 console.log('Started updating stats for: ' + game.name);
 
-                var playsRef = gameRef.collection('plays');
+                var playsRef = db.collection('games').doc(game.id).collection('plays');
+                var resultsRef = db.collection('results').doc(game.id);
 
-                if (flushScores) {
-                    playsRef = playsRef.where();
-                }
-            
                 return playsRef
-                .get()
-                .then(function(playsSnapshot) {
-                    var plays = exports.docsToArray(playsSnapshot);
-                    return updateResults(gameRef, game, plays, true);
-                });
+                    .get()
+                    .then(function(playsSnapshot) {
+                        var plays = exports.docsToArray(playsSnapshot);
+                        return updateResults(resultsRef, game, plays, true);
+                    });
             }));
         }).then(function() {
             console.log('Finished manualStatsUpdate');
         });
 }
 
-function updateResults(gameRef, game, plays, flush) {
-    console.log("Starting result calculation");
-    var existingResults = flush || game.results === undefined ? [] : game.results;
-    var rawResults = addToPlaysResults(plays, existingResults);
-    // console.log(rawResults);
-    // console.log(results);
-    // console.log(game);
-    console.log("Finished result calculation");
+function updateResults(resultsRef, game, plays, flush) {
+    return resultsRef
+    .get()
+    .then(function(resultsSnapshot) {
+        console.log("Starting result calculation");
+        var existingResults = resultsSnapshot.data();
+        var resultsToAddTo = flush || existingResults === undefined ? [] : existingResults;
+        var rawResults = addToPlaysResults(plays, resultsToAddTo);
+        console.log("Finished result calculation");
 
-    console.log("Starting stats calculation");
-    var results = _(rawResults)
-    .filter((result) => {
-        // We only want results with scores and valid player counts
-        return ! _.isEmpty(result.scores) && result.playerCount >= game.minplayers && result.playerCount <= game.maxplayers && result.playerPlace;
-    })
-    .map((result) => {
-        return addStatsToResult(result);
-    })
-    .value();
-    console.log("Finished stats calculation");
+        console.log("Starting stats calculation");
+        var results = _(rawResults)
+        .filter((result) => {
+            // We only want results with scores and valid player counts
+            return ! _.isEmpty(result.scores) && result.playerCount >= game.minplayers && result.playerCount <= game.maxplayers && result.playerPlace;
+        })
+        .map((result) => {
+            return addStatsToResult(result);
+        })
+        .value();
+        console.log("Finished stats calculation");
 
-    var playerCounts = getPlayersCounts(results);
-    // console.log(results);
+        var playerCounts = getPlayersCounts(results);
 
-    _.forEach(playerCounts, (playerCount) => {
-        results.push(getGroupedResultsForPlayerCount(results, playerCount));
+        _.forEach(playerCounts, (playerCount) => {
+            results.push(getGroupedResultsForPlayerCount(results, playerCount));
+        });
+
+        results.push(getGroupedResultsForPlayerCount(results, ""));
+
+        return resultsRef.set({
+            playerCounts: playerCounts,
+            results: results,
+        }, { merge: true });
     });
-
-    results.push(getGroupedResultsForPlayerCount(results, ""));
-    // console.log(results);
-
-    gameRef.update({
-        // stats: admin.firestore.FieldValue.delete(), // Temporary
-        playerCounts: playerCounts,
-        results: results,
-    });
-
-    return Promise.resolve(results);
 }
 
 function getPlayersCounts(results) {
