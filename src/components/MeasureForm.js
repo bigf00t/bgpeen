@@ -17,12 +17,11 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
+import Box from '@material-ui/core/Box';
 
 const styles = theme => ({
     root: {
-        position: 'relative',
-        margin: theme.spacing(4),
-        with: '100%'
+
     },
     select: {
         
@@ -42,9 +41,9 @@ const styles = theme => ({
         
     },
     formGroup: {
-        marginBottom: theme.spacing(4),
+        margin: theme.spacing(2),
         justifyContent: 'center',
-    }
+    },
 });
 
 const ITEM_HEIGHT = 48;
@@ -161,9 +160,12 @@ class MeasureForm extends Component {
             return
         }
 
-        var graphPoints =_.reduce(this.state.result.scores, (points, count, score) => { 
+        var graphPoints =_.chain(this.state.result.scores)
+        .reduce((points, count, score) => { 
             return points.concat([{x: parseInt(score), y: count}]);
-        }, []);
+        }, [])
+        .orderBy(["x"])
+        .value();
 
         var graphData = {
             datasets: [
@@ -178,7 +180,7 @@ class MeasureForm extends Component {
                     fill: true,
                     // showLine: false,
                     // lineWidth: 0.5,
-                    spanGaps: false,
+                    spanGaps: true,
                     lineTension: 0,
                     // cubicInterpolationMode: 'monotone',
                     // steppedLine: true,
@@ -218,7 +220,7 @@ class MeasureForm extends Component {
         const classes = this.props.classes;
 
         return (
-            <form className={classes.root} onSubmit={this.handleSubmit}>
+            <Box component="div" className={classes.root}>
                 <FormGroup row className={classes.formGroup}>
                     {/* <FormControl variant="outlined" className={classes.formControl}>
                         <GameSelect game={this.state.game} data={this.getSortedGames()} handleGameChange={this.handleGameChange} />
@@ -301,7 +303,7 @@ class MeasureForm extends Component {
                     open={this.state.errorOpen}
                     setOpen={this.setErrorOpen}
                 />
-            </form>
+            </Box>
         );
     }
 }

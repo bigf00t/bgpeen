@@ -73,7 +73,7 @@ exports.manualPlaysUpdate = (games, maxPages, minDate, maxDate, flush) => {
                 return updatePlaysRecursively(gameRef, playsUrl, maxPages, 1)
                 .then(function(plays) {
                     console.log('Finished updatePlaysPagesRecursively');
-                    var resultsRef = db.collection('games').doc(game.id);
+                    var resultsRef = db.collection('results').doc(game.id);
                     return updateResults(resultsRef, game, plays, false)
                 });
             }));
@@ -369,17 +369,13 @@ function getCleanPlays(plays) {
         // TODO: Exclude plays where winner isn't person with highest score
         // Exclude plays where not every player has a score
         return _.every(play.players, function(player) {
-            return player.score;
+            return ! (isNaN(parseInt(player.score)) || player.score == "" || player.score == 0)
         });
     })
 }
 
 function getCleanPlayerScores(players) {
     return _(players)
-    .filter(function(player) {
-        // Exclude bogus scores, as well as 0
-        return ! (isNaN(player.score) || player.score == "" || player.score == "0")
-    })
     .orderBy([function(player) { 
         return parseInt(player.score)
     }, 

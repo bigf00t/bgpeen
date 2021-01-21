@@ -8,36 +8,7 @@ var getScoreColor = (percentile) => {
   return percentile < 50 ? '#e57373': '#66bb6a';
 }
 
-var getStdLine = (props, dev) => {
-  var stdVal = props.mean + (props.std * dev);
-  return {
-    type: 'line',
-    mode: 'vertical',
-    scaleID: 'x-axis-0',
-    value: stdVal,
-    borderColor: props.theme.palette.text.secondary,
-    borderWidth: 1,
-    label: {
-      content: `${dev} std: ${stdVal}`,
-      enabled: true,
-      fontColor: props.theme.palette.background.default,
-      backgroundColor: props.theme.palette.text.secondary,
-      position: 'bottom',
-      xPadding: 10,
-      yPadding: 6,
-      // yAdjust: 0,
-    },
-  };
-}
-
 var getOptions = (props) => {
-  var stdLines = [
-    getStdLine(props, -2),
-    getStdLine(props, -1),
-    getStdLine(props, 1),
-    getStdLine(props, 2),
-  ];
-
   return {
     legend: {
       labels: {
@@ -79,7 +50,6 @@ var getOptions = (props) => {
     },
     annotation: {
       annotations: [
-        //...stdLines,
         {
           type: 'line',
           mode: 'vertical',
