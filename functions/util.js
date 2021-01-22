@@ -241,12 +241,15 @@ function updateResults(resultsRef, game, plays, flush) {
         console.log("Finished stats calculation");
 
         var playerCounts = getPlayersCounts(results);
+        var playerCountResults = [];
 
         _.forEach(playerCounts, (playerCount) => {
-            results.push(getGroupedResultsForPlayerCount(results, playerCount));
+            var playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
+            playerCountResults.push(playerCountResult);
+            results.push(playerCountResult);
         });
 
-        results.push(getGroupedResultsForPlayerCount(results, ""));
+        results.push(getGroupedResultsForPlayerCount(playerCountResults, ""));
 
         return resultsRef.set({
             playerCounts: playerCounts,
@@ -369,7 +372,7 @@ function getCleanPlays(plays) {
         // TODO: Exclude plays where winner isn't person with highest score
         // Exclude plays where not every player has a score
         return _.every(play.players, function(player) {
-            return ! (isNaN(parseInt(player.score)) || player.score == "" || player.score == 0)
+            return ! (isNaN(parseInt(player.score)) || parseInt(player.score) == 0)
         });
     })
 }
