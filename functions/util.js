@@ -9,15 +9,30 @@ const {mean, mode, median, std} = require('mathjs');
 
 var _ = require('lodash');
 
-exports.addGame = (name) => {
-    return axios.get(`https://api.geekdo.com/xmlapi2/search?query=${name}&exact=1&type=boardgame`)
+// From https://stackoverflow.com/questions/22707475/how-to-make-a-promise-from-settimeout
+function delay(delay, value) {
+    return new Promise(resolve => setTimeout(resolve, delay, value));
+}
+
+exports.addGame = (name, exact) => {
+    return axios.get(`https://api.geekdo.com/xmlapi2/search?query=${name.replace(":", "")}&exact=${exact ? 1 : 0}&type=boardgame`)
         .then(function (result) {
             var json = convert.xml2js(result.data, {compact: true, attributesKey: '$'});
             if (json.items.item === undefined) {
+                if (exact) {
+                    return delay(2000).then(function() {
+                        // If we didn't find an exact match, try again with an inexact search, and remove any colons from the name
+                        return exports.addGame(name, false);
+                    });
+                }
                 return Promise.resolve("No search results found");
             }
             
             var item = json.items.item.length > 1 ? json.items.item[0] : json.items.item;
+
+            if (item.name.$.value !== name) {
+                return Promise.resolve(`Found a result, but it did not match your search: ${item.name.$.value}`);
+            }
 
             return delay(2000, item.$.id)
             .then(function (id) {
@@ -98,11 +113,6 @@ exports.docsToArray = (snapshot) => {
 function getPlaysUrl(game) {
     var minDate = _.defaultTo(game.lastUpdated, '');
     return `https://api.geekdo.com/xmlapi2/plays?id=${game.id}&mindate=${minDate}&page=`;
-}
-
-// From https://stackoverflow.com/questions/22707475/how-to-make-a-promise-from-settimeout
-function delay(delay, value) {
-    return new Promise(resolve => setTimeout(resolve, delay, value));
 }
 
 function updatePlaysRecursively(gameRef, playsUrl, maxPages, page) {
@@ -264,10 +274,10 @@ function getPlayersCounts(results) {
         return ! _.isEmpty(group.scores);
     })
     .map((group) => {
-        return group.playerCount;
+        return parseInt(group.playerCount);
     })
     .uniq()
-    .sort()
+    .sortBy()
     .value();
 }
 

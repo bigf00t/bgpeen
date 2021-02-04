@@ -17,7 +17,7 @@ const util = require('./util');
 exports.addGame = functions.https.onRequest(async (req, res) => {
     return cors(req, res, () => {
         util
-        .addGame(req.body.name)
+        .addGame(req.body.name, true)
         .then((newGame) => res.status(200).send(newGame))
         .catch(function (e) {
             console.log(e);
@@ -26,34 +26,34 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
     });
 });
 
-exports.addGames = functions.https.onRequest(async (req, res) => {
-    return cors(req, res, () => {
-        const games = req.body["games"];
+// exports.addGames = functions.https.onRequest(async (req, res) => {
+//     return cors(req, res, () => {
+//         const games = req.body["games"];
 
-        var batch = db.batch();
+//         var batch = db.batch();
 
-        _.forEach(games, function(game) {
-            var newGameRef = db.collection('newgames').doc();
-            batch.set(newGameRef, {name: game});
-        });
+//         _.forEach(games, function(game) {
+//             var newGameRef = db.collection('newgames').doc();
+//             batch.set(newGameRef, {name: game});
+//         });
 
-        batch.commit().then(function() {
-            res.status(200).send({});
-        });
-    });
-});
+//         batch.commit().then(function() {
+//             res.status(200).send({});
+//         });
+//     });
+// });
 
-exports.getUserPlays = functions.https.onRequest(async (req, res) => {
-    return cors(req, res, () => {
-        console.log('getUserPlays');
-        // console.log(req.body["game"]);
-        db.collection('games').doc(req.body.game).collection('plays')
-        .where('playerUserIds', 'array-contains', req.body.user)
-        .get().then((snapshot) => {
-            return res.json(util.docsToArray(snapshot));
-        });
-    });
-});
+// exports.getUserPlays = functions.https.onRequest(async (req, res) => {
+//     return cors(req, res, () => {
+//         console.log('getUserPlays');
+//         // console.log(req.body["game"]);
+//         db.collection('games').doc(req.body.game).collection('plays')
+//         .where('playerUserIds', 'array-contains', req.body.user)
+//         .get().then((snapshot) => {
+//             return res.json(util.docsToArray(snapshot));
+//         });
+//     });
+// });
 
 // exports.markForUpdate = functions.https.onRequest(async (req, res) => {
 //     return cors(req, res, async () => {
