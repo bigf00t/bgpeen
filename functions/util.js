@@ -21,7 +21,7 @@ exports.addGame = (name, exact) => {
             if (json.items.item === undefined) {
                 if (exact) {
                     return delay(2000).then(function() {
-                        // If we didn't find an exact match, try again with an inexact search, and remove any colons from the name
+                        // If we didn't find an exact match, try again with an inexact search
                         return exports.addGame(name, false);
                     });
                 }

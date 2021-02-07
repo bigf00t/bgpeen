@@ -6,10 +6,12 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import './App.css';
 
 import Menu from './components/Menu';
-import MeasureForm from './components/MeasureForm';
+import Measure from './components/Measure';
 
 function App() {
-  document.title = window.location.toString().includes('bgpeen') ? "bgpeen - measure your scores" : "good at games? how do you know?";
+  document.title = window.location.toString().includes('bgpeen')
+    ? 'bgpeen - measure your scores'
+    : 'good at games? how do you know?';
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const theme = React.useMemo(
@@ -18,22 +20,22 @@ function App() {
         palette: {
           type: prefersDarkMode ? 'dark' : 'light',
           graph: {
-              background: {
-                light: 'rgba(63, 81, 181, 0.25)',
-                dark: 'rgba(255, 205, 86, 0.25)'
-              },
-              border: {
-                light: 'rgba(63, 81, 181, 0.5)',
-                dark: 'rgba(255, 205, 86, 0.5)'
-              },
-              point: {
-                light: 'rgba(63, 81, 181, 1)',
-                dark: 'rgba(255, 205, 86, 1)'
-              },
+            background: {
+              light: 'rgba(63, 81, 181, 0.25)',
+              dark: 'rgba(255, 205, 86, 0.25)',
+            },
+            border: {
+              light: 'rgba(63, 81, 181, 0.5)',
+              dark: 'rgba(255, 205, 86, 0.5)',
+            },
+            point: {
+              light: 'rgba(63, 81, 181, 1)',
+              dark: 'rgba(255, 205, 86, 1)',
+            },
           },
         },
       }),
-    [prefersDarkMode],
+    [prefersDarkMode]
   );
 
   return (
@@ -41,7 +43,7 @@ function App() {
       <CssBaseline />
       <div className="App">
         <Menu />
-        <MeasureForm />
+        <Measure />
       </div>
     </ThemeProvider>
   );

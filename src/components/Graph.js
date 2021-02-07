@@ -1,52 +1,58 @@
 import React, { Component } from 'react';
 import { Line } from 'react-chartjs-2';
-import * as ChartAnnotation from 'chartjs-plugin-annotation'
-import { withTheme  } from '@material-ui/core/styles';
+import * as ChartAnnotation from 'chartjs-plugin-annotation';
+import { withTheme } from '@material-ui/core/styles';
 import ordinal from 'ordinal';
+import PropTypes from 'prop-types';
+import _ from 'lodash';
 
-var getScoreColor = (percentile) => {
-  return percentile < 50 ? '#e57373': '#66bb6a';
-}
+const getScoreColor = (percentile) => {
+  return percentile < 50 ? '#e57373' : '#66bb6a';
+};
 
-var getOptions = (props) => {
+const getOptions = (props) => {
   return {
     legend: {
       labels: {
-        fontColor: props.theme.palette.text.secondary
-      }
+        fontColor: props.theme.palette.text.secondary,
+      },
     },
     scales: {
-      yAxes: [{
-        scaleLabel: {
-          display: true,
-          labelString: 'Valid Scores',
-          fontColor: props.theme.palette.text.secondary
+      yAxes: [
+        {
+          scaleLabel: {
+            display: true,
+            labelString: 'Valid Scores',
+            fontColor: props.theme.palette.text.secondary,
+          },
+          ticks: {
+            beginAtZero: true,
+            fontColor: props.theme.palette.text.secondary,
+          },
+          gridLines: {
+            color: props.theme.palette.divider,
+            zeroLineColor: props.theme.palette.text.secondary,
+          },
         },
-        ticks: {
-          beginAtZero: true,
-          fontColor: props.theme.palette.text.secondary
+      ],
+      xAxes: [
+        {
+          scaleLabel: {
+            display: true,
+            labelString: 'Score',
+            fontColor: props.theme.palette.text.secondary,
+          },
+          type: 'linear',
+          position: 'bottom',
+          gridLines: {
+            color: props.theme.palette.divider,
+            zeroLineColor: props.theme.palette.text.secondary,
+          },
+          ticks: {
+            fontColor: props.theme.palette.text.secondary,
+          },
         },
-        gridLines: {
-          color: props.theme.palette.divider,
-          zeroLineColor: props.theme.palette.text.secondary
-        }
-      }],
-      xAxes: [{
-        scaleLabel: {
-          display: true,
-          labelString: 'Score',
-          fontColor: props.theme.palette.text.secondary
-        },
-        type: 'linear',
-        position: 'bottom',
-        gridLines: {
-          color: props.theme.palette.divider,
-          zeroLineColor: props.theme.palette.text.secondary
-        },
-        ticks: {
-          fontColor: props.theme.palette.text.secondary
-        },
-      }]
+      ],
     },
     annotation: {
       annotations: [
@@ -77,7 +83,11 @@ var getOptions = (props) => {
           borderWidth: 2,
           label: {
             // TODO: Make this multiline when v1.0 of annotation plugin is released
-            content: [`Your score: ${props.score} - ${ordinal(props.percentile || 0)} percentile`],
+            content: [
+              `Your score: ${props.score} - ${ordinal(
+                props.percentile || 0
+              )} percentile`,
+            ],
             enabled: true,
             fontColor: props.theme.palette.background.default,
             backgroundColor: getScoreColor(props.percentile),
@@ -87,26 +97,98 @@ var getOptions = (props) => {
           },
         },
       ],
-    }
-  }
-}
+    },
+  };
+};
 
 class Graph extends Component {
-  render () {
+  constructor(props) {
+    super(props);
+    this.state = {
+      graphData: {},
+    };
+  }
 
-    if (this.props.data != null) {
-        // TODO: Won't work with multiple datasets, clearly
-        this.props.data.datasets[0].backgroundColor = this.props.theme.palette.graph.background[this.props.theme.palette.type];
-        this.props.data.datasets[0].borderColor = this.props.theme.palette.graph.border[this.props.theme.palette.type];
-        this.props.data.datasets[0].pointBackgroundColor = this.props.theme.palette.graph.point[this.props.theme.palette.type];
+  setGraphData = () => {
+    if (!this.props.result) {
+      return;
+    }
 
-        return (
-            <Line data={this.props.data} options={getOptions(this.props)} plugins={[ChartAnnotation]} />
-        );
+    var graphPoints = _.chain(this.props.result.scores)
+      .reduce((points, count, score) => {
+        return points.concat([{ x: parseInt(score), y: count }]);
+      }, [])
+      .orderBy(['x'])
+      .value();
+
+    var graphData = {
+      datasets: [
+        {
+          data: graphPoints,
+          label: ['Scores'],
+          // color: 'rgba(63, 81, 181, 1)',
+          // backgroundColor: 'rgba(63, 81, 181, 0.25)',
+          backgroundColor: this.props.theme.palette.graph.background[
+            this.props.theme.palette.type
+          ],
+          borderColor: this.props.theme.palette.graph.border[
+            this.props.theme.palette.type
+          ],
+          pointBackgroundColor: this.props.theme.palette.graph.point[
+            this.props.theme.palette.type
+          ],
+          // borderColor: 'rgba(63, 81, 181, 0.5)',
+          // pointBackgroundColor: 'rgba(63, 81, 181, 1)',
+          // borderWidth: 1,
+          fill: true,
+          // showLine: false,
+          // lineWidth: 0.5,
+          spanGaps: true,
+          lineTension: 0,
+          // cubicInterpolationMode: 'monotone',
+          // steppedLine: true,
+          // trendlineLinear: {
+          //     style: "rgba(255,105,180, .8)",
+          //     lineStyle: "solid",
+          //     width: 2
+          // }
+        },
+      ],
+    };
+
+    // return graphData;
+    this.setState({ graphData: graphData });
+  };
+
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.result !== prevProps.result ||
+      this.props.score !== prevProps.score
+    ) {
+      this.setGraphData();
+    }
+  }
+
+  render() {
+    if (this.props.result) {
+      return (
+        <Line
+          data={this.state.graphData}
+          options={getOptions(this.props)}
+          plugins={[ChartAnnotation]}
+        />
+      );
     } else {
-        return "";
+      return '';
     }
   }
 }
+
+Graph.propTypes = {
+  result: PropTypes.object,
+  score: PropTypes.string,
+  percentile: PropTypes.number,
+  theme: PropTypes.any,
+};
 
 export default withTheme(Graph);

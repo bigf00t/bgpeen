@@ -1,22 +1,24 @@
 {
   "name": "bgpeen",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.3.0",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "autosuggest-highlight": "^3.1.1",
     "chart.js": "^2.9.4",
     "chartjs-plugin-annotation": "^0.5.7",
     "firebase": "^8.2.3",
     "moment": "^2.24.0",
     "ordinal": "^1.0.3",
+    "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-autosuggest": "^10.0.4",
     "react-chartjs-2": "^2.11.1",
     "react-debounce-input": "^3.2.3",
     "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
-    "react-scripts": "^3.4.1",
+    "react-scripts": "^4.0.2",
     "redux": "^4.0.4",
     "redux-thunk": "^2.3.0",
     "regression": "^2.0.1",
@@ -42,5 +44,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.12.13",
+    "@babel/preset-env": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
+    "eslint": "^7.19.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "prettier": "^2.2.1"
   }
 }
