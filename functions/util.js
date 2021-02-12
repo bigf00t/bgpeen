@@ -15,7 +15,7 @@ function delay(delay, value) {
 
 exports.addGame = (name, exact) => {
   // eslint-disable-next-line prettier/prettier
-  let searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${name.replace(':', '')}&exact=${exact ? 1 : 0}&type=boardgame`;
+  let searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${name}&exact=${exact ? 1 : 0}&type=boardgame`;
 
   console.log(`Querying ${searchUrl}`);
   return axios.get(searchUrl).then(function (result) {
@@ -27,7 +27,7 @@ exports.addGame = (name, exact) => {
       if (exact) {
         return delay(2000).then(function () {
           // If we didn't find an exact match, try again with an inexact search
-          return exports.addGame(name, false);
+          return exports.addGame(name.replace(':', ''), false);
         });
       }
       return Promise.resolve('No search results found');
@@ -36,7 +36,7 @@ exports.addGame = (name, exact) => {
     var item =
       json.items.item.length > 1 ? json.items.item[0] : json.items.item;
 
-    if (item.name.$.value !== name) {
+    if (item.name.$.value.replace(':', '') !== name) {
       return Promise.resolve(
         `Found a result, but it did not match your search: ${item.name.$.value}`
       );

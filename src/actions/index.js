@@ -28,9 +28,13 @@ export const fetchGameResults = (gameId) => async (dispatch) => {
     .doc(gameId)
     .get()
     .then((snapshot) => {
-      dispatch({
-        type: FETCH_GAME_RESULTS,
-        payload: { id: gameId, ...snapshot.data() },
+      var gameRef = db.collection('games').doc(gameId);
+      gameRef.get().then((doc) => {
+        gameRef.update({ popularity: (doc.data().popularity || 0) + 1 });
+        dispatch({
+          type: FETCH_GAME_RESULTS,
+          payload: { id: gameId, ...snapshot.data() },
+        });
       });
     });
 };

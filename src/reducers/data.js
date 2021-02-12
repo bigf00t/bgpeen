@@ -14,10 +14,6 @@ export default (state = dataState, action) => {
     case FETCH_GAME_RESULTS:
       return {
         ...state,
-        game: {
-          ...state.games.find((game) => game.id === action.payload.id),
-          ...action.payload,
-        },
         games: [
           ...state.games.map((game) => {
             if (game.id !== action.payload.id) {
@@ -26,6 +22,7 @@ export default (state = dataState, action) => {
 
             return {
               ...game,
+              popularity: (game.popularity || 0) + 1,
               ...action.payload,
             };
           }),
