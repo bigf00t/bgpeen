@@ -46,7 +46,6 @@ class SelectGame extends Component {
     this.setState({ game: newGame });
     if (newGame) {
       if (!newGame.id) {
-        console.log(newGame);
         this.setState({ added: false });
         this.props.handleChange(null);
       } else if (!newGame.results) {
@@ -68,9 +67,8 @@ class SelectGame extends Component {
       .add({
         name: this.state.game,
       })
-      .then((docRef) => {
+      .then(() => {
         this.setState({ added: true });
-        console.log('Document written with ID: ', docRef.id);
       });
   };
 
@@ -90,7 +88,6 @@ class SelectGame extends Component {
               name="game"
               value={this.state.game}
               onChange={this.handleGameChange}
-              onInputChange={console.log('onInputChange')}
               options={this.props.data.games}
               getOptionLabel={(option) => option.name || option}
               style={{ width: 300 }}
