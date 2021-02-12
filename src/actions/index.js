@@ -5,6 +5,7 @@ import { db } from '../fire';
 export const fetchGames = () => async (dispatch) => {
   return db
     .collection('games')
+    .where('isNew', '==', false)
     .orderBy('name', 'asc')
     .get()
     .then((snapshot) => {

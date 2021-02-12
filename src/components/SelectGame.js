@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import * as actions from '../actions';
+import { db } from '../fire';
 
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -15,9 +16,6 @@ import PropTypes from 'prop-types';
 import { Button } from '@material-ui/core';
 
 const styles = (theme) => ({
-  root: {},
-  select: {},
-  textField: {},
   button: {
     marginTop: theme.spacing(1),
   },
@@ -30,24 +28,17 @@ const styles = (theme) => ({
     margin: theme.spacing(2),
     justifyContent: 'center',
   },
-});
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
+  message: {
+    margin: theme.spacing(2),
+    textAlign: 'center',
   },
-};
-
+});
 class SelectGame extends Component {
   constructor(props) {
     super(props);
     this.state = {
       game: null,
+      added: false,
     };
   }
 
@@ -56,6 +47,7 @@ class SelectGame extends Component {
     if (newGame) {
       if (!newGame.id) {
         console.log(newGame);
+        this.setState({ added: false });
         this.props.handleChange(null);
       } else if (!newGame.results) {
         this.props.fetchGameResults(newGame.id).then(() => {
@@ -71,29 +63,23 @@ class SelectGame extends Component {
     }
   };
 
+  handleAddClick = () => {
+    db.collection('searches')
+      .add({
+        name: this.state.game,
+      })
+      .then((docRef) => {
+        this.setState({ added: true });
+        console.log('Document written with ID: ', docRef.id);
+      });
+  };
+
   render() {
     const classes = this.props.classes;
 
     return (
-      <Box component="div" className={classes.root}>
+      <Box component="div">
         <FormGroup row className={classes.formGroup}>
-          {/* <FormControl variant="outlined" className={classes.formControl}>
-                        <GameSelect game={this.state.game} data={this.getSortedGames()} handleGameChange={this.handleGameChange} />
-                    </FormControl> */}
-          {/* <FormControl className={classes.formControl}>
-                        <InputLabel id="game-label">Game</InputLabel>
-                        <Select
-                            labelid="game-label"
-                            id="game"
-                            name="game"
-                            value={this.state.game}
-                            onChange={this.handleGameChange}
-                        >
-                        {this.props.data.games.length > 0 ? this.props.data.games.map((game) => (
-                            <MenuItem value={game} key={game.id}>{game.name}</MenuItem>
-                        )) : ''}
-                        </Select>
-                    </FormControl> */}
           <FormControl className={classes.formControl}>
             <Autocomplete
               freeSolo
@@ -104,6 +90,7 @@ class SelectGame extends Component {
               name="game"
               value={this.state.game}
               onChange={this.handleGameChange}
+              onInputChange={console.log('onInputChange')}
               options={this.props.data.games}
               getOptionLabel={(option) => option.name || option}
               style={{ width: 300 }}
@@ -118,12 +105,23 @@ class SelectGame extends Component {
                 className={classes.button}
                 variant="contained"
                 color="primary"
+                disabled={this.state.added}
+                onClick={this.handleAddClick}
               >
-                Add Game
+                {this.state.added ? 'Added!' : 'Add Game'}
               </Button>
             </FormControl>
           )}
         </FormGroup>
+        {this.state.added ? (
+          <Box component="div" className={classes.message}>
+            Game has been added to the queue, but it could take up to 10 minutes
+            for the data to be available. <br />
+            Please wait and refresh in a little while. Thanks!
+          </Box>
+        ) : (
+          ''
+        )}
       </Box>
     );
   }

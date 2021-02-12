@@ -5,25 +5,21 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-const db = admin.firestore();
-
-const axios = require('axios');
-const convert = require('xml-js');
-const cors = require('cors')({origin: true});
+const cors = require('cors')({ origin: true });
 var _ = require('lodash');
 
 const util = require('./util');
 
 exports.addGame = functions.https.onRequest(async (req, res) => {
-    return cors(req, res, () => {
-        util
-        .addGame(req.body.name, true)
-        .then((newGame) => res.status(200).send(newGame))
-        .catch(function (e) {
-            console.log(e);
-            res.send({error: e});
-        });
-    });
+  return cors(req, res, () => {
+    util
+      .addGame(req.body.name, true)
+      .then((newGame) => res.status(200).send(newGame))
+      .catch(function (e) {
+        console.log(e);
+        res.send({ error: e });
+      });
+  });
 });
 
 // exports.addGames = functions.https.onRequest(async (req, res) => {
@@ -69,31 +65,57 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
 // });
 
 const runtimeOpts = {
-    timeoutSeconds: 300,
-    memory: '1GB'
-}
+  timeoutSeconds: 300,
+  memory: '1GB',
+};
 
-exports.manualPlaysUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
+exports.manualPlaysUpdate = functions
+  .runWith(runtimeOpts)
+  .https.onRequest(async (req, res) => {
     return cors(req, res, async () => {
-        util.manualPlaysUpdate(
-            req.body.games, 
-            req.body.maxPages, 
-            req.body.minDate, 
-            req.body.maxDate, 
-            req.body.flush).then(function() {
-                res.status(200).send('Finished Updating Plays');
-            });
-    });
-});
-
-exports.manualStatsUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
-    return cors(req, res, async () => {
-        util.manualStatsUpdate(req.body.games).then(function() {
-            res.status(200).send('Finished Updating Stats');
+      util
+        .manualPlaysUpdate(
+          req.body.games,
+          req.body.maxPages,
+          req.body.minDate,
+          req.body.maxDate,
+          req.body.flush
+        )
+        .then(function () {
+          res.status(200).send('Finished Updating Plays');
         });
     });
-});
+  });
+
+exports.manualStatsUpdate = functions
+  .runWith(runtimeOpts)
+  .https.onRequest(async (req, res) => {
+    return cors(req, res, async () => {
+      util.manualStatsUpdate(req.body.games).then(function () {
+        res.status(200).send('Finished Updating Stats');
+      });
+    });
+  });
 
 // exports.scheduledPlaysUpdate = functions.pubsub.schedule('every 24 hours').onRun((context) => {
 //     util.updatePlays();
 // });
+
+exports.manuallyRunAutomaticGameUpdates = functions
+  .runWith(runtimeOpts)
+  .https.onRequest(async (req, res) => {
+    return cors(req, res, async () => {
+      util.runAutomaticGameUpdates().then(function () {
+        res.status(200).send('Finished runAutomaticGameUpdates!');
+      });
+    });
+  });
+
+exports.runAutomaticGameUpdates = functions
+  .runWith(runtimeOpts)
+  .pubsub.schedule('every 5 minutes')
+  .onRun((context) => {
+    util.runAutomaticGameUpdates().then(function () {
+      console.log('Finished runAutomaticGameUpdates!');
+    });
+  });
