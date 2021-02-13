@@ -13,95 +13,121 @@ function delay(delay, value) {
   return new Promise((resolve) => setTimeout(resolve, delay, value));
 }
 
-exports.addGame = (name, exact) => {
-  // eslint-disable-next-line prettier/prettier
-  let searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${name}&exact=${exact ? 1 : 0}&type=boardgame`;
-
-  console.log(`Querying ${searchUrl}`);
-  return axios.get(searchUrl).then(function (result) {
-    var json = convert.xml2js(result.data, {
-      compact: true,
-      attributesKey: '$',
-    });
-    if (json.items.item === undefined) {
-      if (exact) {
-        return delay(2000).then(function () {
-          // If we didn't find an exact match, try again with an inexact search
-          return exports.addGame(name.replace(':', ''), false);
-        });
+exports.addGame = (searchTerm, exact) => {
+  return db
+    .collection('games')
+    .where('name', '==', searchTerm)
+    .get()
+    .then(function (gamesSnapshot) {
+      if (gamesSnapshot.size > 0) {
+        return Promise.resolve('Game already exists');
       }
-      return Promise.resolve('No search results found');
-    }
 
-    var item =
-      json.items.item.length > 1 ? json.items.item[0] : json.items.item;
+      // eslint-disable-next-line prettier/prettier
+      let searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${searchTerm}&exact=${exact ? 1 : 0}&type=boardgame`;
 
-    if (item.name.$.value.replace(':', '') !== name) {
-      return Promise.resolve(
-        `Found a result, but it did not match your search: ${item.name.$.value}`
-      );
-    }
-
-    return delay(2000, item.$.id)
-      .then(function (id) {
-        return axios.get(`https://api.geekdo.com/xmlapi2/things?id=${id}`);
-      })
-      .then(function (result) {
-        var item = convert.xml2js(result.data, {
+      console.log(`Querying ${searchUrl}`);
+      return axios.get(searchUrl).then(function (result) {
+        var json = convert.xml2js(result.data, {
           compact: true,
           attributesKey: '$',
-        }).items.item;
-        var name = Array.isArray(item.name)
-          ? _.find(item.name, (name) => name.$.type === 'primary').$.value
-          : item.name.$.value;
-        var suggestedplayerspoll = _.find(
-          item.poll,
-          (poll) => poll.$.name === 'suggested_numplayers'
-        );
-        var suggestedplayers = _.reduce(
-          suggestedplayerspoll.results,
-          (redPoll, results) => {
-            redPoll[results.$.numplayers] = _.reduce(
-              results.result,
-              (redResults, result) => {
-                redResults[result.$.value] = parseInt(result.$.numvotes);
-                return redResults;
-              },
-              {}
-            );
-            return redPoll;
-          },
-          {}
-        );
+        });
+        if (json.items.item === undefined) {
+          if (exact) {
+            return delay(2000).then(function () {
+              // If we didn't find an exact match, try again with an inexact search
+              return exports.addGame(searchTerm.replace(':', ''), false);
+            });
+          }
+          return Promise.resolve('No search results found');
+        }
 
-        var newGame = {
-          id: item.$.id,
-          name: name,
-          thumbnail: item.thumbnail._text,
-          image: item.image._text,
-          description: item.description._text,
-          yearpublished: parseInt(item.yearpublished.$.value),
-          minplayers: parseInt(item.minplayers.$.value),
-          maxplayers: parseInt(item.maxplayers.$.value),
-          playingtime: parseInt(item.playingtime.$.value),
-          suggestedplayers: suggestedplayers,
-          isNew: true,
-          popularity: 0,
-          // lastUpdated: null,
-          // oldestPlay: null,
-          // newestPlay: null,
-          // needsUpdate: true
-        };
+        var item =
+          json.items.item.length > 1 ? json.items.item[0] : json.items.item;
+
+        if (item.name.$.value.replace(':', '') !== searchTerm) {
+          return Promise.resolve(
+            `Found a result, but it did not match your search: ${item.name.$.value}`
+          );
+        }
 
         return db
           .collection('games')
-          .doc(newGame.id)
-          .set(newGame, { merge: true })
-          .then(() => {
-            return newGame;
+          .doc(item.$.id)
+          .get()
+          .then(function (gameSnapshot) {
+            if (gameSnapshot.exists) {
+              return Promise.resolve('Game already exists');
+            }
+
+            return delay(2000, item.$.id)
+              .then(function (id) {
+                return axios.get(
+                  `https://api.geekdo.com/xmlapi2/things?id=${id}`
+                );
+              })
+              .then(function (result) {
+                var item = convert.xml2js(result.data, {
+                  compact: true,
+                  attributesKey: '$',
+                }).items.item;
+                var name = Array.isArray(item.name)
+                  ? _.find(item.name, (name) => name.$.type === 'primary').$
+                      .value
+                  : item.name.$.value;
+                var suggestedplayerspoll = _.find(
+                  item.poll,
+                  (poll) => poll.$.name === 'suggested_numplayers'
+                );
+                var suggestedplayers = _.reduce(
+                  suggestedplayerspoll.results,
+                  (redPoll, results) => {
+                    redPoll[results.$.numplayers] = _.reduce(
+                      results.result,
+                      (redResults, result) => {
+                        redResults[result.$.value] = parseInt(
+                          result.$.numvotes
+                        );
+                        return redResults;
+                      },
+                      {}
+                    );
+                    return redPoll;
+                  },
+                  {}
+                );
+
+                var newGame = {
+                  id: item.$.id,
+                  name: name,
+                  thumbnail: item.thumbnail._text,
+                  image: item.image._text,
+                  description: item.description._text,
+                  yearpublished: parseInt(item.yearpublished.$.value),
+                  minplayers: parseInt(item.minplayers.$.value),
+                  maxplayers: parseInt(item.maxplayers.$.value),
+                  playingtime: parseInt(item.playingtime.$.value),
+                  suggestedplayers: suggestedplayers,
+                  isNew: true,
+                  popularity: 0,
+                  // lastUpdated: null,
+                  // oldestPlay: null,
+                  // newestPlay: null,
+                  // needsUpdate: true,
+                  // totalPlays: 0
+                };
+
+                return db
+                  .collection('games')
+                  .doc(newGame.id)
+                  .set(newGame)
+                  .then(() => {
+                    return newGame;
+                  });
+              });
           });
       });
-  });
+    });
 };
 
 exports.runAutomaticGameUpdates = () => {
@@ -133,7 +159,7 @@ function updatePlaysForNewGames(gamesSnapshot) {
   let chain = Promise.resolve();
   gamesSnapshot.forEach((doc) => {
     chain = chain.then(() =>
-      updateGamePlaysAndStats(doc.data(), 10).then(() => delay(2000))
+      updateGamePlaysAndStats(doc.data(), 100).then(() => delay(2000))
     );
   });
   return chain.then(function () {

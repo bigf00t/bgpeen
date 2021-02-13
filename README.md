@@ -5,6 +5,8 @@ To run site locally:
 To run emulators:
 - firebase emulators:start --only functions,firestore --import=./data
 
+To save local data state:
+- firebase emulators:export ./data --only firestore
 
 To test emulated functions in postman:
 - POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames

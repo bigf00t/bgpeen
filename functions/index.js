@@ -70,7 +70,7 @@ const runtimeOpts = {
 };
 
 exports.manualPlaysUpdate = functions
-  .runWith(runtimeOpts)
+  // .runWith(runtimeOpts)
   .https.onRequest(async (req, res) => {
     return cors(req, res, async () => {
       util
@@ -115,7 +115,7 @@ exports.runAutomaticGameUpdates = functions
   .runWith(runtimeOpts)
   .pubsub.schedule('every 5 minutes')
   .onRun((context) => {
-    util.runAutomaticGameUpdates().then(function () {
+    return util.runAutomaticGameUpdates().then(function () {
       console.log('Finished runAutomaticGameUpdates!');
     });
   });
