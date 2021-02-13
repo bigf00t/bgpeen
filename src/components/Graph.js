@@ -60,11 +60,11 @@ const getOptions = (props) => {
           type: 'line',
           mode: 'vertical',
           scaleID: 'x-axis-0',
-          value: props.mean,
+          value: props.result.mean,
           borderColor: props.theme.palette.text.secondary,
           borderWidth: 2,
           label: {
-            content: `Mean: ${props.mean}`,
+            content: `Mean: ${props.result.mean}`,
             enabled: true,
             fontColor: props.theme.palette.background.default,
             backgroundColor: props.theme.palette.text.secondary,
