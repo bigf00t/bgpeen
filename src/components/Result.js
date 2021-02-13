@@ -59,10 +59,6 @@ class Result extends Component {
       score: null,
       players: null,
       place: null,
-      mean: null,
-      mode: null,
-      median: null,
-      std: null,
     };
   }
 
@@ -155,9 +151,10 @@ class Result extends Component {
               {this.state.result.trimmedScoreCount} scores were excluded for
               being outliers (too many standard deviations away from the mean).
               <br />
-              The mean (average) of valid scores is {this.state.mean}, the mode
-              (most common) is {this.state.mode}, the median (middle) is{' '}
-              {this.state.median} and the standard deviation is {this.state.std}
+              The mean (average) of valid scores is {this.state.result.mean},
+              the mode (most common) is {this.state.result.mode}, the median
+              (middle) is {this.state.result.median} and the standard deviation
+              is {this.state.result.std}
               .<br />
               {this.props.filters.score
                 ? ` Your score of ${
