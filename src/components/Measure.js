@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import SelectGame from './SelectGame';
 import Result from './Result';
-// import AlertDialog from './AlertDialog';
 import * as actions from '../actions';
 import { connect } from 'react-redux';
 import { withStyles, withTheme } from '@material-ui/core/styles';
@@ -51,12 +50,6 @@ class Measure extends Component {
           handleChange={this.handleFiltersChange}
         />
         <Result game={this.state.game} filters={this.state.filters} />
-        {/* <AlertDialog
-          title={this.state.errorTitle}
-          content={this.state.errorMessage}
-          open={this.state.errorOpen}
-          setOpen={this.setErrorOpen}
-        /> */}
       </Box>
     );
   }

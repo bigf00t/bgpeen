@@ -85,7 +85,7 @@ const getOptions = (props) => {
             // TODO: Make this multiline when v1.0 of annotation plugin is released
             content: [
               `Your score: ${props.score} - ${ordinal(
-                props.percentile || 0
+                Math.ceil(props.percentile || 0)
               )} percentile`,
             ],
             enabled: true,

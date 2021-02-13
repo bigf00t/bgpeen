@@ -90,8 +90,17 @@ class SelectGame extends Component {
               onChange={this.handleGameChange}
               options={this.props.data.games}
               getOptionLabel={(option) => option.name || option}
-              style={{ width: 300 }}
-              renderInput={(params) => <TextField {...params} label="Game" />}
+              style={{ width: 400 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Click to select a game or start typing!"
+                  label="Game"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              )}
             />
           </FormControl>
           {!this.state.game || this.state.game.id ? (

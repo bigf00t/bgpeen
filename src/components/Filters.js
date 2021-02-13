@@ -24,12 +24,13 @@ const styles = (theme) => ({
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 150,
+    minWidth: 100,
     height: 60,
   },
   selectEmpty: {},
   formGroup: {
     margin: theme.spacing(2),
+    marginTop: theme.spacing(-2),
     justifyContent: 'center',
   },
 });
@@ -40,7 +41,6 @@ const MenuProps = {
   PaperProps: {
     style: {
       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
     },
   },
 };
@@ -132,7 +132,6 @@ class Filters extends Component {
                 labelid="players-label"
                 id="players"
                 name="players"
-                // multiple
                 value={this.state.players}
                 onChange={this.handlePlayersChange}
                 displayEmpty
@@ -159,6 +158,7 @@ class Filters extends Component {
                 name="score"
                 label="Your Score"
                 value={this.state.score}
+                style={{ width: 150 }}
                 onChange={this.handleScoreChange}
               />
             </FormControl>
@@ -174,6 +174,7 @@ class Filters extends Component {
                 onChange={this.handlePlaceChange}
                 input={<Input />}
                 displayEmpty
+                style={{ width: 120 }}
                 MenuProps={MenuProps}
               >
                 <MenuItem key="" value="">
