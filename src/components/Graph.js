@@ -13,6 +13,7 @@ const getScoreColor = (percentile) => {
 const getOptions = (props) => {
   return {
     legend: {
+      display: false,
       labels: {
         fontColor: props.theme.palette.text.secondary,
       },
@@ -21,7 +22,7 @@ const getOptions = (props) => {
       yAxes: [
         {
           scaleLabel: {
-            display: true,
+            display: false,
             labelString: 'Valid Scores',
             fontColor: props.theme.palette.text.secondary,
           },
@@ -38,7 +39,7 @@ const getOptions = (props) => {
       xAxes: [
         {
           scaleLabel: {
-            display: true,
+            display: false,
             labelString: 'Score',
             fontColor: props.theme.palette.text.secondary,
           },

@@ -16,7 +16,7 @@ import PropTypes from 'prop-types';
 
 const styles = (theme) => ({
   paper: {
-    padding: theme.spacing(2, 4, 4),
+    padding: theme.spacing(2, 2, 2),
   },
   link: {
     color: theme.palette.action.active,
@@ -147,7 +147,7 @@ class Result extends Component {
       return (
         <Box component="div">
           <Paper className={classes.paper} square>
-            <Box component="div" display="flex" justifyContent="center">
+            <Box component="div">
               <Box component="div" mb={2}>
                 <Typography
                   variant="h3"
@@ -180,7 +180,56 @@ class Result extends Component {
                     BoardGameGeek.com
                   </Link>
                 </Typography>
-                <Box component="div" display="flex" justifyContent="center">
+                {/* <Box component="p">
+                  There are {this.state.result.scoreCount} valid{' '}
+                  {this.props.filters.place
+                    ? `${ordinal(this.props.filters.place)} place `
+                    : ''}
+                  scores{' '}
+                  {this.props.filters.players
+                    ? ` for ${this.props.filters.players} player games of`
+                    : 'for'}{' '}
+                  <Link
+                    className={classes.link}
+                    href={`https://boardgamegeek.com/boardgame/${this.props.game.id}`}
+                    target="_blank"
+                  >
+                    {this.props.game.name}
+                  </Link>
+                  . These scores are provided by{' '}
+                  <Link
+                    className={classes.link}
+                    href="https://boardgamegeek.com"
+                    target="_blank"
+                  >
+                    BoardGameGeek
+                  </Link>{' '}
+                  and recorded by players like you!
+                </Box>
+                <Box component="p">
+                  {this.state.result.trimmedScoreCount} scores were excluded for
+                  being outliers (too many standard deviations away from the
+                  mean).
+                </Box>
+                <Box component="p">
+                  The mean (average) of valid scores is {this.state.result.mean}
+                  , the mode (most common) is {this.state.result.mode}, the
+                  median (middle) is {this.state.result.median} and the standard
+                  deviation is {this.state.result.std}.
+                </Box>
+                <Box component="p">
+                  {this.props.filters.score
+                    ? ` Your score of ${
+                        this.props.filters.score
+                      } places you in the ${getOrdinalDesc(
+                        this.state.percentile
+                      )} of these scores. ${getPercentileQuip(
+                        this.state.percentile
+                      )}`
+                    : ''}
+                </Box> */}
+              </Box>
+                <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
                   <Card className={classes.card}>
                     <CardContent>
                       <Typography
@@ -266,55 +315,6 @@ class Result extends Component {
                     </CardContent>
                   </Card>
                 </Box>
-                {/* <Box component="p">
-                  There are {this.state.result.scoreCount} valid{' '}
-                  {this.props.filters.place
-                    ? `${ordinal(this.props.filters.place)} place `
-                    : ''}
-                  scores{' '}
-                  {this.props.filters.players
-                    ? ` for ${this.props.filters.players} player games of`
-                    : 'for'}{' '}
-                  <Link
-                    className={classes.link}
-                    href={`https://boardgamegeek.com/boardgame/${this.props.game.id}`}
-                    target="_blank"
-                  >
-                    {this.props.game.name}
-                  </Link>
-                  . These scores are provided by{' '}
-                  <Link
-                    className={classes.link}
-                    href="https://boardgamegeek.com"
-                    target="_blank"
-                  >
-                    BoardGameGeek
-                  </Link>{' '}
-                  and recorded by players like you!
-                </Box>
-                <Box component="p">
-                  {this.state.result.trimmedScoreCount} scores were excluded for
-                  being outliers (too many standard deviations away from the
-                  mean).
-                </Box>
-                <Box component="p">
-                  The mean (average) of valid scores is {this.state.result.mean}
-                  , the mode (most common) is {this.state.result.mode}, the
-                  median (middle) is {this.state.result.median} and the standard
-                  deviation is {this.state.result.std}.
-                </Box>
-                <Box component="p">
-                  {this.props.filters.score
-                    ? ` Your score of ${
-                        this.props.filters.score
-                      } places you in the ${getOrdinalDesc(
-                        this.state.percentile
-                      )} of these scores. ${getPercentileQuip(
-                        this.state.percentile
-                      )}`
-                    : ''}
-                </Box> */}
-              </Box>
             </Box>
             <Graph
               result={this.state.result}

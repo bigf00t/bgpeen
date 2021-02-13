@@ -20,8 +20,7 @@ const styles = (theme) => ({
     marginTop: theme.spacing(1),
   },
   formControl: {
-    margin: theme.spacing(1),
-    minWidth: 150,
+    maxWidth: 330,
     height: 60,
   },
   formGroup: {
@@ -78,7 +77,7 @@ class SelectGame extends Component {
     return (
       <Box component="div">
         <FormGroup row className={classes.formGroup}>
-          <FormControl className={classes.formControl}>
+          <FormControl className={classes.formControl} fullWidth>
             <Autocomplete
               freeSolo
               autoHighlight
@@ -89,13 +88,15 @@ class SelectGame extends Component {
               value={this.state.game}
               onChange={this.handleGameChange}
               options={this.props.data.games}
+              fullWidth
               getOptionLabel={(option) => option.name || option}
-              style={{ width: 400 }}
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Click to select a game or start typing!"
+                  placeholder="Select a game or start typing!"
                   label="Game"
+                  hintText=".."
+                  fullWidth
                   InputLabelProps={{
                     shrink: true,
                   }}

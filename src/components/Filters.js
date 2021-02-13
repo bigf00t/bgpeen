@@ -29,7 +29,7 @@ const styles = (theme) => ({
   },
   selectEmpty: {},
   formGroup: {
-    margin: theme.spacing(2),
+    // margin: theme.spacing(2),
     marginTop: theme.spacing(-2),
     justifyContent: 'center',
   },
@@ -125,6 +125,19 @@ class Filters extends Component {
         <Box component="div" className={classes.root}>
           <FormGroup row className={classes.formGroup}>
             <FormControl className={classes.formControl}>
+              <DebounceInput
+                element={TextField}
+                debounceTimeout={300}
+                className={classes.textField}
+                id="score"
+                name="score"
+                label="Your Score"
+                value={this.state.score}
+                style={{ maxWidth: 100 }}
+                onChange={this.handleScoreChange}
+              />
+            </FormControl>
+            <FormControl className={classes.formControl}>
               <InputLabel id="players-label" shrink={true}>
                 Players
               </InputLabel>
@@ -150,19 +163,6 @@ class Filters extends Component {
               </Select>
             </FormControl>
             <FormControl className={classes.formControl}>
-              <DebounceInput
-                element={TextField}
-                debounceTimeout={300}
-                className={classes.textField}
-                id="score"
-                name="score"
-                label="Your Score"
-                value={this.state.score}
-                style={{ width: 150 }}
-                onChange={this.handleScoreChange}
-              />
-            </FormControl>
-            <FormControl className={classes.formControl}>
               <InputLabel id="place-label" shrink={true}>
                 Place
               </InputLabel>
@@ -174,7 +174,6 @@ class Filters extends Component {
                 onChange={this.handlePlaceChange}
                 input={<Input />}
                 displayEmpty
-                style={{ width: 120 }}
                 MenuProps={MenuProps}
               >
                 <MenuItem key="" value="">
