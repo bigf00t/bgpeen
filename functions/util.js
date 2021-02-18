@@ -45,7 +45,10 @@ exports.addGame = (searchTerm, exact) => {
         var item =
           json.items.item.length > 1 ? json.items.item[0] : json.items.item;
 
-        if (item.name.$.value.replace(':', '') !== searchTerm) {
+        if (
+          item.name.$.value.replace(':', '').toUpperCase() !==
+          searchTerm.toUpperCase()
+        ) {
           return Promise.resolve(
             `Found a result, but it did not match your search: ${item.name.$.value}`
           );
