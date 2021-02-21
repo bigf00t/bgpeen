@@ -14,6 +14,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
+import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 const styles = (theme) => ({
   root: {},
@@ -57,12 +59,9 @@ class Filters extends Component {
   }
 
   handleScoreChange = (event) => {
-    this.setState({ score: event.target.value }, () => {
-      this.props.handleChange(
-        this.state.players,
-        this.state.score,
-        this.state.place
-      );
+    this.setState({ score: this.getIntFromParam(event.target.value) }, () => {
+      this.setHistory();
+      this.sendFiltersUpdate();
     });
   };
 
@@ -71,22 +70,16 @@ class Filters extends Component {
       var validPlayerPlaces = this.getValidPlayerPlaces();
 
       if (
-        this.state.place !== '' &&
+        this.state.place &&
         validPlayerPlaces.indexOf(this.state.place) === -1
       ) {
-        this.setState({ place: '' }, () => {
-          this.props.handleChange(
-            this.state.players,
-            this.state.score,
-            this.state.place
-          );
+        this.setState({ place: null }, () => {
+          this.setHistory();
+          this.sendFiltersUpdate();
         });
       } else {
-        this.props.handleChange(
-          this.state.players,
-          this.state.score,
-          this.state.place
-        );
+        this.setHistory();
+        this.sendFiltersUpdate();
       }
 
       this.setState({ validPlayerPlaces: validPlayerPlaces });
@@ -94,25 +87,76 @@ class Filters extends Component {
   };
 
   getValidPlayerPlaces = () => {
-    return this.props.game && this.state.players !== ''
+    return this.props.data.game && this.state.players
       ? _.range(1, this.state.players + 1)
       : [];
   };
 
   handlePlaceChange = (event) => {
     this.setState({ place: event.target.value }, () => {
-      this.props.handleChange(
-        this.state.players,
-        this.state.score,
-        this.state.place
-      );
+      this.setHistory();
+      this.sendFiltersUpdate();
     });
   };
 
+  setHistory = () => {
+    let params = [
+      this.props.match.params.id,
+      this.props.match.params.name,
+      this.state.players !== '' ? this.state.players : 'any',
+      this.state.place !== '' ? this.state.place : 'any',
+      this.state.score || '',
+    ];
+    this.props.history.push({
+      pathname: `/${params.join('/')}`,
+    });
+  };
+
+  setFiltersFromUrl = () => {
+    this.setState(
+      {
+        players: this.getIntFromParam(this.props.match.params.players),
+        score: this.getIntFromParam(this.props.match.params.score),
+      },
+      () => {
+        this.setState(
+          { validPlayerPlaces: this.getValidPlayerPlaces() },
+          () => {
+            this.setState(
+              {
+                place: this.getIntFromParam(this.props.match.params.place),
+              },
+              () => this.sendFiltersUpdate()
+            );
+          }
+        );
+      }
+    );
+  };
+
+  getIntFromParam = (param) => {
+    return !isNaN(param) && param !== '' ? parseInt(param) : '';
+  };
+
+  sendFiltersUpdate = () => {
+    this.props.handleChange({
+      players: this.state.players,
+      place: this.state.place,
+      score: this.state.score,
+    });
+  };
+
+  componentDidMount() {
+    this.setFiltersFromUrl();
+  }
+
   componentDidUpdate(prevProps) {
-    if (this.props.game !== prevProps.game) {
-      this.setState({ players: '', score: '', place: '' }, () => {
-        this.props.handleChange('', '', '');
+    if (
+      this.props.data.game &&
+      this.props.data.game.id !== prevProps.data.game.id
+    ) {
+      this.setState({ players: '', place: '', score: '' }, () => {
+        this.sendFiltersUpdate();
       });
     }
   }
@@ -120,85 +164,89 @@ class Filters extends Component {
   render() {
     const classes = this.props.classes;
 
-    if (this.props.game) {
-      return (
-        <Box component="div" className={classes.root}>
-          <FormGroup row className={classes.formGroup}>
-            <FormControl className={classes.formControl}>
-              <DebounceInput
-                element={TextField}
-                debounceTimeout={300}
-                className={classes.textField}
-                id="score"
-                name="score"
-                label="Your Score"
-                value={this.state.score}
-                style={{ maxWidth: 100 }}
-                onChange={this.handleScoreChange}
-              />
-            </FormControl>
-            <FormControl className={classes.formControl}>
-              <InputLabel id="players-label" shrink={true}>
-                Players
-              </InputLabel>
-              <Select
-                labelid="players-label"
-                id="players"
-                name="players"
-                value={this.state.players}
-                onChange={this.handlePlayersChange}
-                displayEmpty
-                MenuProps={MenuProps}
-              >
-                <MenuItem key="" value="">
-                  Any
+    return (
+      <Box component="div" className={classes.root}>
+        <FormGroup row className={classes.formGroup}>
+          <FormControl className={classes.formControl}>
+            <DebounceInput
+              element={TextField}
+              debounceTimeout={300}
+              className={classes.textField}
+              id="score"
+              name="score"
+              label="Your Score"
+              value={this.state.score}
+              style={{ maxWidth: 100 }}
+              onChange={this.handleScoreChange}
+            />
+          </FormControl>
+          <FormControl className={classes.formControl}>
+            <InputLabel id="players-label" shrink={true}>
+              Players
+            </InputLabel>
+            <Select
+              labelid="players-label"
+              id="players"
+              name="players"
+              value={this.state.players}
+              onChange={this.handlePlayersChange}
+              displayEmpty
+              MenuProps={MenuProps}
+            >
+              <MenuItem key="" value="">
+                Any
+              </MenuItem>
+              {this.props.data.game.playerCounts
+                ? this.props.data.game.playerCounts.map((count) => (
+                    <MenuItem key={count} value={count}>
+                      {count}
+                    </MenuItem>
+                  ))
+                : ''}
+            </Select>
+          </FormControl>
+          <FormControl className={classes.formControl}>
+            <InputLabel id="place-label" shrink={true}>
+              Place
+            </InputLabel>
+            <Select
+              labelid="place-label"
+              id="place"
+              name="place"
+              value={this.state.place}
+              onChange={this.handlePlaceChange}
+              input={<Input />}
+              displayEmpty
+              MenuProps={MenuProps}
+            >
+              <MenuItem key="" value="">
+                Any
+              </MenuItem>
+              {this.state.validPlayerPlaces.map((count) => (
+                <MenuItem key={count} value={count}>
+                  {ordinal(count)}
                 </MenuItem>
-                {this.props.game.playerCounts
-                  ? this.props.game.playerCounts.map((count) => (
-                      <MenuItem key={count} value={count}>
-                        {count}
-                      </MenuItem>
-                    ))
-                  : ''}
-              </Select>
-            </FormControl>
-            <FormControl className={classes.formControl}>
-              <InputLabel id="place-label" shrink={true}>
-                Place
-              </InputLabel>
-              <Select
-                labelid="place-label"
-                id="place"
-                name="place"
-                value={this.state.place}
-                onChange={this.handlePlaceChange}
-                input={<Input />}
-                displayEmpty
-                MenuProps={MenuProps}
-              >
-                <MenuItem key="" value="">
-                  Any
-                </MenuItem>
-                {this.state.validPlayerPlaces.map((count) => (
-                  <MenuItem key={count} value={count}>
-                    {ordinal(count)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </FormGroup>
-        </Box>
-      );
-    } else {
-      return '';
-    }
+              ))}
+            </Select>
+          </FormControl>
+        </FormGroup>
+      </Box>
+    );
   }
 }
 
 Filters.propTypes = {
-  game: PropTypes.object,
+  data: PropTypes.object,
   classes: PropTypes.object,
+  match: PropTypes.object,
+  history: PropTypes.object,
   handleChange: PropTypes.func,
 };
 
-export default withStyles(styles)(withTheme(Filters));
+const mapStateToProps = ({ data }) => {
+  return { data };
+};
+
+export default connect(mapStateToProps)(
+  withStyles(styles)(withTheme(withRouter(Filters)))
+);

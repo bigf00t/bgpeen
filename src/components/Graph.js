@@ -117,7 +117,7 @@ class Graph extends Component {
 
     var graphPoints = _.chain(this.props.result.scores)
       .reduce((points, count, score) => {
-        return points.concat([{ x: parseInt(score), y: count }]);
+        return points.concat([{ x: score, y: count }]);
       }, [])
       .orderBy(['x'])
       .value();
@@ -187,7 +187,7 @@ class Graph extends Component {
 
 Graph.propTypes = {
   result: PropTypes.object,
-  score: PropTypes.string,
+  score: PropTypes.number,
   percentile: PropTypes.number,
   theme: PropTypes.any,
 };

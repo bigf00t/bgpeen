@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import _ from 'lodash';
 import ordinal from 'ordinal';
@@ -10,9 +10,11 @@ import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 
+import Filters from './Filters';
 import Graph from './Graph';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { Route } from 'react-router-dom';
 
 const styles = (theme) => ({
   paper: {
@@ -60,7 +62,7 @@ const getPercentileQuip = (percentile) => {
     return 'not very good';
   } else if (percentile < 55) {
     return 'boringly average';
-  } else if (percentile === 69) {
+  } else if (parseInt(percentile) === 69) {
     return 'nice';
   } else if (percentile < 90) {
     return 'actually pretty decent';
@@ -77,6 +79,7 @@ class Result extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      filters: {},
       result: {},
       percentile: null,
       players: null,
@@ -85,28 +88,27 @@ class Result extends Component {
   }
 
   setResult = () => {
-    var result = this.props.game
-      ? _.find(this.props.game.results, (result) => {
+    var result = this.props.data.game
+      ? _.find(this.props.data.game.results, (result) => {
           return (
-            (this.props.filters.players || null) ===
+            (this.state.filters.players || null) ===
               (result.playerCount || null) &&
-            (this.props.filters.place || null) === (result.playerPlace || null)
+            (this.state.filters.place || null) === (result.playerPlace || null)
           );
         })
-      : [];
+      : {};
 
     this.setState({ result: result }, () => {
       this.setPercentile();
-      // this.setGraphData();
     });
   };
 
   setPercentile = () => {
-    if (this.props.filters.score) {
+    if (this.state.filters.score) {
       this.setState({
         percentile: this.getPercentile(
           this.state.result.scores,
-          this.props.filters.score
+          this.state.filters.score
         ),
       });
     } else {
@@ -130,22 +132,48 @@ class Result extends Component {
     return percentile;
   };
 
+  componentDidMount() {
+    if (this.props.data.game) {
+      this.setResult();
+    }
+  }
+
   componentDidUpdate(prevProps) {
     if (
-      this.props.game !== prevProps.game ||
-      this.props.filters !== prevProps.filters
+      this.props.data.game &&
+      prevProps.data.game &&
+      this.props.data.game.id !== prevProps.data.game.id
     ) {
       this.setResult();
     }
   }
 
+  handleFiltersChange = (filters) => {
+    this.setState(
+      {
+        filters: filters,
+      },
+      () => this.setResult()
+    );
+  };
+
   render() {
     const classes = this.props.classes;
 
-    if (this.props.game && this.state.result) {
-      // if (!_.isEmpty(this.state.graphData) && this.state.result) {
+    if (this.props.data.game && this.state.result) {
       return (
         <Box component="div">
+          {/* <Filters handleChange={this.handleFiltersChange} /> */}
+          {/* <Route path="/:id/:name" component={Result} /> */}
+          <Route
+            path="/:id/:name/:players?/:place?/:score?"
+            render={(routeProps) => (
+              <Filters
+                {...routeProps}
+                handleChange={this.handleFiltersChange}
+              />
+            )}
+          />
           <Paper className={classes.paper} square>
             <Box component="div">
               <Box component="div" mb={2}>
@@ -155,19 +183,21 @@ class Result extends Component {
                   gutterBottom
                   align="center"
                 >
-                  {this.state.percentile !== null ? getTitle(this.state.percentile) : ''}
+                  {this.state.percentile !== null
+                    ? getTitle(this.state.percentile)
+                    : ''}
                   <Link
                     className={classes.link}
-                    href={`https://boardgamegeek.com/boardgame/${this.props.game.id}`}
+                    href={`https://boardgamegeek.com/boardgame/${this.props.data.game.id}`}
                     target="_blank"
                   >
-                    {this.props.game.name}
+                    {this.props.data.game.name}
                   </Link>
                 </Typography>
                 <Typography component="div" align="center">
-                  {this.props.filters.score
+                  {this.state.filters.score
                     ? ` Your score of ${
-                        this.props.filters.score
+                        this.state.filters.score
                       } places you in the ${getOrdinalDesc(
                         this.state.percentile
                       )} of valid scores recorded on `
@@ -180,170 +210,121 @@ class Result extends Component {
                     BoardGameGeek.com
                   </Link>
                 </Typography>
-                {/* <Box component="p">
-                  There are {this.state.result.scoreCount} valid{' '}
-                  {this.props.filters.place
-                    ? `${ordinal(this.props.filters.place)} place `
-                    : ''}
-                  scores{' '}
-                  {this.props.filters.players
-                    ? ` for ${this.props.filters.players} player games of`
-                    : 'for'}{' '}
-                  <Link
-                    className={classes.link}
-                    href={`https://boardgamegeek.com/boardgame/${this.props.game.id}`}
-                    target="_blank"
-                  >
-                    {this.props.game.name}
-                  </Link>
-                  . These scores are provided by{' '}
-                  <Link
-                    className={classes.link}
-                    href="https://boardgamegeek.com"
-                    target="_blank"
-                  >
-                    BoardGameGeek
-                  </Link>{' '}
-                  and recorded by players like you!
-                </Box>
-                <Box component="p">
-                  {this.state.result.trimmedScoreCount} scores were excluded for
-                  being outliers (too many standard deviations away from the
-                  mean).
-                </Box>
-                <Box component="p">
-                  The mean (average) of valid scores is {this.state.result.mean}
-                  , the mode (most common) is {this.state.result.mode}, the
-                  median (middle) is {this.state.result.median} and the standard
-                  deviation is {this.state.result.std}.
-                </Box>
-                <Box component="p">
-                  {this.props.filters.score
-                    ? ` Your score of ${
-                        this.props.filters.score
-                      } places you in the ${getOrdinalDesc(
-                        this.state.percentile
-                      )} of these scores. ${getPercentileQuip(
-                        this.state.percentile
-                      )}`
-                    : ''}
-                </Box> */}
               </Box>
-                <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Valid Scores
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.scoreCount}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Excluded Scores
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.trimmedScoreCount}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Mean
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.mean}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Mode
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.mode}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Median
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.median}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card className={classes.card}>
-                    <CardContent>
-                      <Typography
-                        className={classes.title}
-                        color="textSecondary"
-                        gutterBottom
-                      >
-                        Std
-                      </Typography>
-                      <Typography variant="h3" component="h3">
-                        {this.state.result.std}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Box>
+              <Box
+                component="div"
+                display="flex"
+                flexWrap="wrap"
+                justifyContent="center"
+                alignItems="center"
+                width={1}
+              >
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Valid Scores
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.scoreCount}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Excluded Scores
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.trimmedScoreCount}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Mean
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.mean}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Mode
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.mode}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Median
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.median}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Std
+                    </Typography>
+                    <Typography variant="h3" component="h3">
+                      {this.state.result.std}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
             </Box>
             <Graph
               result={this.state.result}
-              score={this.props.filters.score}
+              score={
+                this.state.filters.score !== ''
+                  ? this.state.filters.score
+                  : null
+              }
               percentile={this.state.percentile}
             ></Graph>
           </Paper>
         </Box>
       );
     } else {
-      // return (
-      //     <Paper className={classes.paper}>
-      //         <p>
-      //             No data found. Please check your inputs and try again.
-      //         </p>
-      //     </Paper>
-      // );
       return '';
     }
-    // } else {
-    //   return '';
-    // }
   }
 }
 
 Result.propTypes = {
   data: PropTypes.object,
-  game: PropTypes.object,
-  filters: PropTypes.object,
   classes: PropTypes.object,
 };
 
