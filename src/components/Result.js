@@ -62,7 +62,7 @@ const getPercentileQuip = (percentile) => {
     return 'not very good';
   } else if (percentile < 55) {
     return 'boringly average';
-  } else if (parseInt(percentile) === 69) {
+  } else if (Math.ceil(percentile) === 69) {
     return 'nice';
   } else if (percentile < 90) {
     return 'actually pretty decent';
@@ -124,7 +124,7 @@ class Result extends Component {
         (result, c, s) =>
           result +
           (parseInt(s) < score ? c : 0) +
-          (parseInt(s) === score ? score / 0.5 : 0),
+          (parseInt(s) === score ? c / 0.5 : 0),
         0
       ) *
         100) /

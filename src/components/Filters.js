@@ -73,7 +73,7 @@ class Filters extends Component {
         this.state.place &&
         validPlayerPlaces.indexOf(this.state.place) === -1
       ) {
-        this.setState({ place: null }, () => {
+        this.setState({ place: '' }, () => {
           this.setHistory();
           this.sendFiltersUpdate();
         });

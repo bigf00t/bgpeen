@@ -121,7 +121,6 @@ class Graph extends Component {
       }, [])
       .orderBy(['x'])
       .value();
-    console.log(graphPoints);
 
     var graphData = {
       datasets: [
