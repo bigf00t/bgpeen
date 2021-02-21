@@ -117,10 +117,11 @@ class Graph extends Component {
 
     var graphPoints = _.chain(this.props.result.scores)
       .reduce((points, count, score) => {
-        return points.concat([{ x: score, y: count }]);
+        return points.concat([{ x: parseInt(score), y: count }]);
       }, [])
       .orderBy(['x'])
       .value();
+    console.log(graphPoints);
 
     var graphData = {
       datasets: [
