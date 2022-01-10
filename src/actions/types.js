@@ -1,2 +1,3 @@
-export const FETCH_GAMES = 'FETCH_GAMES';
-export const FETCH_GAME_RESULTS = 'FETCH_GAME_RESULTS';
+export const LOAD_GAME = 'LOAD_GAME';
+export const LOAD_GAMES = 'LOAD_GAMES';
+export const SET_GAME = 'SET_GAME';

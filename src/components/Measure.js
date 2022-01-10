@@ -3,10 +3,10 @@ import SelectGame from './SelectGame';
 import Result from './Result';
 import * as actions from '../actions';
 import { connect } from 'react-redux';
+import { Route } from 'react-router-dom';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
-import Filters from './Filters';
 
 const styles = () => ({
   root: {},
@@ -15,41 +15,20 @@ const styles = () => ({
 class Measure extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      game: null,
-      filters: {},
-    };
+    this.state = {};
   }
 
-  componentDidMount() {
-    this.props.fetchGames();
-  }
-
-  handleGameChange = (game) => {
-    this.setState({ game: game });
-  };
-
-  handleFiltersChange = (players, score, place) => {
-    this.setState({
-      filters: {
-        players: players,
-        score: score,
-        place: place,
-      },
-    });
-  };
+  // componentDidMount() {
+  //   this.props.loadGames();
+  // }
 
   render() {
     const classes = this.props.classes;
 
     return (
       <Box component="div" className={classes.root}>
-        <SelectGame handleChange={this.handleGameChange} />
-        <Filters
-          game={this.state.game}
-          handleChange={this.handleFiltersChange}
-        />
-        <Result game={this.state.game} filters={this.state.filters} />
+        <Route path="/:id?/:name?" component={SelectGame} />
+        <Route path="/:id/:name" component={Result} />
       </Box>
     );
   }
@@ -58,7 +37,6 @@ class Measure extends Component {
 Measure.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  fetchGames: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {

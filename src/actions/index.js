@@ -1,8 +1,8 @@
-import { FETCH_GAMES, FETCH_GAME_RESULTS } from '../actions/types';
+import { LOAD_GAMES, LOAD_GAME, SET_GAME } from '../actions/types';
 import _ from 'lodash';
 import { db } from '../fire';
 
-export const fetchGames = () => async (dispatch) => {
+export const loadGames = () => async (dispatch) => {
   return db
     .collection('games')
     .where('isNew', '==', false)
@@ -16,13 +16,13 @@ export const fetchGames = () => async (dispatch) => {
         }
       });
       dispatch({
-        type: FETCH_GAMES,
+        type: LOAD_GAMES,
         payload: games,
       });
     });
 };
 
-export const fetchGameResults = (gameId) => async (dispatch) => {
+export const loadGame = (gameId) => async (dispatch) => {
   return db
     .collection('results')
     .doc(gameId)
@@ -33,8 +33,15 @@ export const fetchGameResults = (gameId) => async (dispatch) => {
         gameRef.update({ popularity: (doc.data().popularity || 0) + 1 });
       });
       dispatch({
-        type: FETCH_GAME_RESULTS,
+        type: LOAD_GAME,
         payload: { id: gameId, ...snapshot.data() },
       });
     });
+};
+
+export const setGame = (gameId) => async (dispatch) => {
+  return dispatch({
+    type: SET_GAME,
+    payload: { id: gameId },
+  });
 };

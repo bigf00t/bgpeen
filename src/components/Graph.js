@@ -187,7 +187,7 @@ class Graph extends Component {
 
 Graph.propTypes = {
   result: PropTypes.object,
-  score: PropTypes.string,
+  score: PropTypes.number,
   percentile: PropTypes.number,
   theme: PropTypes.any,
 };

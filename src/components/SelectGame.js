@@ -14,10 +14,12 @@ import Box from '@material-ui/core/Box';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import PropTypes from 'prop-types';
 import { Button } from '@material-ui/core';
+import { withRouter } from 'react-router-dom';
 
 const styles = (theme) => ({
   button: {
     marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(1),
   },
   formControl: {
     maxWidth: 330,
@@ -32,6 +34,14 @@ const styles = (theme) => ({
     textAlign: 'center',
   },
 });
+
+const getGameSlug = (game) => {
+  return game.name
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace(/[^\w-]+/g, '');
+};
+
 class SelectGame extends Component {
   constructor(props) {
     super(props);
@@ -42,22 +52,26 @@ class SelectGame extends Component {
   }
 
   handleGameChange = (event, newGame) => {
+    // console.log(newGame);
     this.setState({ game: newGame });
     if (newGame) {
       if (!newGame.id) {
         this.setState({ added: false });
-        this.props.handleChange(null);
-      } else if (!newGame.results) {
-        this.props.fetchGameResults(newGame.id).then(() => {
-          let loadedGame = _.find(
-            this.props.data.games,
-            (game) => game.id === newGame.id
-          );
-          this.props.handleChange(loadedGame);
-        });
+        this.props.setGame(null);
       } else {
-        this.props.handleChange(newGame);
+        this.setOrLoadGame(newGame);
+        this.props.history.push({
+          pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
+        });
       }
+    }
+  };
+
+  setOrLoadGame = (newGame) => {
+    if (!newGame.results) {
+      this.props.loadGame(newGame.id);
+    } else {
+      this.props.setGame(newGame.id);
     }
   };
 
@@ -70,6 +84,31 @@ class SelectGame extends Component {
         this.setState({ added: true });
       });
   };
+
+  setGameFromUrl = () => {
+    if (this.props.match.params.id) {
+      let newGame = this.props.data.games.find(
+        (game) => game.id == this.props.match.params.id,
+        null
+      );
+      this.setOrLoadGame(newGame);
+      this.setState({ game: newGame });
+    } else if (this.props.data.game !== null) {
+      this.props.setGame(null);
+      this.setState({ game: null });
+    }
+  };
+
+  componentDidMount() {
+    this.props.loadGames().then(() => this.setGameFromUrl());
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.location !== prevProps.location) {
+      this.setState({ added: false });
+      this.setGameFromUrl();
+    }
+  }
 
   render() {
     const classes = this.props.classes;
@@ -95,7 +134,6 @@ class SelectGame extends Component {
                   {...params}
                   placeholder="Select a game or start typing!"
                   label="Game"
-                  hintText=".."
                   fullWidth
                   InputLabelProps={{
                     shrink: true,
@@ -137,7 +175,12 @@ class SelectGame extends Component {
 SelectGame.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  fetchGameResults: PropTypes.func,
+  history: PropTypes.object,
+  location: PropTypes.object,
+  match: PropTypes.object,
+  loadGames: PropTypes.func,
+  loadGame: PropTypes.func,
+  setGame: PropTypes.func,
   handleChange: PropTypes.func,
 };
 
@@ -148,4 +191,4 @@ const mapStateToProps = ({ data }) => {
 export default connect(
   mapStateToProps,
   actions
-)(withStyles(styles)(withTheme(SelectGame)));
+)(withStyles(styles)(withTheme(withRouter(SelectGame))));

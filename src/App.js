@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createMuiTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
@@ -39,13 +40,15 @@ function App() {
   );
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <div className="App">
-        <Menu />
-        <Measure />
-      </div>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <div className="App">
+          <Menu />
+          <Measure />
+        </div>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
