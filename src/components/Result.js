@@ -15,6 +15,7 @@ import Graph from './Graph';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Route } from 'react-router-dom';
+import Image from 'material-ui-image';
 
 const styles = (theme) => ({
   paper: {
@@ -28,6 +29,17 @@ const styles = (theme) => ({
   },
   card: {
     margin: theme.spacing(1),
+  },
+  image: {
+    margin: theme.spacing(0, 0, 0, 0),
+    maxWidth: 100,
+    maxHeight: 100,
+  },
+  title: {
+    margin: theme.spacing(0, 0, 0, 2),
+  },
+  credit: {
+    padding: theme.spacing(2),
   },
 });
 
@@ -44,32 +56,32 @@ const getOrdinalDesc = (percentile) => {
   }% (${percentile > 0 ? ordinal(Math.ceil(percentile)) : '0th'} percentile)`;
 };
 
-const getTitle = (percentile) => {
+const getScoreTitle = (percentile) => {
   if (window.location.toString().includes('bgpeen')) {
-    return `Your bgpeen is ${percentile < 50 ? 'small' : 'big'} in `;
+    return `Your bgpeen is ${percentile < 50 ? 'small' : 'big'}.`;
   } else {
-    return `You're ${getPercentileQuip(percentile)} at `;
+    return `You're ${getPercentileQuip(percentile)}`;
   }
 };
 
 // TODO: Case or switch
 const getPercentileQuip = (percentile) => {
   if (percentile < 1) {
-    return 'quite possibly one of the worst people in the world';
+    return 'quite possibly one of the worst players in the world!';
   } else if (percentile < 10) {
-    return 'just terrible';
+    return 'just terrible.';
   } else if (percentile < 45) {
-    return 'not very good';
+    return 'not very good.';
   } else if (percentile < 55) {
-    return 'boringly average';
+    return 'boringly average.';
   } else if (Math.ceil(percentile) === 69) {
-    return 'nice';
+    return 'nice ;).';
   } else if (percentile < 90) {
-    return 'actually pretty decent';
+    return 'actually pretty decent...';
   } else if (percentile < 99) {
-    return 'legit amazing';
+    return 'legit amazing!';
   } else if (percentile >= 99) {
-    return 'probably cheating';
+    return 'probably cheating :(';
   } else {
     return '';
   }
@@ -176,38 +188,41 @@ class Result extends Component {
           />
           <Paper className={classes.paper} square>
             <Box component="div">
-              <Box component="div" mb={2}>
+              <Box
+                component="div"
+                mb={2}
+                display="flex"
+                flexWrap="wrap"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Image
+                  src={this.props.data.game.thumbnail}
+                  imageStyle={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'scale-down',
+                  }}
+                  style={{ width: 100, height: 100, padding: 0 }}
+                  color='"none"'
+                  className={classes.image}
+                />
                 <Typography
-                  variant="h3"
+                  variant="h2"
                   component="h2"
+                  className={[classes.title]}
                   gutterBottom
                   align="center"
                 >
-                  {this.state.percentile !== null
+                  {/* {this.state.percentile !== null
                     ? getTitle(this.state.percentile)
-                    : ''}
+                    : ''} */}
                   <Link
-                    className={classes.link}
+                    className={[classes.link]}
                     href={`https://boardgamegeek.com/boardgame/${this.props.data.game.id}`}
                     target="_blank"
                   >
                     {this.props.data.game.name}
-                  </Link>
-                </Typography>
-                <Typography component="div" align="center">
-                  {this.state.filters.score
-                    ? ` Your score of ${
-                        this.state.filters.score
-                      } places you in the ${getOrdinalDesc(
-                        this.state.percentile
-                      )} of valid scores recorded on `
-                    : 'Scores provided by '}
-                  <Link
-                    className={classes.link}
-                    href="https://boardgamegeek.com"
-                    target="_blank"
-                  >
-                    BoardGameGeek.com
                   </Link>
                 </Typography>
               </Box>
@@ -222,13 +237,13 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Valid Scores
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.scoreCount}
                     </Typography>
                   </CardContent>
@@ -236,13 +251,13 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Excluded Scores
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.trimmedScoreCount}
                     </Typography>
                   </CardContent>
@@ -250,13 +265,13 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Mean
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.mean}
                     </Typography>
                   </CardContent>
@@ -264,13 +279,13 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Mode
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.mode}
                     </Typography>
                   </CardContent>
@@ -278,13 +293,13 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Median
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.median}
                     </Typography>
                   </CardContent>
@@ -292,17 +307,50 @@ class Result extends Component {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography
-                      className={classes.title}
+                      align="center"
                       color="textSecondary"
                       gutterBottom
                     >
                       Std
                     </Typography>
-                    <Typography variant="h3" component="h3">
+                    <Typography variant="h3" component="h3" align="center">
                       {this.state.result.std}
                     </Typography>
                   </CardContent>
                 </Card>
+              </Box>
+              <Box component="div">
+                <Box
+                  component="div"
+                  mb={2}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Typography
+                    component="div"
+                    align="center"
+                    className={classes.credit}
+                  >
+                    {this.state.filters.score
+                      ? ` Your score of ${
+                          this.state.filters.score
+                        } places you in the ${getOrdinalDesc(
+                          this.state.percentile
+                        )} of valid scores.`
+                      : ''}
+                  </Typography>
+                  <Typography
+                    variant="h2"
+                    component="h2"
+                    className={[classes.title]}
+                    gutterBottom
+                    align="center"
+                  >
+                    {this.state.percentile !== null
+                      ? getScoreTitle(this.state.percentile)
+                      : ''}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
             <Graph
@@ -315,6 +363,16 @@ class Result extends Component {
               percentile={this.state.percentile}
             ></Graph>
           </Paper>
+          <Typography component="div" align="center" className={classes.credit}>
+            {'Scores provided by '}
+            <Link
+              className={classes.link}
+              href="https://boardgamegeek.com"
+              target="_blank"
+            >
+              boardgamegeek.com
+            </Link>
+          </Typography>
         </Box>
       );
     } else {

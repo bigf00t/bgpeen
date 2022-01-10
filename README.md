@@ -11,6 +11,10 @@ To save local data state:
 To test emulated functions in postman:
 - POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames
 
+To deploy
+- $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
+- firebase login --reauth
+
 To deploy site:
 - npm run-script build
 - firebase deploy --only hosting
