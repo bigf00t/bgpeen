@@ -53,9 +53,9 @@ function updateGame(game, gameRef, pageResults) {
     .update({
       unusablePlays: _.defaultTo(game.unusablePlays, 0) + newUnusablePlayCount,
       remainingPlays: remainingPlays,
-      startDate: remainingPlays === 0 ? '' : game.startDate === '' ? newestPlayDate : game.startDate,
+      startDate: remainingPlays === 0 ? '' : _.defaultTo(game.startDate, '') === '' ? newestPlayDate : game.startDate,
       maxDate: remainingPlays === 0 ? '' : oldestPlayDate,
-      minDate: remainingPlays === 0 ? game.startDate : game.minDate,
+      minDate: remainingPlays === 0 ? game.startDate : _.defaultTo(game.minDate, ''),
       totalPlays: _.defaultTo(game.totalPlays, 0) + plays.length,
       lastUpdated: moment(new Date()).format(),
     })
@@ -68,7 +68,12 @@ function getPlaysUrl(game) {
   // var maxDate = _.defaultTo(game.remainingPlays, 0) > 0 ? _.defaultTo(game.oldestPlay, '') : '';
   // var minDate = maxDate === '' ? _.defaultTo(game.newestPlay, '') : '';
 
-  return `https://api.geekdo.com/xmlapi2/plays?id=${game.id}&mindate=${game.minDate}&maxdate=${game.maxDate}&page=`;
+  return (
+    `https://api.geekdo.com/xmlapi2/plays?id=${game.id}` +
+    `&mindate=${_.defaultTo(game.minDate, '')}` +
+    `&maxdate=${_.defaultTo(game.maxDate, '')}` +
+    `&page=`
+  );
 }
 
 function updatePlaysRecursively(game, gameRef, playsUrl, maxPages, page = 1) {

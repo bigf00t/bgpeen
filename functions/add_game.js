@@ -123,6 +123,9 @@ exports.addGame = (searchTerm, exact) => {
                     popularity: 0,
                     totalPlays: 0,
                     dateAdded: moment(new Date()).format(),
+                    startDate: '',
+                    maxDate: '',
+                    minDate: '',
                   };
 
                   console.info(`Successfully added ${name}!`);
