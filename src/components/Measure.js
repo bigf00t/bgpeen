@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import SelectGame from './SelectGame';
 import Result from './Result';
+import PopularGames from './PopularGames';
 import * as actions from '../actions';
 import { connect } from 'react-redux';
 import { Route } from 'react-router-dom';
@@ -27,8 +28,8 @@ class Measure extends Component {
 
     return (
       <Box component="div" className={classes.root}>
-        <Route path="/:id?/:name?" component={SelectGame} />
-        <Route path="/:id/:name" component={Result} />
+        <SelectGame />
+        <PopularGames />
       </Box>
     );
   }

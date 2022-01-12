@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import _ from 'lodash';
 import ordinal from 'ordinal';
+import * as actions from '../actions';
 
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
@@ -14,7 +15,7 @@ import Filters from './Filters';
 import Graph from './Graph';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Route } from 'react-router-dom';
+import { withRouter, Route } from 'react-router-dom';
 import Image from 'material-ui-image';
 
 const styles = (theme) => ({
@@ -136,17 +137,45 @@ class Result extends Component {
     return percentile;
   };
 
+  setGameFromUrl = () => {
+    if (this.props.match.params.id) {
+      let newGame = this.props.data.games.find((game) => game.id == this.props.match.params.id, null);
+      this.setOrLoadGame(newGame);
+      this.setState({ game: newGame });
+    }
+    // else if (this.props.data.game !== null) {
+    //   this.props.setGame(null);
+    //   this.setState({ game: null });
+    // }
+  };
+
+  setOrLoadGame = (newGame) => {
+    if (!newGame.results) {
+      this.props.loadGame(newGame.id);
+    } else {
+      this.props.setGame(newGame.id);
+    }
+  };
+
   componentDidMount() {
-    if (this.props.data.game) {
+    this.props.setGame(null);
+
+    if (_.isEmpty(this.props.data.games)) {
+      this.props.loadGames().then(() => {
+        this.setGameFromUrl();
+        this.setResult();
+      });
+    } else {
+      this.setGameFromUrl();
       this.setResult();
     }
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.data.game && prevProps.data.game && this.props.data.game.id !== prevProps.data.game.id) {
-      this.setResult();
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (this.props.data.game && prevProps.data.game && this.props.data.game.id !== prevProps.data.game.id) {
+  //     this.setResult();
+  //   }
+  // }
 
   handleFiltersChange = (filters) => {
     this.setState(
@@ -163,12 +192,6 @@ class Result extends Component {
     if (this.props.data.game && this.state.result) {
       return (
         <Box component="div">
-          {/* <Filters handleChange={this.handleFiltersChange} /> */}
-          {/* <Route path="/:id/:name" component={Result} /> */}
-          <Route
-            path="/:id/:name/:players?/:place?/:score?"
-            render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
-          />
           <Paper className={classes.paper} square>
             <Box component="div">
               <Box component="div" mb={2} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
@@ -183,12 +206,12 @@ class Result extends Component {
                   color='"none"'
                   className={classes.image}
                 />
-                <Typography variant="h2" component="h2" className={[classes.title]} gutterBottom align="center">
+                <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
                   {/* {this.state.percentile !== null
                     ? getTitle(this.state.percentile)
                     : ''} */}
                   <Link
-                    className={[classes.link]}
+                    className={classes.link}
                     href={`https://boardgamegeek.com/boardgame/${this.props.data.game.id}`}
                     target="_blank"
                   >
@@ -196,6 +219,10 @@ class Result extends Component {
                   </Link>
                 </Typography>
               </Box>
+              <Route
+                path="/:id/:name/:players?/:place?/:score?"
+                render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
+              />
               <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
                 <Card className={classes.card}>
                   <CardContent>
@@ -267,7 +294,7 @@ class Result extends Component {
                         )} of valid scores.`
                       : ''}
                   </Typography>
-                  <Typography variant="h2" component="h2" className={[classes.title]} gutterBottom align="center">
+                  <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
                     {this.state.percentile !== null ? getScoreTitle(this.state.percentile) : ''}
                   </Typography>
                 </Box>
@@ -296,10 +323,14 @@ class Result extends Component {
 Result.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
+  match: PropTypes.object,
+  loadGames: PropTypes.func,
+  setGame: PropTypes.func,
+  loadGame: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps)(withStyles(styles)(withTheme(Result)));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(withRouter(Result))));

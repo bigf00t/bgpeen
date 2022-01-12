@@ -28,7 +28,7 @@ class Menu extends Component {
     const classes = this.props.classes;
 
     return (
-      <AppBar position="static" color="default" display="flex" flexDirection="column">
+      <AppBar position="static" color="default" display="flex">
         <Toolbar>
           <Box display="flex" flexGrow={1}>
             <Link className={classes.logo} to="/">
@@ -41,7 +41,7 @@ class Menu extends Component {
             </Link>
           </Box>
           <a className={classes.twitter} href="https://twitter.com/GoodAtDotGames" target="_blank" rel="noreferrer">
-            <Typography component="span" variant="span" color="textSecondary">
+            <Typography component="span" color="textSecondary">
               @GoodAtDotGames
             </Typography>
           </a>

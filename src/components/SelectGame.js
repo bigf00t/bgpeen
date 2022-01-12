@@ -15,6 +15,9 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import PropTypes from 'prop-types';
 import { Button } from '@material-ui/core';
 import { withRouter } from 'react-router-dom';
+import Typography from '@material-ui/core/Typography';
+
+import { getGameSlug } from '../utils';
 
 const styles = (theme) => ({
   button: {
@@ -35,13 +38,6 @@ const styles = (theme) => ({
   },
 });
 
-const getGameSlug = (game) => {
-  return game.name
-    .toLowerCase()
-    .replace(/ /g, '-')
-    .replace(/[^\w-]+/g, '');
-};
-
 class SelectGame extends Component {
   constructor(props) {
     super(props);
@@ -59,19 +55,11 @@ class SelectGame extends Component {
         this.setState({ added: false });
         this.props.setGame(null);
       } else {
-        this.setOrLoadGame(newGame);
+        // this.setOrLoadGame(newGame);
         this.props.history.push({
           pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
         });
       }
-    }
-  };
-
-  setOrLoadGame = (newGame) => {
-    if (!newGame.results) {
-      this.props.loadGame(newGame.id);
-    } else {
-      this.props.setGame(newGame.id);
     }
   };
 
@@ -85,25 +73,14 @@ class SelectGame extends Component {
       });
   };
 
-  setGameFromUrl = () => {
-    if (this.props.match.params.id) {
-      let newGame = this.props.data.games.find((game) => game.id == this.props.match.params.id, null);
-      this.setOrLoadGame(newGame);
-      this.setState({ game: newGame });
-    } else if (this.props.data.game !== null) {
-      this.props.setGame(null);
-      this.setState({ game: null });
-    }
-  };
-
   componentDidMount() {
-    this.props.loadGames().then(() => this.setGameFromUrl());
+    this.props.loadGames();
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.location !== prevProps.location) {
       this.setState({ added: false });
-      this.setGameFromUrl();
+      // this.setGameFromUrl();
     }
   }
 
@@ -111,7 +88,10 @@ class SelectGame extends Component {
     const classes = this.props.classes;
 
     return (
-      <Box component="div">
+      <Box component="div" mt={2}>
+        <Typography variant="h4" component="h4" align="center">
+          Find a Game
+        </Typography>
         <FormGroup row className={classes.formGroup}>
           <FormControl className={classes.formControl} fullWidth>
             <Autocomplete
@@ -129,8 +109,8 @@ class SelectGame extends Component {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Select a game or start typing!"
-                  label="Game"
+                  placeholder="Start typing..."
+                  // label="Game"
                   fullWidth
                   InputLabelProps={{
                     shrink: true,
@@ -173,7 +153,6 @@ SelectGame.propTypes = {
   classes: PropTypes.object,
   history: PropTypes.object,
   location: PropTypes.object,
-  match: PropTypes.object,
   loadGames: PropTypes.func,
   loadGame: PropTypes.func,
   setGame: PropTypes.func,
