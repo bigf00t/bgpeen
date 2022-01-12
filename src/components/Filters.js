@@ -69,10 +69,7 @@ class Filters extends Component {
     this.setState({ players: event.target.value }, () => {
       var validPlayerPlaces = this.getValidPlayerPlaces();
 
-      if (
-        this.state.place &&
-        validPlayerPlaces.indexOf(this.state.place) === -1
-      ) {
+      if (this.state.place && validPlayerPlaces.indexOf(this.state.place) === -1) {
         this.setState({ place: '' }, () => {
           this.setHistory();
           this.sendFiltersUpdate();
@@ -87,9 +84,7 @@ class Filters extends Component {
   };
 
   getValidPlayerPlaces = () => {
-    return this.props.data.game && this.state.players
-      ? _.range(1, this.state.players + 1)
-      : [];
+    return this.props.data.game && this.state.players ? _.range(1, this.state.players + 1) : [];
   };
 
   handlePlaceChange = (event) => {
@@ -119,17 +114,14 @@ class Filters extends Component {
         score: this.getIntFromParam(this.props.match.params.score),
       },
       () => {
-        this.setState(
-          { validPlayerPlaces: this.getValidPlayerPlaces() },
-          () => {
-            this.setState(
-              {
-                place: this.getIntFromParam(this.props.match.params.place),
-              },
-              () => this.sendFiltersUpdate()
-            );
-          }
-        );
+        this.setState({ validPlayerPlaces: this.getValidPlayerPlaces() }, () => {
+          this.setState(
+            {
+              place: this.getIntFromParam(this.props.match.params.place),
+            },
+            () => this.sendFiltersUpdate()
+          );
+        });
       }
     );
   };
@@ -151,10 +143,7 @@ class Filters extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (
-      this.props.data.game &&
-      this.props.data.game.id !== prevProps.data.game.id
-    ) {
+    if (this.props.data.game && this.props.data.game.id !== prevProps.data.game.id) {
       this.setState({ players: '', place: '', score: '' }, () => {
         this.sendFiltersUpdate();
       });
@@ -247,6 +236,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps)(
-  withStyles(styles)(withTheme(withRouter(Filters)))
-);
+export default connect(mapStateToProps)(withStyles(styles)(withTheme(withRouter(Filters))));

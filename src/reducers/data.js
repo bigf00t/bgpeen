@@ -13,10 +13,7 @@ export default (state = dataState, action) => {
         games: action.payload,
       };
     case LOAD_GAME:
-      var loadedGame = state.games.find(
-        (game) => game.id == action.payload.id,
-        null
-      );
+      var loadedGame = state.games.find((game) => game.id == action.payload.id, null);
       return {
         ...state,
         game: loadedGame ? { ...loadedGame, ...action.payload } : null,

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import Box from '@material-ui/core/Box';
 import { Link } from 'react-router-dom';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
@@ -12,7 +13,13 @@ const styles = () => ({
     textDecoration: 'none',
     '& span': {
       verticalAlign: 'top',
-    }
+    },
+  },
+  twitter: {
+    textDecoration: 'none',
+    '& span': {
+      verticalAlign: 'top',
+    },
   },
 });
 
@@ -21,22 +28,23 @@ class Menu extends Component {
     const classes = this.props.classes;
 
     return (
-      <AppBar position="static" color="default">
+      <AppBar position="static" color="default" display="flex" flexDirection="column">
         <Toolbar>
-          <Link className={classes.logo} to="/">
-            <Typography component="span" variant="h4" color="textPrimary">
-              {window.location.toString().includes('bgpeen')
-                ? 'bgpeen'
-                : 'goodat.games'}
+          <Box display="flex" flexGrow={1}>
+            <Link className={classes.logo} to="/">
+              <Typography component="span" variant="h4" color="textPrimary">
+                {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
+              </Typography>
+              <Typography component="span" variant="subtitle2" color="textPrimary">
+                &nbsp;beta
+              </Typography>
+            </Link>
+          </Box>
+          <a className={classes.twitter} href="https://twitter.com/GoodAtDotGames" target="_blank" rel="noreferrer">
+            <Typography component="span" variant="span" color="textSecondary">
+              @GoodAtDotGames
             </Typography>
-            <Typography
-              component="span"
-              variant="subtitle2"
-              color="textPrimary"
-            >
-              &nbsp;beta
-            </Typography>
-          </Link>
+          </a>
         </Toolbar>
       </AppBar>
     );

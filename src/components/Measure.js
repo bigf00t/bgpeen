@@ -43,7 +43,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(
-  mapStateToProps,
-  actions
-)(withStyles(styles)(withTheme(Measure)));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(Measure)));

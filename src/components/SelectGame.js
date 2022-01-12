@@ -87,10 +87,7 @@ class SelectGame extends Component {
 
   setGameFromUrl = () => {
     if (this.props.match.params.id) {
-      let newGame = this.props.data.games.find(
-        (game) => game.id == this.props.match.params.id,
-        null
-      );
+      let newGame = this.props.data.games.find((game) => game.id == this.props.match.params.id, null);
       this.setOrLoadGame(newGame);
       this.setState({ game: newGame });
     } else if (this.props.data.game !== null) {
@@ -160,8 +157,7 @@ class SelectGame extends Component {
         </FormGroup>
         {this.state.added ? (
           <Box component="div" className={classes.message}>
-            Game has been added to the queue, but it could take up to 10 minutes
-            for the data to be available. <br />
+            Game has been added to the queue, but it could take up to 10 minutes for the data to be available. <br />
             Please wait and refresh in a little while. Thanks!
           </Box>
         ) : (
@@ -188,7 +184,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(
-  mapStateToProps,
-  actions
-)(withStyles(styles)(withTheme(withRouter(SelectGame))));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(withRouter(SelectGame))));

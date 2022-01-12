@@ -84,11 +84,7 @@ const getOptions = (props) => {
           borderWidth: 2,
           label: {
             // TODO: Make this multiline when v1.0 of annotation plugin is released
-            content: [
-              `Your score: ${props.score} - ${ordinal(
-                Math.ceil(props.percentile || 0)
-              )} percentile`,
-            ],
+            content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
             enabled: true,
             fontColor: props.theme.palette.background.default,
             backgroundColor: getScoreColor(props.percentile),
@@ -129,15 +125,9 @@ class Graph extends Component {
           label: ['Scores'],
           // color: 'rgba(63, 81, 181, 1)',
           // backgroundColor: 'rgba(63, 81, 181, 0.25)',
-          backgroundColor: this.props.theme.palette.graph.background[
-            this.props.theme.palette.type
-          ],
-          borderColor: this.props.theme.palette.graph.border[
-            this.props.theme.palette.type
-          ],
-          pointBackgroundColor: this.props.theme.palette.graph.point[
-            this.props.theme.palette.type
-          ],
+          backgroundColor: this.props.theme.palette.graph.background[this.props.theme.palette.type],
+          borderColor: this.props.theme.palette.graph.border[this.props.theme.palette.type],
+          pointBackgroundColor: this.props.theme.palette.graph.point[this.props.theme.palette.type],
           // borderColor: 'rgba(63, 81, 181, 0.5)',
           // pointBackgroundColor: 'rgba(63, 81, 181, 1)',
           // borderWidth: 1,
@@ -162,23 +152,14 @@ class Graph extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    if (
-      this.props.result !== prevProps.result ||
-      this.props.score !== prevProps.score
-    ) {
+    if (this.props.result !== prevProps.result || this.props.score !== prevProps.score) {
       this.setGraphData();
     }
   }
 
   render() {
     if (this.props.result) {
-      return (
-        <Line
-          data={this.state.graphData}
-          options={getOptions(this.props)}
-          plugins={[ChartAnnotation]}
-        />
-      );
+      return <Line data={this.state.graphData} options={getOptions(this.props)} plugins={[ChartAnnotation]} />;
     } else {
       return '';
     }

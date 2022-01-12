@@ -48,12 +48,11 @@ const getOrdinalDesc = (percentile) => {
     return '';
   }
 
-  var position =
-    percentile < 50 ? 'bottom' : percentile > 50 ? 'top' : 'middle';
+  var position = percentile < 50 ? 'bottom' : percentile > 50 ? 'top' : 'middle';
 
-  return `${position} ${
-    percentile > 50 ? (100 - percentile).toFixed(2) : percentile.toFixed(2)
-  }% (${percentile > 0 ? ordinal(Math.ceil(percentile)) : '0th'} percentile)`;
+  return `${position} ${percentile > 50 ? (100 - percentile).toFixed(2) : percentile.toFixed(2)}% (${
+    percentile > 0 ? ordinal(Math.ceil(percentile)) : '0th'
+  } percentile)`;
 };
 
 const getScoreTitle = (percentile) => {
@@ -103,8 +102,7 @@ class Result extends Component {
     var result = this.props.data.game
       ? _.find(this.props.data.game.results, (result) => {
           return (
-            (this.state.filters.players || null) ===
-              (result.playerCount || null) &&
+            (this.state.filters.players || null) === (result.playerCount || null) &&
             (this.state.filters.place || null) === (result.playerPlace || null)
           );
         })
@@ -118,10 +116,7 @@ class Result extends Component {
   setPercentile = () => {
     if (this.state.filters.score) {
       this.setState({
-        percentile: this.getPercentile(
-          this.state.result.scores,
-          this.state.filters.score
-        ),
+        percentile: this.getPercentile(this.state.result.scores, this.state.filters.score),
       });
     } else {
       this.setState({ percentile: null });
@@ -133,10 +128,7 @@ class Result extends Component {
     var percentile =
       (_.reduce(
         scores,
-        (result, c, s) =>
-          result +
-          (parseInt(s) < score ? c : 0) +
-          (parseInt(s) === score ? c / 0.5 : 0),
+        (result, c, s) => result + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c / 0.5 : 0),
         0
       ) *
         100) /
@@ -151,11 +143,7 @@ class Result extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (
-      this.props.data.game &&
-      prevProps.data.game &&
-      this.props.data.game.id !== prevProps.data.game.id
-    ) {
+    if (this.props.data.game && prevProps.data.game && this.props.data.game.id !== prevProps.data.game.id) {
       this.setResult();
     }
   }
@@ -179,23 +167,11 @@ class Result extends Component {
           {/* <Route path="/:id/:name" component={Result} /> */}
           <Route
             path="/:id/:name/:players?/:place?/:score?"
-            render={(routeProps) => (
-              <Filters
-                {...routeProps}
-                handleChange={this.handleFiltersChange}
-              />
-            )}
+            render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
           />
           <Paper className={classes.paper} square>
             <Box component="div">
-              <Box
-                component="div"
-                mb={2}
-                display="flex"
-                flexWrap="wrap"
-                justifyContent="center"
-                alignItems="center"
-              >
+              <Box component="div" mb={2} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
                 <Image
                   src={this.props.data.game.thumbnail}
                   imageStyle={{
@@ -207,13 +183,7 @@ class Result extends Component {
                   color='"none"'
                   className={classes.image}
                 />
-                <Typography
-                  variant="h2"
-                  component="h2"
-                  className={[classes.title]}
-                  gutterBottom
-                  align="center"
-                >
+                <Typography variant="h2" component="h2" className={[classes.title]} gutterBottom align="center">
                   {/* {this.state.percentile !== null
                     ? getTitle(this.state.percentile)
                     : ''} */}
@@ -226,21 +196,10 @@ class Result extends Component {
                   </Link>
                 </Typography>
               </Box>
-              <Box
-                component="div"
-                display="flex"
-                flexWrap="wrap"
-                justifyContent="center"
-                alignItems="center"
-                width={1}
-              >
+              <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Valid Scores
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -250,11 +209,7 @@ class Result extends Component {
                 </Card>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Excluded Scores
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -264,11 +219,7 @@ class Result extends Component {
                 </Card>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Mean
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -278,11 +229,7 @@ class Result extends Component {
                 </Card>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Mode
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -292,11 +239,7 @@ class Result extends Component {
                 </Card>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Median
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -306,11 +249,7 @@ class Result extends Component {
                 </Card>
                 <Card className={classes.card}>
                   <CardContent>
-                    <Typography
-                      align="center"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography align="center" color="textSecondary" gutterBottom>
                       Std
                     </Typography>
                     <Typography variant="h3" component="h3" align="center">
@@ -320,56 +259,29 @@ class Result extends Component {
                 </Card>
               </Box>
               <Box component="div">
-                <Box
-                  component="div"
-                  mb={2}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Typography
-                    component="div"
-                    align="center"
-                    className={classes.credit}
-                  >
+                <Box component="div" mb={2} justifyContent="center" alignItems="center">
+                  <Typography component="div" align="center" className={classes.credit}>
                     {this.state.filters.score
-                      ? ` Your score of ${
-                          this.state.filters.score
-                        } places you in the ${getOrdinalDesc(
+                      ? ` Your score of ${this.state.filters.score} places you in the ${getOrdinalDesc(
                           this.state.percentile
                         )} of valid scores.`
                       : ''}
                   </Typography>
-                  <Typography
-                    variant="h2"
-                    component="h2"
-                    className={[classes.title]}
-                    gutterBottom
-                    align="center"
-                  >
-                    {this.state.percentile !== null
-                      ? getScoreTitle(this.state.percentile)
-                      : ''}
+                  <Typography variant="h2" component="h2" className={[classes.title]} gutterBottom align="center">
+                    {this.state.percentile !== null ? getScoreTitle(this.state.percentile) : ''}
                   </Typography>
                 </Box>
               </Box>
             </Box>
             <Graph
               result={this.state.result}
-              score={
-                this.state.filters.score !== ''
-                  ? this.state.filters.score
-                  : null
-              }
+              score={this.state.filters.score !== '' ? this.state.filters.score : null}
               percentile={this.state.percentile}
             ></Graph>
           </Paper>
           <Typography component="div" align="center" className={classes.credit}>
             {'Scores provided by '}
-            <Link
-              className={classes.link}
-              href="https://boardgamegeek.com"
-              target="_blank"
-            >
+            <Link className={classes.link} href="https://boardgamegeek.com" target="_blank">
               boardgamegeek.com
             </Link>
           </Typography>
