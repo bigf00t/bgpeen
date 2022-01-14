@@ -10,6 +10,7 @@ const cors = require('cors')({ origin: true });
 const add_game = require('./add_game');
 const manual_plays = require('./manual_plays_update');
 const manual_stats = require('./manual_stats_update');
+const manual_games = require('./manual_games_update');
 const automatic = require('./automatic_game_updates');
 
 const runtimeOpts = {
@@ -29,16 +30,15 @@ exports.addGame = functions.https.onRequest(async (req, res) => {
   });
 });
 
-exports.manualPlaysUpdate = functions.https // .runWith(runtimeOpts)
-  .onRequest(async (req, res) => {
-    return cors(req, res, async () => {
-      manual_plays
-        .manualPlaysUpdate(req.body.games, req.body.maxPages, req.body.minDate, req.body.maxDate, req.body.flush)
-        .then(function () {
-          res.status(200).send('Finished Updating Plays');
-        });
-    });
+exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    manual_plays
+      .manualPlaysUpdate(req.body.games, req.body.maxPages, req.body.minDate, req.body.maxDate, req.body.flush)
+      .then(function () {
+        res.status(200).send('Finished Updating Plays');
+      });
   });
+});
 
 exports.manualStatsUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
   return cors(req, res, async () => {
@@ -61,5 +61,13 @@ exports.runAutomaticGameUpdates = functions
   .pubsub.schedule('every 5 minutes')
   .onRun(async () => {
     await automatic.runAutomaticGameUpdates();
-    console.log('Finished runAutomaticGameUpdates!');
+    // console.log('Finished runAutomaticGameUpdates!');
   });
+
+exports.manualGamesUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    manual_games.manualGamesUpdate(req.body.games).then(function () {
+      res.status(200).send('Finished Updating Games');
+    });
+  });
+});

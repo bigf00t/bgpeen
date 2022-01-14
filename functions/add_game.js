@@ -122,10 +122,13 @@ exports.addGame = (searchTerm, exact) => {
                     suggestedplayers: suggestedplayers,
                     popularity: 0,
                     totalPlays: 0,
-                    dateAdded: moment(new Date()).format(),
+                    unusablePlays: 0,
+                    remainingPlays: 0,
+                    dateAdded: moment(new Date()),
                     startDate: '',
                     maxDate: '',
                     minDate: '',
+                    isNew: true,
                   };
 
                   console.info(`Successfully added ${name}!`);
@@ -135,6 +138,7 @@ exports.addGame = (searchTerm, exact) => {
                     .doc(newGame.id)
                     .set(newGame)
                     .then(() => {
+                      console.info(`Added ${newGame.name} (${newGame.id})`);
                       return newGame;
                     });
                 })

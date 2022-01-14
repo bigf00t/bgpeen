@@ -6,19 +6,13 @@ exports.updateResults = (resultsRef, game, dirtyPlays, flush) => {
   console.info(`Updating results for ${game.name}`);
 
   return resultsRef.get().then(function (resultsSnapshot) {
-    // console.info('Starting result calculation');
     var existingResults = resultsSnapshot.data();
     var resultsToAddTo = flush || existingResults === undefined ? [] : existingResults.results;
     var cleanPlays = getCleanPlays(dirtyPlays);
     //TODO: Save this val
     // var unusablePlays = dirtyPlays.length - cleanPlays.length;
 
-    console.info(`Adding ${cleanPlays.length} valid plays to results`);
-
     var rawResults = addPlaysToResults(cleanPlays, resultsToAddTo);
-    // console.info('Finished result calculation');
-
-    // console.info('Starting stats calculation');
     var results = _(rawResults)
       .filter((result) => {
         // We only want results with scores and valid player counts
@@ -33,7 +27,6 @@ exports.updateResults = (resultsRef, game, dirtyPlays, flush) => {
         return addStatsToResult(result);
       })
       .value();
-    // console.info('Finished stats calculation');
 
     // No valid results
     if (results.length === 0) {

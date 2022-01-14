@@ -7,8 +7,7 @@ const util = require('./util');
 const update = require('./update_plays');
 
 exports.manualPlaysUpdate = (games, maxPages) => {
-  // , minDate, maxDate, flush
-  // console.info(games);
+  // Missing minDate, maxDate, flush
   return db
     .collection('games')
     .where('id', 'in', games)
@@ -21,7 +20,6 @@ exports.manualPlaysUpdate = (games, maxPages) => {
       );
     })
     .then(function () {
-      // console.info('Finished updateGames');
       return Promise.resolve();
     });
 };

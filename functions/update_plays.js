@@ -11,18 +11,14 @@ const util = require('./util');
 
 exports.updateGamePlays = (game, maxPages) => {
   var gameRef = db.collection('games').doc(game.id);
-  console.info(`Started updating plays for: ${game.name}`);
+  console.info(`Getting plays for ${game.name}`);
+
   var playsUrl = getPlaysUrl(game);
-  return updatePlaysRecursively(game, gameRef, playsUrl, maxPages).then(function (pageResults) {
+  console.info(`Using BGG API Url: ${playsUrl}`);
+
+  return updatePlaysRecursively(game, gameRef, playsUrl, maxPages).then((pageResults) => {
     return updateGame(game, gameRef, pageResults);
   });
-  // .then(function () {
-  //   // if (game.isNew) {
-  //   //   return gameRef.update({ isNew: false });
-  //   // }
-  //   // console.info('Finished updateGamePlays');
-  //   return Promise.resolve();
-  // });
 };
 
 function updateGame(game, gameRef, pageResults) {
@@ -43,12 +39,8 @@ function updateGame(game, gameRef, pageResults) {
 
   var remainingPlays = pageResults.slice(-1)[0].remainingPlays;
 
-  // console.log(game.unusablePlays + newUnusablePlayCount);
-  // console.log(pageResults.slice(-1)[0].remainingPlays);
-  // console.log(oldestPlayDate);
-  // console.log(newestPlayDate);
-  // console.log(_.defaultTo(game.totalPlays, 0) + plays.length);
-  // console.log(moment(new Date()).format('YYYY-MM-DD'));
+  console.info(`Added ${plays.length} total plays`);
+
   return gameRef
     .update({
       unusablePlays: _.defaultTo(game.unusablePlays, 0) + newUnusablePlayCount,
@@ -57,7 +49,8 @@ function updateGame(game, gameRef, pageResults) {
       maxDate: remainingPlays === 0 ? '' : oldestPlayDate,
       minDate: remainingPlays === 0 ? game.startDate : _.defaultTo(game.minDate, ''),
       totalPlays: _.defaultTo(game.totalPlays, 0) + plays.length,
-      lastUpdated: moment(new Date()).format(),
+      playsLastUpdated: moment(new Date()),
+      isNew: false,
     })
     .then(function () {
       return Promise.resolve(plays);
@@ -65,9 +58,6 @@ function updateGame(game, gameRef, pageResults) {
 }
 
 function getPlaysUrl(game) {
-  // var maxDate = _.defaultTo(game.remainingPlays, 0) > 0 ? _.defaultTo(game.oldestPlay, '') : '';
-  // var minDate = maxDate === '' ? _.defaultTo(game.newestPlay, '') : '';
-
   return (
     `https://api.geekdo.com/xmlapi2/plays?id=${game.id}` +
     `&mindate=${_.defaultTo(game.minDate, '')}` +
@@ -77,16 +67,9 @@ function getPlaysUrl(game) {
 }
 
 function updatePlaysRecursively(game, gameRef, playsUrl, maxPages, page = 1) {
-  // console.info('Loading plays page: ' + page);
   return updatePlaysPage(gameRef, playsUrl, maxPages, page).then(function (pageResult) {
-    // console.info(
-    //   'Remaining pages: ' +
-    //     (pageResult.remainingPages > maxPages - page
-    //       ? maxPages - page
-    //       : pageResult.remainingPages)
-    // );
-    if (page >= maxPages || pageResult.remainingPages == 0) {
-      //Hit the bottom of the stack
+    if ((maxPages > 0 && page >= maxPages) || pageResult.remainingPages == 0) {
+      // Hit the bottom of the stack
       return Promise.resolve([pageResult]);
     }
     return util.delay(page + 1).then(function (nextPage) {
@@ -101,11 +84,9 @@ function updatePlaysRecursively(game, gameRef, playsUrl, maxPages, page = 1) {
 }
 
 function updatePlaysPage(gameRef, playsUrl, maxPages, page) {
-  console.info(`Starting BGG call: ${playsUrl}${page}`);
   return axios
     .get(playsUrl + page)
     .then(function (result) {
-      // console.info('Finished BGG call');
       var json = convert.xml2js(result.data, {
         compact: true,
         attributesKey: '$',
@@ -113,9 +94,8 @@ function updatePlaysPage(gameRef, playsUrl, maxPages, page) {
 
       if (json.plays.play != undefined) {
         var plays = getCleanPlaysFromJson(json.plays.play);
-        // console.info(plays);
+        console.info(`Adding ${plays.length} valid plays`);
 
-        // console.info('Started db batch updates');
         var batch = db.batch();
 
         _.forEach(plays, function (play) {
@@ -123,8 +103,8 @@ function updatePlaysPage(gameRef, playsUrl, maxPages, page) {
           batch.set(playRef, play);
         });
 
+        // TODO: Await?
         batch.commit();
-        // console.info('Committed db batch updates');
 
         var totalPlays = json.plays.$.total;
         var unusablePlays = json.plays.play.length - plays.length;
