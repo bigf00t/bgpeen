@@ -7,7 +7,7 @@ const update_plays = require('./update_plays');
 const update_results = require('./update_results');
 const moment = require('moment');
 
-exports.runAutomaticGameUpdates = (runAsFunction = true) => {
+exports.runAutomaticGameUpdates = (runAsFunction = true, maxPages = 100) => {
   return db
     .collection('searches')
     .limit(50)
@@ -18,12 +18,17 @@ exports.runAutomaticGameUpdates = (runAsFunction = true) => {
       } else {
         let twoWeeksAgo = moment().subtract(2, 'week');
 
-        var queries = [
-          db.collection('games').where('isNew', '==', true).orderBy('createdDate', 'asc'),
-          // The next two lines should be commented out for PROD until we perform local updates
-          db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
-          db.collection('games').where('playsLastUpdated', '<', twoWeeksAgo).orderBy('playsLastUpdated', 'asc'),
-        ];
+        var queries = [db.collection('games').where('isNew', '==', true).orderBy('createdDate', 'asc')];
+
+        // Temporary until local updates have finished
+        if (!runAsFunction) {
+          queries = queries.concat([
+            db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
+            db.collection('games').where('playsLastUpdated', '<', twoWeeksAgo).orderBy('playsLastUpdated', 'asc'),
+          ]);
+        }
+
+        console.log(queries);
 
         let chain = Promise.resolve(false);
         queries.forEach((query) => {
@@ -38,7 +43,7 @@ exports.runAutomaticGameUpdates = (runAsFunction = true) => {
 
             return query.get().then((gamesSnapshot) => {
               if (gamesSnapshot.size > 0) {
-                return updatePlaysForEligibleGames(gamesSnapshot, 0).then(() => {
+                return updatePlaysForEligibleGames(gamesSnapshot, maxPages).then(() => {
                   return Promise.resolve(true);
                 });
               }

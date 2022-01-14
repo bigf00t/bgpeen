@@ -10,7 +10,7 @@ let run = () => {
   // manual_games.manualGamesUpdate(['13', '68448']);
 
   console.log('Starting runAutomaticGameUpdates');
-  automatic.runAutomaticGameUpdates(false);
+  automatic.runAutomaticGameUpdates(false, 0);
 };
 
 // Node entrypoint
