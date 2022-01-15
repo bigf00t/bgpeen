@@ -35,19 +35,19 @@ exports.manualGamesUpdate = (games) => {
               totalPlays: plays.length,
               unusablePlays: _.defaultTo(game.unusablePlays, 0),
               remainingPlays: _.defaultTo(game.remainingPlays, 1),
-              startDate: _.defaultTo(game.startDate, plays.length > 0 ? plays[0].date : ''),
+              newestPlayDate: plays.length > 0 ? plays[0].date : '',
+              oldestPlayDate: plays.length > 0 ? plays.slice(-1)[0].date : '',
               maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
               minDate: _.defaultTo(game.minDate, ''),
-              dateAdded: _.defaultTo(game.dateAdded, now),
+              addedDate: _.defaultTo(game.addedDate, now),
+              dateAdded: admin.firestore.FieldValue.delete(),
               playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
+              startDate: admin.firestore.FieldValue.delete(),
             });
 
             return Promise.resolve();
           });
       })
-    ).then(function () {
-      console.info('Finished manualStatsUpdate');
-      return batch.commit();
-    });
+    ).then(() => batch.commit());
   });
 };

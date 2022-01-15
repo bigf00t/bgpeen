@@ -7,96 +7,87 @@ const update_plays = require('./update_plays');
 const update_results = require('./update_results');
 const moment = require('moment');
 
-exports.runAutomaticGameUpdates = (runAsFunction = true, maxPages = 100) => {
-  return db
+exports.runAutomaticGameUpdates = (newOnly = true, maxGames = 1, maxPages = 100) =>
+  db
     .collection('searches')
     .limit(50)
     .get()
     .then((searchesSnapshot) => {
       if (searchesSnapshot.size > 0) {
-        return addSearchedGames(searchesSnapshot);
+        return addSearchedGames(searchesSnapshot, maxPages);
       } else {
         let twoWeeksAgo = moment().subtract(2, 'week');
 
-        var queries = [db.collection('games').where('isNew', '==', true).orderBy('createdDate', 'asc')];
+        let queries = [db.collection('games').where('isNew', '==', true).orderBy('addedDate', 'asc')];
 
         // Temporary until local updates have finished
-        if (!runAsFunction) {
+        if (!newOnly) {
           queries = queries.concat([
             db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
             db.collection('games').where('playsLastUpdated', '<', twoWeeksAgo).orderBy('playsLastUpdated', 'asc'),
           ]);
         }
 
-        console.log(queries);
-
-        let chain = Promise.resolve(false);
+        let chain = Promise.resolve();
         queries.forEach((query) => {
           chain = chain.then((result) => {
             if (result) {
+              // Already loaded a query
               return Promise.resolve(true);
             }
 
-            if (runAsFunction) {
-              query = query.limit(1);
+            if (maxGames > 0) {
+              query = query.limit(maxGames);
             }
 
             return query.get().then((gamesSnapshot) => {
-              if (gamesSnapshot.size > 0) {
-                return updatePlaysForEligibleGames(gamesSnapshot, maxPages).then(() => {
-                  return Promise.resolve(true);
-                });
+              if (gamesSnapshot.size === 0) {
+                return Promise.resolve();
               }
-              return Promise.resolve(false);
+              return updatePlaysForEligibleGames(gamesSnapshot, maxPages).then(() => Promise.resolve(true));
             });
           });
         });
-        return chain.then(function (result) {
+        return chain.then((result) => {
           if (!result) {
-            console.log('Did not find any games to update!');
+            return Promise.reject('Did not find any games to update!');
           }
           return Promise.resolve();
         });
       }
     });
-};
 
-function updatePlaysForEligibleGames(gamesSnapshot, maxPages) {
+const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
   let chain = Promise.resolve();
   gamesSnapshot.forEach((doc) => {
-    chain = chain.then(() => {
-      console.info('='.repeat(100));
-      return update_plays
+    chain = chain.then(() =>
+      update_plays
         .updateGamePlays(doc.data(), maxPages)
-        .then((plays) => {
-          var resultsRef = db.collection('results').doc(doc.data().id);
-          return update_results.updateResults(resultsRef, doc.data(), plays, false);
-        })
-        .then(() => {
-          return util.delay();
-        });
-    });
+        .then((plays) => update_results.updateResults(doc.data(), plays, false))
+        .then(() => util.delay())
+        .catch((err) => Promise.reject(err))
+    );
   });
-  return chain.then(function () {
-    console.info('='.repeat(100));
-    return Promise.resolve();
-  });
-}
+  return chain.then(() => Promise.resolve());
+};
 
-function addSearchedGames(searchesSnapshot) {
+const addSearchedGames = (searchesSnapshot, maxPages) => {
   let chain = Promise.resolve();
   searchesSnapshot.forEach((doc) => {
     chain = chain.then(() =>
       add_game
         .addGame(doc.data().name, true)
-        .then((result) => {
-          db.collection('searches').doc(doc.id).delete();
-          return Promise.resolve(result);
-        })
         .then(() => util.delay())
+        .then((newGame) =>
+          update_plays
+            .updateGamePlays(newGame, maxPages)
+            .then((plays) => update_results.updateResults(newGame, plays, false))
+            .catch((err) => Promise.reject(err))
+        )
+        .then(() => util.delay())
+        .catch((err) => Promise.reject(err))
+        .finally(() => db.collection('searches').doc(doc.id).delete())
     );
   });
-  return chain.then(function () {
-    return Promise.resolve();
-  });
-}
+  return chain.then(() => Promise.resolve());
+};

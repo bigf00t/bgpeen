@@ -48,14 +48,12 @@ class SelectGame extends Component {
   }
 
   handleGameChange = (event, newGame) => {
-    // console.log(newGame);
     this.setState({ game: newGame });
     if (newGame) {
       if (!newGame.id) {
         this.setState({ added: false });
         this.props.setGame(null);
       } else {
-        // this.setOrLoadGame(newGame);
         this.props.history.push({
           pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
         });
@@ -80,7 +78,6 @@ class SelectGame extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.location !== prevProps.location) {
       this.setState({ added: false });
-      // this.setGameFromUrl();
     }
   }
 

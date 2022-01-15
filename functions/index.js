@@ -18,56 +18,67 @@ const runtimeOpts = {
   memory: '1GB',
 };
 
-exports.addGame = functions.https.onRequest(async (req, res) => {
-  return cors(req, res, () => {
+exports.addGame = functions.https.onRequest(async (req, res) =>
+  cors(req, res, () =>
     add_game
       .addGame(req.body.name, true)
       .then((newGame) => res.status(200).send(newGame))
-      .catch(function (e) {
-        console.log(e);
+      .catch((e) => {
+        console.error(e);
         res.send({ error: e });
-      });
-  });
-});
+      })
+  )
+);
 
-exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) => {
-  return cors(req, res, async () => {
+exports.manualPlaysUpdate = functions.https.onRequest(async (req, res) =>
+  cors(req, res, async () =>
     manual_plays
-      .manualPlaysUpdate(req.body.games, req.body.maxPages, req.body.minDate, req.body.maxDate, req.body.flush)
-      .then(function () {
-        res.status(200).send('Finished Updating Plays');
-      });
-  });
-});
+      .manualPlaysUpdate(req.body.games, req.body.maxPages)
+      .then(() => res.status(200).send('Finished Updating Plays'))
+      .catch((e) => {
+        console.error(e);
+        res.status(500).send(e);
+      })
+  )
+);
 
-exports.manualStatsUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
-  return cors(req, res, async () => {
-    manual_stats.manualStatsUpdate(req.body.games).then(function () {
-      res.status(200).send('Finished Updating Stats');
-    });
-  });
-});
+exports.manualStatsUpdate = functions
+  .runWith(runtimeOpts)
+  .https.onRequest(async (req, res) =>
+    cors(req, res, async () =>
+      manual_stats.manualStatsUpdate(req.body.games).then(() => res.status(200).send('Finished Updating Stats'))
+    )
+  );
 
-exports.manuallyRunAutomaticGameUpdates = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
-  return cors(req, res, async () => {
-    automatic.runAutomaticGameUpdates().then(function () {
-      res.status(200).send('Finished runAutomaticGameUpdates!');
-    });
-  });
-});
+exports.manuallyRunAutomaticGameUpdates = functions.runWith(runtimeOpts).https.onRequest(async (req, res) =>
+  cors(req, res, async () =>
+    automatic
+      .runAutomaticGameUpdates(false, 1, 10)
+      .then(() => res.status(200).send('Finished runAutomaticGameUpdates!'))
+      .catch((e) => {
+        console.error(e);
+        res.status(500).send(e);
+      })
+  )
+);
 
 exports.runAutomaticGameUpdates = functions
   .runWith(runtimeOpts)
   .pubsub.schedule('every 5 minutes')
   .onRun(async () => {
-    await automatic.runAutomaticGameUpdates();
-    // console.log('Finished runAutomaticGameUpdates!');
-  });
-
-exports.manualGamesUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) => {
-  return cors(req, res, async () => {
-    manual_games.manualGamesUpdate(req.body.games).then(function () {
-      res.status(200).send('Finished Updating Games');
+    await automatic.runAutomaticGameUpdates().catch((e) => {
+      console.error(e);
     });
   });
-});
+
+exports.manualGamesUpdate = functions.runWith(runtimeOpts).https.onRequest(async (req, res) =>
+  cors(req, res, async () =>
+    manual_games
+      .manualGamesUpdate(req.body.games)
+      .then(() => res.status(200).send('Finished Updating Games'))
+      .catch((e) => {
+        console.error(e);
+        res.status(500).send(e);
+      })
+  )
+);
