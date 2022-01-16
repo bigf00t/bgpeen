@@ -47,7 +47,7 @@ class PopularGames extends Component {
         </Typography>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
           {this.state.popularGames.map((game) => (
-            <Card key={game} className={classes.card}>
+            <Card key={game.id} className={classes.card}>
               <CardActionArea
                 component={Link}
                 to={`/${game.id}/${getGameSlug(game)}`}

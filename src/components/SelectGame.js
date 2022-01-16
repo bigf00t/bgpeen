@@ -4,7 +4,6 @@ import * as actions from '../actions';
 import { db } from '../fire';
 
 import { connect } from 'react-redux';
-import _ from 'lodash';
 
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';

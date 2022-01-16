@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
 import SelectGame from './SelectGame';
-import Result from './Result';
 import PopularGames from './PopularGames';
 import * as actions from '../actions';
 import { connect } from 'react-redux';
-import { Route } from 'react-router-dom';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
@@ -18,10 +16,6 @@ class Measure extends Component {
     super(props);
     this.state = {};
   }
-
-  // componentDidMount() {
-  //   this.props.loadGames();
-  // }
 
   render() {
     const classes = this.props.classes;

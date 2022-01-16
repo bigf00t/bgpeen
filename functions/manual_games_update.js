@@ -4,7 +4,6 @@ const db = admin.firestore();
 var _ = require('lodash');
 
 const util = require('./util');
-const moment = require('moment');
 
 exports.manualGamesUpdate = (games) => {
   let query = db.collection('games');
@@ -27,7 +26,7 @@ exports.manualGamesUpdate = (games) => {
             console.info(`Started updating game: ${game.name}`);
 
             var plays = util.docsToArray(playsSnapshot);
-            let now = moment(new Date());
+            let now = new Date();
 
             console.info(`Found ${plays.length} plays`);
 

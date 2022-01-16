@@ -59,14 +59,17 @@ exports.runAutomaticGameUpdates = (newOnly = true, maxGames = 1, maxPages = 100)
 
 const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
   let chain = Promise.resolve();
-  gamesSnapshot.forEach((doc) => {
-    chain = chain.then(() =>
-      update_plays
+  gamesSnapshot.docs.forEach((doc, index) => {
+    chain = chain.then(() => {
+      console.info('='.repeat(100));
+      console.info(`Updating game ${index + 1} of ${gamesSnapshot.size} - ${doc.data().name} (${doc.data().id})`);
+
+      return update_plays
         .updateGamePlays(doc.data(), maxPages)
         .then((plays) => update_results.updateResults(doc.data(), plays, false))
         .then(() => util.delay())
-        .catch((err) => Promise.reject(err))
-    );
+        .catch((err) => Promise.reject(err));
+    });
   });
   return chain.then(() => Promise.resolve());
 };

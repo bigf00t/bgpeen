@@ -30,7 +30,10 @@ export const loadGame = (gameId) => async (dispatch) => {
     .then((snapshot) => {
       var gameRef = db.collection('games').doc(gameId);
       gameRef.get().then((doc) => {
-        gameRef.update({ popularity: (doc.data().popularity || 0) + 1 });
+        gameRef.update({
+          popularity: (doc.data().popularity || 0) + 1,
+          lastLoadedDate: new Date(),
+        });
       });
       dispatch({
         type: LOAD_GAME,

@@ -5,7 +5,7 @@ const { mean, mode, median, std } = require('mathjs');
 
 var _ = require('lodash');
 
-exports.updateResults = (game, dirtyPlays, flush) => {
+exports.updateResults = (game, newPlays, flush) => {
   console.info('-'.repeat(100));
   console.info(`Updating results for ${game.name}`);
 
@@ -15,12 +15,12 @@ exports.updateResults = (game, dirtyPlays, flush) => {
     .get()
     .then((resultsSnapshot) => {
       var existingResults = resultsSnapshot.data();
+      var existingAllScoreCount = _.defaultTo(
+        _.find(existingResults.results, (result) => result.playerCount === '').scoreCount,
+        0
+      );
       var resultsToAddTo = flush || existingResults === undefined ? [] : existingResults.results;
-      var cleanPlays = getCleanPlays(dirtyPlays);
-      //TODO: Save this val
-      // var unusablePlays = dirtyPlays.length - cleanPlays.length;
-
-      var rawResults = addPlaysToResults(cleanPlays, resultsToAddTo);
+      var rawResults = addPlaysToResults(newPlays, resultsToAddTo);
 
       // We only want results with scores and valid player counts
       var results = _(rawResults)
@@ -48,11 +48,12 @@ exports.updateResults = (game, dirtyPlays, flush) => {
         results.push(playerCountResult);
       });
 
-      var allResults = getGroupedResultsForPlayerCount(playerCountResults, '');
+      var allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
+      var newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
 
-      console.info(`Adding ${allResults.scoreCount} valid scores to results`);
+      console.info(`Adding ${newScoresCount} new scores to results`);
 
-      results.push(allResults);
+      results.push(allScoresResult);
 
       return resultsRef.set(
         {
@@ -170,13 +171,6 @@ const addPlaysToResults = (plays, results) => {
 
   return results;
 };
-
-const getCleanPlays = (plays) =>
-  _.filter(plays, (play) =>
-    // TODO: Exclude plays where winner isn't person with highest score
-    // Exclude plays where not every player has a score
-    _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
-  );
 
 // TODO: Verify that this works with a test
 const getCleanPlayerScores = (players) =>

@@ -3,7 +3,6 @@ const db = admin.firestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
-const moment = require('moment');
 
 var _ = require('lodash');
 
@@ -105,7 +104,7 @@ exports.addGame = (searchTerm, exact) =>
                     totalPlays: 0,
                     unusablePlays: 0,
                     remainingPlays: 0,
-                    addedDate: moment(new Date()),
+                    addedDate: new Date(),
                     newestPlayDate: '',
                     oldestPlayDate: '',
                     maxDate: '',
