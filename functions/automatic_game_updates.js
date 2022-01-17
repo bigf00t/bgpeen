@@ -10,7 +10,7 @@ const dayjs = require('dayjs');
 var duration = require('dayjs/plugin/duration');
 dayjs.extend(duration);
 
-exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 50) =>
+exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80) =>
   db
     .collection('searches')
     .limit(50)
@@ -23,12 +23,13 @@ exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 50) =>
         let oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
         const queries = [
+          db.collection('games').where('totalPlays', '==', 0),
           db
             .collection('games')
             .where('playsLastUpdated', '<', oneWeekAgo)
             .where('hasMinPlays', '==', false)
             .orderBy('playsLastUpdated', 'asc'),
-          db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
+          // db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
           db.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
         ];
 
@@ -91,7 +92,7 @@ const addSearchedGames = (searchesSnapshot, maxPages) => {
     chain = chain.then(() =>
       add_game
         .addGame(doc.data().name, true)
-        .then(() => util.delay())
+        .then((newGame) => util.delay(newGame))
         .then((newGame) =>
           update_plays
             .updateGamePlays(newGame, maxPages)

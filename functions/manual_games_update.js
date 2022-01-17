@@ -18,34 +18,41 @@ exports.manualGamesUpdate = (games) => {
     return Promise.all(
       _.map(util.docsToArray(gamesSnapshot), (game) => {
         let gameRef = db.collection('games').doc(game.id);
-        return gameRef
-          .collection('plays')
-          .orderBy('date', 'desc')
-          .get()
-          .then((playsSnapshot) => {
-            console.info(`Started updating game: ${game.name}`);
 
-            var plays = util.docsToArray(playsSnapshot);
-            let now = new Date();
+        return batch.update(gameRef, {
+          hasNoPlays: game.totalPlays === 0,
+          // dateAdded: admin.firestore.FieldValue.delete(),
+          // startDate: admin.firestore.FieldValue.delete(),
+          // isNew: admin.firestore.FieldValue.delete(),
+        });
 
-            console.info(`Found ${plays.length} plays`);
+        // Update play related fields
+        // return gameRef
+        //   .collection('plays')
+        //   .orderBy('date', 'desc')
+        //   .get()
+        //   .then((playsSnapshot) => {
+        //     console.info(`Started updating game: ${game.name}`);
 
-            batch.update(gameRef, {
-              totalPlays: plays.length,
-              unusablePlays: _.defaultTo(game.unusablePlays, 0),
-              remainingPlays: _.defaultTo(game.remainingPlays, 1),
-              newestPlayDate: plays.length > 0 ? plays[0].date : '',
-              oldestPlayDate: plays.length > 0 ? plays.slice(-1)[0].date : '',
-              maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
-              minDate: _.defaultTo(game.minDate, ''),
-              addedDate: _.defaultTo(game.addedDate, now),
-              dateAdded: admin.firestore.FieldValue.delete(),
-              playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
-              startDate: admin.firestore.FieldValue.delete(),
-            });
+        //     var plays = util.docsToArray(playsSnapshot);
+        //     let now = new Date();
 
-            return Promise.resolve();
-          });
+        //     console.info(`Found ${plays.length} plays`);
+
+        //     return batch.update(gameRef, {
+        //       totalPlays: plays.length,
+        //       unusablePlays: _.defaultTo(game.unusablePlays, 0),
+        //       remainingPlays: _.defaultTo(game.remainingPlays, 1),
+        //       newestPlayDate: plays.length > 0 ? plays[0].date : '',
+        //       oldestPlayDate: plays.length > 0 ? plays.slice(-1)[0].date : '',
+        //       maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
+        //       minDate: _.defaultTo(game.minDate, ''),
+        //       addedDate: _.defaultTo(game.addedDate, now),
+        //       // dateAdded: admin.firestore.FieldValue.delete(),
+        //       playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
+        //       // startDate: admin.firestore.FieldValue.delete(),
+        //     });
+        //   });
       })
     ).then(() => batch.commit());
   });

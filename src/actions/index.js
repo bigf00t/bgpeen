@@ -5,7 +5,7 @@ import { db } from '../fire';
 export const loadGames = () => async (dispatch) => {
   return db
     .collection('games')
-    .where('isNew', '==', false)
+    .where('hasNoPlays', '==', false)
     .orderBy('name', 'asc')
     .get()
     .then((snapshot) => {

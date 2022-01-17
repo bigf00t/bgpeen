@@ -61,8 +61,8 @@ const updateGame = (game, gameRef, pageResults) => {
       minDate: remainingPlays === 0 ? newestPlayDate : _.defaultTo(game.minDate, ''),
       totalPlays: totalPlays,
       hasMinPlays: totalPlays >= 10000,
+      hasNoPlays: totalPlays === 0,
       playsLastUpdated: new Date(),
-      isNew: admin.firestore.FieldValue.delete(), // Temp
     })
     .then(() => Promise.resolve(plays));
 };

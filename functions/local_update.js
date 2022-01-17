@@ -2,10 +2,10 @@
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-// const manual_games = require('./manual_games_update');
-// const manual_stats = require('./manual_stats_update');
+const manual_games = require('./manual_games_update');
+const manual_stats = require('./manual_stats_update');
 const automatic = require('./automatic_game_updates');
-// const manual_plays = require('./manual_plays_update');
+const manual_plays = require('./manual_plays_update');
 
 let run = () => {
   // DON'T RUN, TOO EXPENSIVE!
