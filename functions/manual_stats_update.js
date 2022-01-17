@@ -18,11 +18,10 @@ exports.manualStatsUpdate = (games) =>
 
           // Expensive query!
           var playsRef = db.collection('games').doc(game.id).collection('plays');
-          var resultsRef = db.collection('results').doc(game.id);
 
           return playsRef
             .get()
-            .then((playsSnapshot) => update.updateResults(resultsRef, game, util.docsToArray(playsSnapshot), true));
+            .then((playsSnapshot) => update.updateResults(game, util.docsToArray(playsSnapshot), true));
         })
       )
     );

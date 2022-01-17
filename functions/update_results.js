@@ -15,12 +15,12 @@ exports.updateResults = (game, newPlays, flush) => {
     .get()
     .then((resultsSnapshot) => {
       var existingResults = resultsSnapshot.data();
-      var existingAllScoreCount = _.defaultTo(
-        _.find(existingResults.results, (result) => result.playerCount === '').scoreCount,
-        0
-      );
+      var existingAllScoreCount = existingResults
+        ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
+        : 0;
       var resultsToAddTo = flush || existingResults === undefined ? [] : existingResults.results;
-      var rawResults = addPlaysToResults(newPlays, resultsToAddTo);
+      var validPlays = getCleanPlays(newPlays);
+      var rawResults = addPlaysToResults(validPlays, resultsToAddTo);
 
       // We only want results with scores and valid player counts
       var results = _(rawResults)
@@ -171,6 +171,13 @@ const addPlaysToResults = (plays, results) => {
 
   return results;
 };
+
+const getCleanPlays = (plays) =>
+  _.filter(plays, (play) =>
+    // TODO: Exclude plays where winner isn't person with highest score
+    // Exclude plays where not every player has a score
+    _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
+  );
 
 // TODO: Verify that this works with a test
 const getCleanPlayerScores = (players) =>

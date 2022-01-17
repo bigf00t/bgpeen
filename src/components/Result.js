@@ -171,12 +171,6 @@ class Result extends Component {
     }
   }
 
-  // componentDidUpdate(prevProps) {
-  //   if (this.props.data.game && prevProps.data.game && this.props.data.game.id !== prevProps.data.game.id) {
-  //     this.setResult();
-  //   }
-  // }
-
   handleFiltersChange = (filters) => {
     this.setState(
       {
@@ -207,13 +201,11 @@ class Result extends Component {
                   className={classes.image}
                 />
                 <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-                  {/* {this.state.percentile !== null
-                    ? getTitle(this.state.percentile)
-                    : ''} */}
                   <Link
                     className={classes.link}
                     href={`https://boardgamegeek.com/boardgame/${this.props.data.game.id}`}
                     target="_blank"
+                    title="View on boardgamegeek.com"
                   >
                     {this.props.data.game.name}
                   </Link>

@@ -5,9 +5,12 @@ const util = require('./util');
 const add_game = require('./add_game');
 const update_plays = require('./update_plays');
 const update_results = require('./update_results');
-const moment = require('moment');
 
-exports.runAutomaticGameUpdates = (newOnly = true, maxGames = 1, maxPages = 100) =>
+const dayjs = require('dayjs');
+var duration = require('dayjs/plugin/duration');
+dayjs.extend(duration);
+
+exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 50) =>
   db
     .collection('searches')
     .limit(50)
@@ -16,17 +19,18 @@ exports.runAutomaticGameUpdates = (newOnly = true, maxGames = 1, maxPages = 100)
       if (searchesSnapshot.size > 0) {
         return addSearchedGames(searchesSnapshot, maxPages);
       } else {
-        let twoWeeksAgo = moment().subtract(2, 'week');
+        let oneMonthAgo = dayjs().subtract(1, 'month').toDate();
+        let oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
-        let queries = [db.collection('games').where('isNew', '==', true).orderBy('addedDate', 'asc')];
-
-        // Temporary until local updates have finished
-        if (!newOnly) {
-          queries = queries.concat([
-            db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
-            db.collection('games').where('playsLastUpdated', '<', twoWeeksAgo).orderBy('playsLastUpdated', 'asc'),
-          ]);
-        }
+        const queries = [
+          db
+            .collection('games')
+            .where('playsLastUpdated', '<', oneWeekAgo)
+            .where('hasMinPlays', '==', false)
+            .orderBy('playsLastUpdated', 'asc'),
+          db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
+          db.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
+        ];
 
         let chain = Promise.resolve();
         queries.forEach((query) => {
@@ -58,11 +62,18 @@ exports.runAutomaticGameUpdates = (newOnly = true, maxGames = 1, maxPages = 100)
     });
 
 const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
+  let startTime = new Date();
   let chain = Promise.resolve();
   gamesSnapshot.docs.forEach((doc, index) => {
     chain = chain.then(() => {
       console.info('='.repeat(100));
-      console.info(`Updating game ${index + 1} of ${gamesSnapshot.size} - ${doc.data().name} (${doc.data().id})`);
+
+      let elapsedTime = dayjs.duration(dayjs().diff(startTime));
+      console.info(
+        `Updating game ${index + 1} of ${gamesSnapshot.size} - ${doc.data().name} (${
+          doc.data().id
+        }) - Elapsed time ${elapsedTime.format('HH:mm:ss')}`
+      );
 
       return update_plays
         .updateGamePlays(doc.data(), maxPages)

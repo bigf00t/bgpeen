@@ -109,7 +109,7 @@ exports.addGame = (searchTerm, exact) =>
                     oldestPlayDate: '',
                     maxDate: '',
                     minDate: '',
-                    isNew: true,
+                    hasMinPlays: false,
                   };
 
                   console.info(`Adding ${newGame.name} (${newGame.id})`);

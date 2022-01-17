@@ -3,7 +3,7 @@ const db = admin.firestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
-const moment = require('moment');
+const dayjs = require('dayjs');
 
 const _ = require('lodash');
 
@@ -33,18 +33,19 @@ const updateGame = (game, gameRef, pageResults) => {
   if (pageResultsWithPlays.length > 0) {
     let newNewestPlayDate = pageResultsWithPlays[0].plays[0].date;
     newestPlayDate =
-      !game.newestPlayDate || moment(newNewestPlayDate).isAfter(game.newestPlayDate)
+      !game.newestPlayDate || dayjs(newNewestPlayDate).isAfter(game.newestPlayDate)
         ? newNewestPlayDate
         : game.newestPlayDate;
 
     currentOldestPlayDate = pageResultsWithPlays.slice(-1)[0].plays.slice(-1)[0].date;
     oldestPlayDate =
-      !game.oldestPlayDate || moment(currentOldestPlayDate).isBefore(game.oldestPlayDate)
+      !game.oldestPlayDate || dayjs(currentOldestPlayDate).isBefore(game.oldestPlayDate)
         ? currentOldestPlayDate
         : game.oldestPlayDate;
   }
 
   let remainingPlays = pageResults.slice(-1)[0].remainingPlays;
+  let totalPlays = _.defaultTo(game.totalPlays, 0) + plays.length;
 
   console.info(
     `Added ${plays.length} total plays for ${game.name} - ${remainingPlays} unloaded plays remaining on BGG`
@@ -58,9 +59,10 @@ const updateGame = (game, gameRef, pageResults) => {
       oldestPlayDate: oldestPlayDate,
       maxDate: remainingPlays === 0 ? '' : currentOldestPlayDate,
       minDate: remainingPlays === 0 ? newestPlayDate : _.defaultTo(game.minDate, ''),
-      totalPlays: _.defaultTo(game.totalPlays, 0) + plays.length,
+      totalPlays: totalPlays,
+      hasMinPlays: totalPlays >= 10000,
       playsLastUpdated: new Date(),
-      isNew: false,
+      isNew: admin.firestore.FieldValue.delete(), // Temp
     })
     .then(() => Promise.resolve(plays));
 };
