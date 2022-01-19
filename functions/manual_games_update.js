@@ -7,8 +7,9 @@ const util = require('./util');
 
 exports.manualGamesUpdate = (games) => {
   let query = db.collection('games');
+  console.log(games);
 
-  if (games) {
+  if (games && games.length > 0) {
     query = query.where('id', 'in', games);
   }
 
@@ -17,14 +18,23 @@ exports.manualGamesUpdate = (games) => {
 
     return Promise.all(
       _.map(util.docsToArray(gamesSnapshot), (game) => {
-        let gameRef = db.collection('games').doc(game.id);
+        return db
+          .collection('results')
+          .doc(game.id)
+          .get()
+          .then((resultsSnapshot) => {
+            let gameRef = db.collection('games').doc(game.id);
+            var allScoresResult = _.find(resultsSnapshot.data().results, (result) => result.playerCount === '');
 
-        return batch.update(gameRef, {
-          hasNoPlays: game.totalPlays === 0,
-          // dateAdded: admin.firestore.FieldValue.delete(),
-          // startDate: admin.firestore.FieldValue.delete(),
-          // isNew: admin.firestore.FieldValue.delete(),
-        });
+            return batch.update(gameRef, {
+              totalScores: allScoresResult ? allScoresResult.scoreCount : 0,
+              mean: allScoresResult ? allScoresResult.mean : 0,
+              // hasNoPlays: game.totalPlays === 0,
+              // dateAdded: admin.firestore.FieldValue.delete(),
+              // startDate: admin.firestore.FieldValue.delete(),
+              // isNew: admin.firestore.FieldValue.delete(),
+            });
+          });
 
         // Update play related fields
         // return gameRef

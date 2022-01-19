@@ -32,20 +32,26 @@ const styles = (theme) => ({
     marginTop: theme.spacing(-2),
     justifyContent: 'center',
   },
+  floatingLabelFocusStyle: {
+    '&.Mui-focused': {
+      color: theme.palette.text.primary,
+    },
+  },
 });
 
 class Filters extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      score: '',
-      place: null,
-      players: null,
-      validPlayerPlaces: [],
-      // placeInputValue: '',
-      // playersInputValue: '',
-    };
   }
+
+  state = {
+    score: '',
+    place: null,
+    players: null,
+    validPlayerPlaces: [],
+    playersHighlightValue: '',
+    placeHighlightValue: '',
+  };
 
   handleScoreChange = (event) => {
     this.setState({ score: this.getIntFromParam(event.target.value) }, () => {
@@ -55,10 +61,11 @@ class Filters extends Component {
   };
 
   handlePlayersChange = (event, newPlayers) => {
-    // Makes blur work
-    setTimeout(() => {
-      document.activeElement.blur();
-    }, 0);
+    if (!newPlayers) {
+      setTimeout(() => {
+        document.activeElement.blur();
+      }, 0);
+    }
     this.setState({ players: newPlayers }, () => {
       var validPlayerPlaces = this.getValidPlayerPlaces();
 
@@ -76,19 +83,28 @@ class Filters extends Component {
     });
   };
 
+  handlePlayersHighlightChange = (event, option, reason) => {
+    this.setState({ playersHighlightValue: option });
+  };
+
   getValidPlayerPlaces = () => {
     return this.props.data.game && this.state.players ? _.range(1, this.state.players + 1) : [];
   };
 
   handlePlaceChange = (event, newPlace) => {
-    // Makes blur work
-    setTimeout(() => {
-      document.activeElement.blur();
-    }, 0);
+    if (!newPlace) {
+      setTimeout(() => {
+        document.activeElement.blur();
+      }, 0);
+    }
     this.setState({ place: newPlace }, () => {
       this.setHistory();
       this.sendFiltersUpdate();
     });
+  };
+
+  handlePlaceHighlightChange = (event, option, reason) => {
+    this.setState({ placeHighlightValue: option });
   };
 
   setHistory = () => {
@@ -147,20 +163,32 @@ class Filters extends Component {
     }
   }
 
-  // handleKeyDown(event) {
-  //   switch (event.key) {
-  //     case 'Tab': {
-  //       if (this.state.playersInputValue.length > 0) {
-  //         this.handleScoreChange(event, this.state.players.concat([this.state.playersInputValue]));
-  //       }
-  //       break;
-  //     }
-  //     default:
-  //   }
-  // }
-
   render() {
     const classes = this.props.classes;
+
+    const handlePlayersKeyDown = (event) => {
+      switch (event.key) {
+        case 'Tab': {
+          if (this.state.playersHighlightValue) {
+            this.handlePlayersChange(event, this.state.playersHighlightValue);
+          }
+          break;
+        }
+        default:
+      }
+    };
+
+    const handlePlaceKeyDown = (event) => {
+      switch (event.key) {
+        case 'Tab': {
+          if (this.state.placeHighlightValue) {
+            this.handlePlaceChange(event, this.state.placeHighlightValue);
+          }
+          break;
+        }
+        default:
+      }
+    };
 
     return (
       <Box component="div" className={classes.root}>
@@ -176,6 +204,9 @@ class Filters extends Component {
               value={this.state.score}
               style={{ maxWidth: 160 }}
               onChange={this.handleScoreChange}
+              InputLabelProps={{
+                className: classes.floatingLabelFocusStyle,
+              }}
             />
           </FormControl>
           <span>{this.state.players == undefined}</span>
@@ -192,12 +223,14 @@ class Filters extends Component {
               value={this.state.players || null}
               // inputValue={this.state.playersInputValue}
               onChange={this.handlePlayersChange}
+              // onBlur={this.handlePlayersBlur}
+              onHighlightChange={this.handlePlayersHighlightChange}
               // onInputChange={(event, newInputValue) => this.setState({ playersInputValue: newInputValue })}
               options={this.props.data.game.playerCounts}
               fullWidth
               getOptionLabel={(count) => (count ? String(count) : '')}
               renderInput={(params) => {
-                // params.inputProps.onKeyDown = this.handleKeyDown;
+                params.inputProps.onKeyDown = handlePlayersKeyDown;
                 return (
                   <TextField
                     {...params}
@@ -206,9 +239,9 @@ class Filters extends Component {
                     // label="Game"
                     fullWidth
                     labelid="players-label"
-                    // InputLabelProps={{
-                    //   shrink: true,
-                    // }}
+                    InputLabelProps={{
+                      className: classes.floatingLabelFocusStyle,
+                    }}
                   />
                 );
               }}
@@ -246,6 +279,7 @@ class Filters extends Component {
               name="place"
               value={this.state.place || null}
               onChange={this.handlePlaceChange}
+              onHighlightChange={this.handlePlaceHighlightChange}
               // inputValue={this.state.playersInputValue}
               // onInputChange={(event, newInputValue) => this.setState({ playersInputValue: newInputValue })}
               options={this.state.validPlayerPlaces}
@@ -253,7 +287,7 @@ class Filters extends Component {
               getOptionLabel={(count) => (count ? ordinal(count) : '')}
               disabled={!this.state.players}
               renderInput={(params) => {
-                // params.inputProps.onKeyDown = this.handleKeyDown;
+                params.inputProps.onKeyDown = handlePlaceKeyDown;
                 return (
                   <TextField
                     {...params}
@@ -262,9 +296,9 @@ class Filters extends Component {
                     // label="Game"
                     fullWidth
                     labelid="place-label"
-                    // InputLabelProps={{
-                    //   shrink: true,
-                    // }}
+                    InputLabelProps={{
+                      className: classes.floatingLabelFocusStyle,
+                    }}
                   />
                 );
               }}

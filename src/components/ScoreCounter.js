@@ -32,8 +32,8 @@ class ScoreCounter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      totalScores: 0,
-      totalGames: 0,
+      totalScores: Math.floor(1000000 + Math.random() * 9000000), // Random 7 digit start
+      totalGames: Math.floor(100 + Math.random() * 900), // Random 3 digit start
     };
   }
 

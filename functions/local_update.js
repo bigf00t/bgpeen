@@ -9,7 +9,7 @@ if (!argv.prod) {
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-// const manual_games = require('./manual_games_update');
+const manual_games = require('./manual_games_update');
 // const manual_stats = require('./manual_stats_update');
 const automatic = require('./automatic_game_updates');
 const manual_plays = require('./manual_plays_update');
@@ -23,6 +23,9 @@ switch (argv.function) {
     break;
   case 'runAutomaticGameUpdates':
     automatic.runAutomaticGameUpdates(argv.maxGames, argv.maxPages).catch((err) => console.error(err));
+    break;
+  case 'manualGamesUpdate':
+    manual_games.manualGamesUpdate(argv.id ? [`${argv.id}`] : null).catch((err) => console.error(err));
     break;
   default:
   // code block
