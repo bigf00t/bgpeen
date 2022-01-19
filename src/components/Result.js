@@ -7,9 +7,15 @@ import * as actions from '../actions';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
+import { Link as RouterLink } from 'react-router-dom';
 import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMore from '@material-ui/icons/ExpandMore';
+import ArrowBack from '@material-ui/icons/ArrowBack';
 
 import Filters from './Filters';
 import Graph from './Graph';
@@ -24,8 +30,10 @@ const styles = (theme) => ({
   },
   link: {
     color: theme.palette.action.active,
+    textDecoration: 'none',
     '&:hover': {
-      textDecoration: 'underline',
+      textDecoration: 'none',
+      opacity: 0.75,
     },
   },
   card: {
@@ -41,6 +49,10 @@ const styles = (theme) => ({
   },
   credit: {
     padding: theme.spacing(2),
+  },
+  arrow: {
+    top: 2,
+    position: 'relative',
   },
 });
 
@@ -188,7 +200,12 @@ class Result extends Component {
         <Box component="div">
           <Paper className={classes.paper} square>
             <Box component="div">
-              <Box component="div" mb={2} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+              <RouterLink className={classes.link} to="/">
+                <Typography component="span" variant="h6">
+                  <ArrowBack fontSize="small" className={classes.arrow} /> Find another game
+                </Typography>
+              </RouterLink>
+              <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
                 <Image
                   src={this.props.data.game.thumbnail}
                   imageStyle={{
@@ -211,86 +228,36 @@ class Result extends Component {
                   </Link>
                 </Typography>
               </Box>
-              <Route
-                path="/:id/:name/:players?/:place?/:score?"
-                render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
-              />
-              <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Valid Scores
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.scoreCount}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Excluded Scores
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.trimmedScoreCount}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Mean
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.mean}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Mode
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.mode}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Median
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.median}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card className={classes.card}>
-                  <CardContent>
-                    <Typography align="center" color="textSecondary" gutterBottom>
-                      Std
-                    </Typography>
-                    <Typography variant="h3" component="h3" align="center">
-                      {this.state.result.std}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
               <Box component="div">
-                <Box component="div" mb={2} justifyContent="center" alignItems="center">
-                  <Typography component="div" align="center" className={classes.credit}>
-                    {this.state.filters.score
-                      ? ` Your score of ${this.state.filters.score} places you in the ${getOrdinalDesc(
-                          this.state.percentile
-                        )} of valid scores.`
-                      : ''}
+                <Box component="div" justifyContent="center" alignItems="center">
+                  <Typography component="div" variant="h3" align="center" className={classes.credit}>
+                    The average score is {this.state.result.mean}
                   </Typography>
-                  <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-                    {this.state.percentile !== null ? getScoreTitle(this.state.percentile) : ''}
+                  <Typography component="div" variant="h4" align="center" className={classes.credit}>
+                    How do you stack up?
                   </Typography>
                 </Box>
               </Box>
+              <Route
+                path="/:id/:name/:score?/:players?/:place?"
+                render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
+              />
+              {this.state.filters.score && (
+                <Box component="div">
+                  <Box component="div" mb={2} justifyContent="center" alignItems="center">
+                    <Typography component="div" align="center" className={classes.credit}>
+                      {this.state.filters.score
+                        ? ` Your score of ${this.state.filters.score} places you in the ${getOrdinalDesc(
+                            this.state.percentile
+                          )} of ${this.state.result.scoreCount} valid scores.`
+                        : ''}
+                    </Typography>
+                    <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+                      {this.state.percentile !== null ? getScoreTitle(this.state.percentile) : ''}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
             </Box>
             <Graph
               result={this.state.result}
@@ -298,6 +265,86 @@ class Result extends Component {
               percentile={this.state.percentile}
             ></Graph>
           </Paper>
+          <Box mt={2}>
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography align="center" variant="h5">
+                  See More Details
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box
+                  component="div"
+                  display="flex"
+                  flexWrap="wrap"
+                  justifyContent="center"
+                  alignItems="center"
+                  width={1}
+                >
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Valid Scores
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.scoreCount}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Excluded Scores
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.trimmedScoreCount}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Mean
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.mean}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Mode
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.mode}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Median
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.median}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography align="center" color="textSecondary" gutterBottom>
+                        Std
+                      </Typography>
+                      <Typography variant="h3" component="h3" align="center">
+                        {this.state.result.std}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          </Box>
           <Typography component="div" align="center" className={classes.credit}>
             {'Scores provided by '}
             <Link className={classes.link} href="https://boardgamegeek.com" target="_blank">

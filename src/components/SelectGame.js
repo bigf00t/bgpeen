@@ -84,7 +84,7 @@ class SelectGame extends Component {
     const classes = this.props.classes;
 
     return (
-      <Box component="div" mt={2}>
+      <Box component="div" mt={5}>
         <Typography variant="h4" component="h4" align="center">
           Find a Game
         </Typography>
@@ -93,7 +93,7 @@ class SelectGame extends Component {
             <Autocomplete
               freeSolo
               autoHighlight
-              autoSelect
+              // autoSelect
               blurOnSelect
               id="game"
               name="game"

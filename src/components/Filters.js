@@ -8,14 +8,11 @@ import { withStyles, withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControl from '@material-ui/core/FormControl';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 
 const styles = (theme) => ({
   root: {},
@@ -26,7 +23,7 @@ const styles = (theme) => ({
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 100,
+    minWidth: 160,
     height: 60,
   },
   selectEmpty: {},
@@ -37,24 +34,16 @@ const styles = (theme) => ({
   },
 });
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
-
 class Filters extends Component {
   constructor(props) {
     super(props);
     this.state = {
       score: '',
-      place: '',
-      players: '',
+      place: null,
+      players: null,
       validPlayerPlaces: [],
+      // placeInputValue: '',
+      // playersInputValue: '',
     };
   }
 
@@ -65,8 +54,12 @@ class Filters extends Component {
     });
   };
 
-  handlePlayersChange = (event) => {
-    this.setState({ players: event.target.value }, () => {
+  handlePlayersChange = (event, newPlayers) => {
+    // Makes blur work
+    setTimeout(() => {
+      document.activeElement.blur();
+    }, 0);
+    this.setState({ players: newPlayers }, () => {
       var validPlayerPlaces = this.getValidPlayerPlaces();
 
       if (this.state.place && validPlayerPlaces.indexOf(this.state.place) === -1) {
@@ -87,8 +80,12 @@ class Filters extends Component {
     return this.props.data.game && this.state.players ? _.range(1, this.state.players + 1) : [];
   };
 
-  handlePlaceChange = (event) => {
-    this.setState({ place: event.target.value }, () => {
+  handlePlaceChange = (event, newPlace) => {
+    // Makes blur work
+    setTimeout(() => {
+      document.activeElement.blur();
+    }, 0);
+    this.setState({ place: newPlace }, () => {
       this.setHistory();
       this.sendFiltersUpdate();
     });
@@ -98,9 +95,9 @@ class Filters extends Component {
     let params = [
       this.props.match.params.id,
       this.props.match.params.name,
-      this.state.players !== '' ? this.state.players : 'any',
-      this.state.place !== '' ? this.state.place : 'any',
-      this.state.score || '',
+      this.state.score || '-',
+      this.state.players || '-',
+      this.state.place || '-',
     ];
     this.props.history.push({
       pathname: `/${params.join('/')}`,
@@ -127,7 +124,7 @@ class Filters extends Component {
   };
 
   getIntFromParam = (param) => {
-    return !isNaN(param) && param !== '' ? parseInt(param) : '';
+    return param && !isNaN(param) ? parseInt(param) : '';
   };
 
   sendFiltersUpdate = () => {
@@ -150,6 +147,18 @@ class Filters extends Component {
     }
   }
 
+  // handleKeyDown(event) {
+  //   switch (event.key) {
+  //     case 'Tab': {
+  //       if (this.state.playersInputValue.length > 0) {
+  //         this.handleScoreChange(event, this.state.players.concat([this.state.playersInputValue]));
+  //       }
+  //       break;
+  //     }
+  //     default:
+  //   }
+  // }
+
   render() {
     const classes = this.props.classes;
 
@@ -165,25 +174,56 @@ class Filters extends Component {
               name="score"
               label="Your Score"
               value={this.state.score}
-              style={{ maxWidth: 100 }}
+              style={{ maxWidth: 160 }}
               onChange={this.handleScoreChange}
             />
           </FormControl>
+          <span>{this.state.players == undefined}</span>
           <FormControl className={classes.formControl}>
-            <InputLabel id="players-label" shrink={true}>
-              Players
-            </InputLabel>
-            <Select
+            {/* <InputLabel id="players-label">Your Player Count</InputLabel> */}
+            <Autocomplete
+              // freeSolo
+              autoHighlight
+              // autoSelect
+              blurOnSelect
+              disableClearable={this.state.players == ''}
+              id="players"
+              // name="players"
+              value={this.state.players || null}
+              // inputValue={this.state.playersInputValue}
+              onChange={this.handlePlayersChange}
+              // onInputChange={(event, newInputValue) => this.setState({ playersInputValue: newInputValue })}
+              options={this.props.data.game.playerCounts}
+              fullWidth
+              getOptionLabel={(count) => (count ? String(count) : '')}
+              renderInput={(params) => {
+                // params.inputProps.onKeyDown = this.handleKeyDown;
+                return (
+                  <TextField
+                    {...params}
+                    label="Your Player Count"
+                    // placeholder="Your Player Count"
+                    // label="Game"
+                    fullWidth
+                    labelid="players-label"
+                    // InputLabelProps={{
+                    //   shrink: true,
+                    // }}
+                  />
+                );
+              }}
+            />
+            {/* <Select
               labelid="players-label"
               id="players"
               name="players"
               value={this.state.players}
               onChange={this.handlePlayersChange}
-              displayEmpty
+              // displayEmpty
               MenuProps={MenuProps}
             >
-              <MenuItem key="" value="">
-                Any
+              {/* <MenuItem key="" value="">
+              Any
               </MenuItem>
               {this.props.data.game.playerCounts
                 ? this.props.data.game.playerCounts.map((count) => (
@@ -192,23 +232,55 @@ class Filters extends Component {
                     </MenuItem>
                   ))
                 : ''}
-            </Select>
+            </Select> */}
           </FormControl>
           <FormControl className={classes.formControl}>
-            <InputLabel id="place-label" shrink={true}>
-              Place
-            </InputLabel>
-            <Select
+            {/* <InputLabel id="place-label">Your Finish</InputLabel> */}
+            <Autocomplete
+              // freeSolo
+              autoHighlight
+              // autoSelect
+              blurOnSelect
+              disableClearable={this.state.place == ''}
+              id="place"
+              name="place"
+              value={this.state.place || null}
+              onChange={this.handlePlaceChange}
+              // inputValue={this.state.playersInputValue}
+              // onInputChange={(event, newInputValue) => this.setState({ playersInputValue: newInputValue })}
+              options={this.state.validPlayerPlaces}
+              fullWidth
+              getOptionLabel={(count) => (count ? ordinal(count) : '')}
+              disabled={!this.state.players}
+              renderInput={(params) => {
+                // params.inputProps.onKeyDown = this.handleKeyDown;
+                return (
+                  <TextField
+                    {...params}
+                    label="Your Finish Place"
+                    // placeholder="Your Player Count"
+                    // label="Game"
+                    fullWidth
+                    labelid="place-label"
+                    // InputLabelProps={{
+                    //   shrink: true,
+                    // }}
+                  />
+                );
+              }}
+            />
+            {/* <Select
               labelid="place-label"
               id="place"
               name="place"
               value={this.state.place}
               onChange={this.handlePlaceChange}
-              input={<Input />}
-              displayEmpty
+              // input={<Input />}
+              // displayEmpty
               MenuProps={MenuProps}
+              disabled={this.state.players == ''}
             >
-              <MenuItem key="" value="">
+              {/* <MenuItem key="" value="">
                 Any
               </MenuItem>
               {this.state.validPlayerPlaces.map((count) => (
@@ -216,7 +288,7 @@ class Filters extends Component {
                   {ordinal(count)}
                 </MenuItem>
               ))}
-            </Select>
+            </Select> */}
           </FormControl>
         </FormGroup>
       </Box>

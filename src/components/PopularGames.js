@@ -41,8 +41,8 @@ class PopularGames extends Component {
     const classes = this.props.classes;
 
     return (
-      <Box component="div">
-        <Typography variant="h4" component="h4" align="center" mt={2}>
+      <Box component="div" mt={5}>
+        <Typography variant="h4" component="h4" align="center">
           Popular Games
         </Typography>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
@@ -54,6 +54,49 @@ class PopularGames extends Component {
                 title={`${game.name}-${game.popularity}`}
               >
                 <CardMedia component="img" image={game.thumbnail} alt={game.name} />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    height: '100%',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    bgcolor: 'rgba(0, 0, 0, 0.75)',
+                    color: 'white',
+                    padding: '10px',
+                    textAlign: 'center',
+                    opacity: 0,
+                    transition: '0.3s',
+                    '&:hover': {
+                      opacity: 1,
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      padding: '10px',
+                    }}
+                  >
+                    <Typography variant="body2">Scores</Typography>
+                    <Typography variant="h5">{game.totalScores}</Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      width: '100%',
+                      padding: '10px',
+                    }}
+                  >
+                    <Typography variant="body2">Average</Typography>
+                    <Typography variant="h5">{game.mean}</Typography>
+                  </Box>
+                </Box>
               </CardActionArea>
             </Card>
           ))}

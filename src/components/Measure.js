@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ScoreCounter from './ScoreCounter';
 import SelectGame from './SelectGame';
 import PopularGames from './PopularGames';
 import * as actions from '../actions';
@@ -23,6 +24,7 @@ class Measure extends Component {
     return (
       <Box component="div" className={classes.root}>
         <SelectGame />
+        <ScoreCounter />
         <PopularGames />
       </Box>
     );

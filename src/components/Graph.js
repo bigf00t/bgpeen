@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Line } from 'react-chartjs-2';
 import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import { withTheme } from '@material-ui/core/styles';
-import ordinal from 'ordinal';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
@@ -32,7 +31,7 @@ const getOptions = (props) => {
           },
           gridLines: {
             color: props.theme.palette.divider,
-            zeroLineColor: props.theme.palette.text.secondary,
+            zeroLineColor: props.theme.palette.divider,
           },
         },
       ],
@@ -47,7 +46,7 @@ const getOptions = (props) => {
           position: 'bottom',
           gridLines: {
             color: props.theme.palette.divider,
-            zeroLineColor: props.theme.palette.text.secondary,
+            zeroLineColor: props.theme.palette.divider,
           },
           ticks: {
             fontColor: props.theme.palette.text.secondary,
@@ -63,17 +62,19 @@ const getOptions = (props) => {
           scaleID: 'x-axis-0',
           value: props.result.mean,
           borderColor: props.theme.palette.text.secondary,
+          borderDash: [5],
           borderWidth: 2,
-          label: {
-            content: `Mean: ${props.result.mean}`,
-            enabled: true,
-            fontColor: props.theme.palette.background.default,
-            backgroundColor: props.theme.palette.text.secondary,
-            position: 'bottom',
-            xPadding: 10,
-            yPadding: 6,
-            // yAdjust: 0,
-          },
+          // label: {
+          //   // content: `Average: ${props.result.mean}`,
+          //   content: `Average Score`,
+          //   enabled: true,
+          //   fontColor: props.theme.palette.background.default,
+          //   backgroundColor: props.theme.palette.text.secondary,
+          //   position: 'top',
+          //   xPadding: 10,
+          //   yPadding: 6,
+          //   // yAdjust: 0,
+          // },
         },
         {
           type: 'line',
@@ -81,16 +82,55 @@ const getOptions = (props) => {
           scaleID: 'x-axis-0',
           value: props.score,
           borderColor: getScoreColor(props.percentile),
-          borderWidth: 2,
+          borderWidth: 4,
+          // label: {
+          //   // TODO: Make this multiline when v1.0 of annotation plugin is released
+          //   // content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
+          //   content: [`Your Score`],
+          //   enabled: true,
+          //   fontColor: props.theme.palette.background.default,
+          //   backgroundColor: getScoreColor(props.percentile),
+          //   position: 'top',
+          //   xPadding: 10,
+          //   yPadding: 6,
+          //   yAdjust: 24,
+          // },
+        },
+        {
+          type: 'line',
+          mode: 'vertical',
+          scaleID: 'x-axis-0',
+          value: props.score,
+          borderWidth: 0,
           label: {
             // TODO: Make this multiline when v1.0 of annotation plugin is released
-            content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
+            // content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
+            content: [`Your Score`],
             enabled: true,
             fontColor: props.theme.palette.background.default,
             backgroundColor: getScoreColor(props.percentile),
             position: 'top',
             xPadding: 10,
             yPadding: 6,
+            yAdjust: 25,
+          },
+        },
+        {
+          type: 'line',
+          mode: 'vertical',
+          scaleID: 'x-axis-0',
+          value: props.result.mean,
+          borderWidth: 0,
+          label: {
+            // content: `Average: ${props.result.mean}`,
+            content: `Average Score`,
+            enabled: true,
+            fontColor: props.theme.palette.background.default,
+            backgroundColor: props.theme.palette.text.secondary,
+            position: 'top',
+            xPadding: 10,
+            yPadding: 6,
+            yAdjust: 2,
           },
         },
       ],
