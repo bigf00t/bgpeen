@@ -34,6 +34,8 @@ class ScoreCounter extends Component {
     this.state = {
       totalScores: null,
       totalGames: null,
+      scoreValue: null,
+      gameValue: null,
     };
   }
 
@@ -41,10 +43,15 @@ class ScoreCounter extends Component {
     this.props.loadGames().then(() => {
       var totalScores = _.reduce(this.props.data.games, (sum, game) => sum + (game.totalScores || 0), 0);
       var totalGames = this.props.data.games.length;
-      this.setState({
-        totalScores: totalScores,
-        totalGames: totalGames,
-      });
+      this.setState(
+        {
+          totalScores: totalScores.toString(),
+          totalGames: totalGames.toString(),
+          scoreValue: '0'.repeat(totalScores.length),
+          gameValue: '0'.repeat(totalGames.length),
+        },
+        () => this.setState({ scoreValue: this.state.totalScores, gameValue: this.state.totalGames })
+      );
     });
   }
 
@@ -73,7 +80,7 @@ class ScoreCounter extends Component {
                 color="white"
                 background=""
                 play
-                numbers={`${this.state.totalScores}`}
+                numbers={this.state.scoreValue}
                 duration="2"
                 numberStyle={numberStyle}
               />
@@ -88,7 +95,7 @@ class ScoreCounter extends Component {
                 color="white"
                 background=""
                 play
-                numbers={`${this.state.totalGames}`}
+                numbers={this.state.gameValue}
                 duration="2"
                 numberStyle={numberStyle}
               />
