@@ -32,15 +32,19 @@ class ScoreCounter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      totalScores: Math.floor(1000000 + Math.random() * 9000000), // Random 7 digit start
-      totalGames: Math.floor(100 + Math.random() * 900), // Random 3 digit start
+      totalScores: null,
+      totalGames: null,
     };
   }
 
   componentDidMount() {
     this.props.loadGames().then(() => {
-      var totalScores = _.reduce(this.props.data.games, (sum, game) => sum + game.totalScores, 0);
-      this.setState({ totalScores: totalScores, totalGames: this.props.data.games.length });
+      var totalScores = _.reduce(this.props.data.games, (sum, game) => sum + (game.totalScores || 0), 0);
+      var totalGames = this.props.data.games.length;
+      this.setState({
+        totalScores: totalScores,
+        totalGames: totalGames,
+      });
     });
   }
 
@@ -48,40 +52,54 @@ class ScoreCounter extends Component {
     const classes = this.props.classes;
 
     return (
-      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1} mt={5}>
-        <Typography variant="h4" component="h4" align="center">
-          Now serving
-        </Typography>
-        <Box component="div" className={classes.counter}>
-          <FlipNumbers
-            height={60}
-            width={42}
-            color="white"
-            background=""
-            play
-            numbers={`${this.state.totalScores}`}
-            duration="2"
-            numberStyle={numberStyle}
-          />
-        </Box>
-        <Typography variant="h4" component="h4" align="center" mt={2}>
-          scores for
-        </Typography>
-        <Box component="div" className={classes.counter}>
-          <FlipNumbers
-            height={60}
-            width={42}
-            color="white"
-            background=""
-            play
-            numbers={`${this.state.totalGames}`}
-            duration="2"
-            numberStyle={numberStyle}
-          />
-        </Box>
-        <Typography variant="h4" component="h4" align="center" mt={2}>
-          games and counting!
-        </Typography>
+      <Box component="div">
+        {this.state.totalScores && this.state.totalGames ? (
+          <Box
+            component="div"
+            display="flex"
+            flexWrap="wrap"
+            justifyContent="center"
+            alignItems="center"
+            width={1}
+            mt={5}
+          >
+            <Typography variant="h4" component="h4" align="center">
+              Now serving
+            </Typography>
+            <Box component="div" className={classes.counter}>
+              <FlipNumbers
+                height={60}
+                width={42}
+                color="white"
+                background=""
+                play
+                numbers={`${this.state.totalScores}`}
+                duration="2"
+                numberStyle={numberStyle}
+              />
+            </Box>
+            <Typography variant="h4" component="h4" align="center" mt={2}>
+              scores for
+            </Typography>
+            <Box component="div" className={classes.counter}>
+              <FlipNumbers
+                height={60}
+                width={42}
+                color="white"
+                background=""
+                play
+                numbers={`${this.state.totalGames}`}
+                duration="2"
+                numberStyle={numberStyle}
+              />
+            </Box>
+            <Typography variant="h4" component="h4" align="center" mt={2}>
+              games and counting!
+            </Typography>
+          </Box>
+        ) : (
+          ''
+        )}
       </Box>
     );
   }

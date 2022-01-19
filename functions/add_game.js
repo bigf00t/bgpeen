@@ -102,6 +102,8 @@ exports.addGame = (searchTerm, exact) =>
                     suggestedplayers: suggestedplayers,
                     popularity: 0,
                     totalPlays: 0,
+                    totalScores: 0,
+                    mean: 0,
                     unusablePlays: 0,
                     remainingPlays: 0,
                     addedDate: new Date(),
