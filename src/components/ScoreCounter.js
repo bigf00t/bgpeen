@@ -41,12 +41,12 @@ class ScoreCounter extends Component {
 
   componentDidMount() {
     this.props.loadGames().then(() => {
-      var totalScores = _.reduce(this.props.data.games, (sum, game) => sum + (game.totalScores || 0), 0);
-      var totalGames = this.props.data.games.length;
+      var totalScores = _.reduce(this.props.data.games, (sum, game) => sum + (game.totalScores || 0), 0).toString();
+      var totalGames = this.props.data.games.length.toString();
       this.setState(
         {
-          totalScores: totalScores.toString(),
-          totalGames: totalGames.toString(),
+          totalScores: totalScores,
+          totalGames: totalGames,
           scoreValue: '0'.repeat(totalScores.length),
           gameValue: '0'.repeat(totalGames.length),
         },
