@@ -19,11 +19,13 @@
     "https": "^1.0.0",
     "lodash": "^4.17.21",
     "mathjs": "^10.1.0",
+    "minimist": "^1.2.5",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "firebase-functions-test": "^0.2.3"
   },
   "private": true

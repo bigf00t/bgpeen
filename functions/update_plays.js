@@ -111,22 +111,7 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
 
       let cleanPlays = getCleanPlaysFromJson(json.plays.play);
 
-      // When we're on the edge of the daterange, some duplicate records could sneak in
-      let possibleDuplicates = _(cleanPlays)
-        .filter(
-          (play) =>
-            play.date === game.minDate || play.date === game.maxDate || (game.minDate === '' && game.maxDate === '')
-        )
-        .map((play) => {
-          return gameRef
-            .collection('plays')
-            .doc(play.id)
-            .get()
-            .then((doc) => (doc.exists ? play.id : null));
-        })
-        .value();
-
-      return Promise.all(possibleDuplicates).then((results) => {
+      return getNonExistingPlays(game, gameRef, cleanPlays).then((plays) => {
         let totalPlays = json.plays.$.total;
         let totalPages = _.ceil(totalPlays / 100);
         let actualTotalPages = _.min([maxPages, totalPages]);
@@ -134,11 +119,10 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
         let finished = (maxPages > 0 && page >= maxPages) || totalRemainingPages == 0;
 
         // Get plays that don't exist in the db yet
-        let plays = cleanPlays.filter((play) => !results.includes(play.id));
         let duplicatePlaysCount = cleanPlays.length - plays.length;
 
         // This may be double-counting some invalid plays, but there's not much to be done
-        let unusablePlaysCount = json.plays.play.length - duplicatePlaysCount - plays.length;
+        let unusablePlaysCount = json.plays.play.length - cleanPlays.length;
         let remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
 
         console.info(
@@ -195,3 +179,21 @@ const getPlayerUserIds = (players) =>
     .filter((player) => player.userid != undefined)
     .map((player) => player.userid)
     .value();
+
+const getNonExistingPlays = (game, gameRef, plays) => {
+  // When we're on the edge of the daterange, some duplicate records could sneak in
+  const possibleExistingPlays = _(plays)
+    .filter(
+      (play) => play.date === game.minDate || play.date === game.maxDate || (game.minDate === '' && game.maxDate === '')
+    )
+    .map((play) =>
+      gameRef
+        .collection('plays')
+        .doc(play.id)
+        .get()
+        .then((doc) => (doc.exists ? play.id : null))
+    )
+    .value();
+
+  return Promise.all(possibleExistingPlays).then((results) => plays.filter((play) => !results.includes(play.id)));
+};

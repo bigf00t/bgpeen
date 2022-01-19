@@ -23,7 +23,7 @@ exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80) =>
         let oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
         const queries = [
-          db.collection('games').where('totalPlays', '==', 0),
+          // db.collection('games').where('totalPlays', '==', 0).orderBy('playsLastUpdated', 'asc'),
           db
             .collection('games')
             .where('playsLastUpdated', '<', oneWeekAgo)

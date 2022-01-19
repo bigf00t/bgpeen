@@ -5,7 +5,7 @@ const { mean, mode, median, std } = require('mathjs');
 
 var _ = require('lodash');
 
-exports.updateResults = (game, newPlays, flush) => {
+exports.updateResults = (game, newPlays) => {
   console.info('-'.repeat(100));
   console.info(`Updating results for ${game.name}`);
 
@@ -18,7 +18,7 @@ exports.updateResults = (game, newPlays, flush) => {
       var existingAllScoreCount = existingResults
         ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
         : 0;
-      var resultsToAddTo = flush || existingResults === undefined ? [] : existingResults.results;
+      var resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
       var validPlays = getCleanPlays(newPlays);
       var rawResults = addPlaysToResults(validPlays, resultsToAddTo);
 
@@ -55,13 +55,20 @@ exports.updateResults = (game, newPlays, flush) => {
 
       results.push(allScoresResult);
 
-      return resultsRef.set(
-        {
-          playerCounts: playerCounts,
-          results: results,
-        },
-        { merge: true }
-      );
+      return resultsRef
+        .set(
+          {
+            playerCounts: playerCounts,
+            results: results,
+          },
+          { merge: true }
+        )
+        .then(() =>
+          db.collection('games').doc(game.id).update({
+            totalScores: allScoresResult.scoreCount,
+            mean: allScoresResult.mean,
+          })
+        );
     })
     .catch((error) => Promise.reject(error));
 };
