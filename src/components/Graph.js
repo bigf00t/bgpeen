@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 const getScoreColor = (percentile) => {
-  return percentile < 50 ? '#e57373' : '#66bb6a';
+  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
 };
 
 const getOptions = (props) => {

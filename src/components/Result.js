@@ -72,28 +72,28 @@ const getScoreTitle = (percentile) => {
   if (window.location.toString().includes('bgpeen')) {
     return `Your bgpeen is ${percentile < 50 ? 'small' : 'big'}.`;
   } else {
-    return `You're ${getPercentileQuip(percentile)}`;
+    return `${getPercentileQuip(percentile)}`;
   }
 };
 
 // TODO: Case or switch
 const getPercentileQuip = (percentile) => {
-  if (percentile < 1) {
-    return 'quite possibly one of the worst players in the world!';
+  if (Math.ceil(percentile) === 69) {
+    return 'Nice.';
+  } else if (percentile < 1) {
+    return "You're quite possibly one of the worst players in the world!";
   } else if (percentile < 10) {
-    return 'just terrible.';
-  } else if (percentile < 45) {
-    return 'not very good.';
-  } else if (percentile < 55) {
-    return 'boringly average.';
-  } else if (Math.ceil(percentile) === 69) {
-    return 'nice ;).';
+    return "You're just terrible.";
+  } else if (percentile < 40) {
+    return "You're not very good.";
+  } else if (percentile < 60) {
+    return "You're boringly average.";
   } else if (percentile < 90) {
-    return 'actually pretty decent...';
+    return "You're actually pretty decent...";
   } else if (percentile < 99) {
-    return 'legit amazing!';
+    return "You're legit amazing!";
   } else if (percentile >= 99) {
-    return 'probably cheating :(';
+    return "You're probably cheating :(";
   } else {
     return '';
   }
@@ -236,7 +236,7 @@ class Result extends Component {
                     {this.state.result.scoreCount} Scores - Average {this.state.result.mean}
                   </Typography>
                   <Typography component="div" variant="h4" align="center" className={classes.credit}>
-                    How do you stack up?
+                    How good are you?
                   </Typography>
                 </Box>
               </Box>
