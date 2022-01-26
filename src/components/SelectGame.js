@@ -48,13 +48,14 @@ class SelectGame extends Component {
   }
 
   handleGameTextChange = (event) => {
-    this.setState({ gameText: event.target.value });
-    // console.log(event.target.value);
+    if (!this.state.game) {
+      this.setState({ gameText: event.target.value });
+      // console.log(event.target.value);
+    }
   };
 
-  handleGameBlur = (event) => {
-    this.setState({ game: this.state.gameText });
-    this.setState({ added: false });
+  handleGameBlur = () => {
+    this.setState({ game: this.state.gameText, added: false });
     this.props.setGame(null);
   };
 
@@ -135,14 +136,15 @@ class SelectGame extends Component {
                 disabled={this.state.added}
                 onClick={this.handleAddClick}
               >
-                {this.state.added ? 'Added!' : 'Add Game'}
+                Add Game
+                {/* {this.state.added ? 'Added!' : 'Add Game'} */}
               </Button>
             </FormControl>
           )}
         </FormGroup>
         {this.state.added ? (
           <Box component="div" className={classes.message}>
-            Game has been added to the queue, but it could take up to 10 minutes for the data to be available. <br />
+            Game has been added to the queue, but it could take up to 10 minutes for score data to be available. <br />
             Please wait and refresh in a little while. Thanks!
           </Box>
         ) : (
