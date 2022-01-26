@@ -10,7 +10,7 @@ const dayjs = require('dayjs');
 var duration = require('dayjs/plugin/duration');
 dayjs.extend(duration);
 
-exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80) =>
+exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorical = false) =>
   db
     .collection('searches')
     .limit(50)
@@ -22,16 +22,21 @@ exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80) =>
         let oneMonthAgo = dayjs().subtract(1, 'month').toDate();
         let oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
-        const queries = [
-          // db.collection('games').where('totalPlays', '==', 0).orderBy('playsLastUpdated', 'asc'),
+        let queries = [
           db
             .collection('games')
             .where('playsLastUpdated', '<', oneWeekAgo)
             .where('hasMinPlays', '==', false)
             .orderBy('playsLastUpdated', 'asc'),
-          // db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'desc'),
           db.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
         ];
+
+        if (includeHistorical) {
+          queries = queries.concat([
+            db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
+            db.collection('games').orderBy('playsLastUpdated', 'asc'),
+          ]);
+        }
 
         let chain = Promise.resolve();
         queries.forEach((query) => {
