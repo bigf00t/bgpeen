@@ -42,21 +42,28 @@ class SelectGame extends Component {
     super(props);
     this.state = {
       game: null,
+      gameText: null,
       added: false,
     };
   }
 
+  handleGameTextChange = (event) => {
+    this.setState({ gameText: event.target.value });
+    // console.log(event.target.value);
+  };
+
+  handleGameBlur = (event) => {
+    this.setState({ game: this.state.gameText });
+    this.setState({ added: false });
+    this.props.setGame(null);
+  };
+
   handleGameChange = (event, newGame) => {
     this.setState({ game: newGame });
     if (newGame) {
-      if (!newGame.id) {
-        this.setState({ added: false });
-        this.props.setGame(null);
-      } else {
-        this.props.history.push({
-          pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
-        });
-      }
+      this.props.history.push({
+        pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
+      });
     }
   };
 
@@ -66,7 +73,7 @@ class SelectGame extends Component {
         name: this.state.game,
       })
       .then(() => {
-        this.setState({ added: true });
+        this.setState({ added: true, game: null, gameText: null });
       });
   };
 
@@ -99,6 +106,7 @@ class SelectGame extends Component {
               name="game"
               value={this.state.game}
               onChange={this.handleGameChange}
+              onBlur={this.handleGameBlur}
               options={this.props.data.games}
               fullWidth
               getOptionLabel={(option) => option.name || option}
@@ -107,6 +115,7 @@ class SelectGame extends Component {
                   {...params}
                   placeholder="Start typing..."
                   // label="Game"
+                  onChange={this.handleGameTextChange}
                   fullWidth
                   InputLabelProps={{
                     shrink: true,

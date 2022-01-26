@@ -196,6 +196,8 @@ class Result extends Component {
     const classes = this.props.classes;
 
     if (this.props.data.game && this.state.result) {
+      document.title = `Good at ${this.props.data.game.name}`;
+
       return (
         <Box component="div">
           <Paper className={classes.paper} square>
@@ -231,7 +233,7 @@ class Result extends Component {
               <Box component="div">
                 <Box component="div" justifyContent="center" alignItems="center">
                   <Typography component="div" variant="h3" align="center" className={classes.credit}>
-                    The average score is {this.state.result.mean}
+                    {this.state.result.scoreCount} Scores - Average {this.state.result.mean}
                   </Typography>
                   <Typography component="div" variant="h4" align="center" className={classes.credit}>
                     How do you stack up?

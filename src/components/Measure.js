@@ -20,6 +20,7 @@ class Measure extends Component {
 
   render() {
     const classes = this.props.classes;
+    document.title = 'Good at Games';
 
     return (
       <Box component="div" className={classes.root}>

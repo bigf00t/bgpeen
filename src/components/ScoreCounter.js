@@ -28,6 +28,17 @@ const numberStyle = {
   background: 'rgba(0, 0, 0, 0.75)',
 };
 
+const nonNumberStyle = {
+  width: 20,
+  height: 60,
+  fontSize: '2rem',
+  borderRadius: '6px',
+  marginRight: '0.2rem',
+  paddingTop: '0.6rem',
+  paddingLeft: '0.4rem',
+  background: 'rgba(0, 0, 0, 0.75)',
+};
+
 class ScoreCounter extends Component {
   constructor(props) {
     super(props);
@@ -45,8 +56,8 @@ class ScoreCounter extends Component {
       var totalGames = this.props.data.games.length.toString();
       this.setState(
         {
-          totalScores: totalScores,
-          totalGames: totalGames,
+          totalScores: parseInt(totalScores).toLocaleString(),
+          totalGames: parseInt(totalGames).toLocaleString(),
           scoreValue: '0'.repeat(totalScores.length),
           gameValue: '0'.repeat(totalGames.length),
         },
@@ -83,6 +94,7 @@ class ScoreCounter extends Component {
                 numbers={this.state.scoreValue}
                 duration="2"
                 numberStyle={numberStyle}
+                nonNumberStyle={nonNumberStyle}
               />
             </Box>
             <Typography variant="h4" component="h4" align="center" mt={2}>
@@ -98,6 +110,7 @@ class ScoreCounter extends Component {
                 numbers={this.state.gameValue}
                 duration="2"
                 numberStyle={numberStyle}
+                nonNumberStyle={nonNumberStyle}
               />
             </Box>
             <Typography variant="h4" component="h4" align="center" mt={2}>

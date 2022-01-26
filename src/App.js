@@ -11,9 +11,7 @@ import Measure from './components/Measure';
 import Result from './components/Result';
 
 function App() {
-  document.title = window.location.toString().includes('bgpeen')
-    ? 'bgpeen - measure your scores'
-    : 'good at games? how do you know?';
+  // document.title = window.location.toString().includes('bgpeen') ? 'bgpeen - measure your scores' : 'Good at games?';
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const theme = React.useMemo(
