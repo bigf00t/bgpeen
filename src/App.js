@@ -45,8 +45,9 @@ function App() {
         <div className="App">
           <Menu />
           <Routes>
-            <Route path="/:id/:name" element={<Result />} />
-            <Route path="/:id/:name/:score/:players/:place" element={<Result />} />
+            <Route path="/:id/:name" element={<Result />}>
+              <Route path=":score/:players/:place" element={<Result />} />
+            </Route>
             <Route path="/" element={<Measure />} />
           </Routes>
         </div>

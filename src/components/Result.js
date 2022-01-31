@@ -154,9 +154,9 @@ const Result = (props) => {
 
   const setGameFromUrl = () => {
     if (params.id) {
-      console.log(props.data.games);
+      // console.log(props.data.games);
       const newGame = props.data.games.find((game) => game.id == params.id, null);
-      console.log(newGame);
+      // console.log(newGame);
       setOrLoadGame(newGame);
       // setGame(newGame);
     }
@@ -172,13 +172,13 @@ const Result = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    console.log('componentDidMount');
-    console.log(props);
+    // console.log('componentDidMount');
+    // console.log(props);
     props.setGame(null);
 
     if (_.isEmpty(props.data.games)) {
       props.loadGames().then(() => {
-        console.log(props);
+        // console.log(props);
         setGameFromUrl();
         updateResult();
       });
@@ -189,7 +189,7 @@ const Result = (props) => {
   }, []);
 
   const handleFiltersChange = (filters) => {
-    console.log('handleFiltersChange');
+    // console.log('handleFiltersChange');
     setFilters(filters);
     updateResult();
   };

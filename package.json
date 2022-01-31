@@ -9,7 +9,7 @@
     "@material-ui/styles": "^4.11.4",
     "chart.js": "^2.9.4",
     "chartjs-plugin-annotation": "^0.5.7",
-    "firebase": "^8.10.0",
+    "firebase": "^9.6.5",
     "lodash": "^4.17.21",
     "material-ui-image": "^3.3.2",
     "ordinal": "^1.0.3",

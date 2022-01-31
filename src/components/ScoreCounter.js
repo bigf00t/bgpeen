@@ -49,8 +49,6 @@ const ScoreCounter = (props) => {
   // componentDidMount
   useEffect(() => {
     props.loadGames();
-    setScoreValue(null);
-    setGameValue(null);
   }, []);
 
   useEffect(() => {

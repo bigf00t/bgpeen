@@ -40,7 +40,7 @@ const styles = (theme) => ({
 });
 
 const Filters = (props) => {
-  const [score, setScore] = useState('');
+  const [score, setScore] = useState(null);
   const [place, setPlace] = useState(null);
   const [players, setPlayers] = useState(null);
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
@@ -54,11 +54,19 @@ const Filters = (props) => {
 
   // Dropdowns changed
   useEffect(() => {
-    if (score || place || players) {
-      setHistory();
+    if (filtersChanged()) {
+      updateHistory();
       sendFiltersUpdate();
     }
   }, [score, place, players]);
+
+  const filtersChanged = () => {
+    return (
+      (score !== null && score !== (params.score ?? '')) ||
+      (players !== null && players !== (params.players ?? '')) ||
+      (place !== null && place !== (params.place ?? ''))
+    );
+  };
 
   // Players changed
   useEffect(() => {
@@ -67,7 +75,7 @@ const Filters = (props) => {
     if (place && validPlayerPlaces.indexOf(place) === -1) {
       setPlace('');
     }
-    console.log(validPlayerPlaces);
+    // console.log(validPlayerPlaces);
     setValidPlayerPlaces(validPlayerPlaces);
   }, [players]);
 
@@ -105,14 +113,17 @@ const Filters = (props) => {
     setPlaceHighlightValue(option);
   };
 
-  const setHistory = () => {
-    const urlParams = [params.id, params.name, score || '-', players || '-', place || '-'];
+  const updateHistory = () => {
+    var urlParams = [params.id, params.name];
+    if (score || players || place) {
+      urlParams = urlParams.concat([score || '-', players || '-', place || '-']);
+    }
     navigate(`/${urlParams.join('/')}`);
   };
 
   const setFiltersFromUrl = () => {
-    setPlayers(getIntFromParam(params.players));
     setScore(getIntFromParam(params.score));
+    setPlayers(getIntFromParam(params.players));
     setValidPlayerPlaces(getValidPlayerPlaces());
     setPlace(getIntFromParam(params.place));
     sendFiltersUpdate();

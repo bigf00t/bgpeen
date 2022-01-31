@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { collection, addDoc } from 'firebase/firestore';
 import * as actions from '../actions';
 import { db } from '../fire';
 
@@ -53,6 +54,7 @@ const SelectGame = (props) => {
   };
 
   const handleGameBlur = () => {
+    // TODO: Handle tab
     setGame(gameText);
     setAdded(false);
     props.setGame(null);
@@ -60,21 +62,20 @@ const SelectGame = (props) => {
 
   const handleGameChange = (event, newGame) => {
     setGame(newGame);
-    if (newGame) {
+    if (newGame && newGame.id) {
       navigate(`/${newGame.id}/${getGameSlug(newGame)}`);
     }
   };
 
-  const handleAddClick = () => {
-    db.collection('searches')
-      .add({
-        name: game,
-      })
-      .then(() => {
-        setGame(null);
-        setGameText(null);
-        setAdded(true);
-      });
+  const handleAddClick = async () => {
+    // TODO: Should be action?
+    await addDoc(collection(db, 'searches'), {
+      name: gameText,
+    });
+
+    setGame(null);
+    setGameText(null);
+    setAdded(true);
   };
 
   // componentDidMount
