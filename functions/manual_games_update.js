@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 const db = admin.firestore();
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 const util = require('./util');
 
@@ -14,7 +14,7 @@ exports.manualGamesUpdate = (games) => {
   }
 
   return query.get().then(function (gamesSnapshot) {
-    let batch = db.batch();
+    const batch = db.batch();
 
     return Promise.all(
       _.map(util.docsToArray(gamesSnapshot), (game) => {
@@ -23,16 +23,16 @@ exports.manualGamesUpdate = (games) => {
           .doc(game.id)
           .get()
           .then((resultsSnapshot) => {
-            let gameRef = db.collection('games').doc(game.id);
-            var allScoresResult = _.find(resultsSnapshot.data().results, (result) => result.playerCount === '');
+            const gameRef = db.collection('games').doc(game.id);
+            const allScoresResult = _.find(resultsSnapshot.data().results, (result) => result.playerCount === '');
 
             return batch.update(gameRef, {
               totalScores: allScoresResult ? allScoresResult.scoreCount : 0,
               mean: allScoresResult ? allScoresResult.mean : 0,
               // hasNoPlays: game.totalPlays === 0,
-              // dateAdded: admin.firestore.FieldValue.delete(),
-              // startDate: admin.firestore.FieldValue.delete(),
-              // isNew: admin.firestore.FieldValue.delete(),
+              // dateAdded: admin.firestore.FieldValue.deconste(),
+              // startDate: admin.firestore.FieldValue.deconste(),
+              // isNew: admin.firestore.FieldValue.deconste(),
             });
           });
 
@@ -44,8 +44,8 @@ exports.manualGamesUpdate = (games) => {
         //   .then((playsSnapshot) => {
         //     console.info(`Started updating game: ${game.name}`);
 
-        //     var plays = util.docsToArray(playsSnapshot);
-        //     let now = new Date();
+        //     const plays = util.docsToArray(playsSnapshot);
+        //     const now = new Date();
 
         //     console.info(`Found ${plays.length} plays`);
 
@@ -58,9 +58,9 @@ exports.manualGamesUpdate = (games) => {
         //       maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
         //       minDate: _.defaultTo(game.minDate, ''),
         //       addedDate: _.defaultTo(game.addedDate, now),
-        //       // dateAdded: admin.firestore.FieldValue.delete(),
+        //       // dateAdded: admin.firestore.FieldValue.deconste(),
         //       playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
-        //       // startDate: admin.firestore.FieldValue.delete(),
+        //       // startDate: admin.firestore.FieldValue.deconste(),
         //     });
         //   });
       })

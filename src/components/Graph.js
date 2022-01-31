@@ -151,14 +151,14 @@ class Graph extends Component {
       return;
     }
 
-    var graphPoints = _.chain(this.props.result.scores)
+    const graphPoints = _.chain(this.props.result.scores)
       .reduce((points, count, score) => {
         return points.concat([{ x: parseInt(score), y: count }]);
       }, [])
       .orderBy(['x'])
       .value();
 
-    var graphData = {
+    const graphData = {
       datasets: [
         {
           data: graphPoints,

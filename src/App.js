@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Switch, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
@@ -44,14 +44,11 @@ function App() {
         <CssBaseline />
         <div className="App">
           <Menu />
-          <Switch>
-            <Route path="/:id/:name">
-              <Result />
-            </Route>
-            <Route path="/">
-              <Measure />
-            </Route>
-          </Switch>
+          <Routes>
+            <Route path="/:id/:name" element={<Result />} />
+            <Route path="/:id/:name/:score/:players/:place" element={<Result />} />
+            <Route path="/" element={<Measure />} />
+          </Routes>
         </div>
       </ThemeProvider>
     </BrowserRouter>

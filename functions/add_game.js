@@ -4,7 +4,7 @@ const db = admin.firestore();
 const axios = require('axios');
 const convert = require('xml-js');
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 const util = require('./util');
 
@@ -19,13 +19,13 @@ exports.addGame = (searchTerm, exact) =>
       }
 
       // eslint-disable-next-line prettier/prettier
-      let searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${searchTerm}&exact=${exact ? 1 : 0}&type=boardgame`;
+      const searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${searchTerm}&exact=${exact ? 1 : 0}&type=boardgame`;
 
       console.info(`Querying ${searchUrl}`);
       return axios
         .get(searchUrl)
         .then((result) => {
-          var json = convert.xml2js(result.data, {
+          const json = convert.xml2js(result.data, {
             compact: true,
             attributesKey: '$',
           });
@@ -37,16 +37,14 @@ exports.addGame = (searchTerm, exact) =>
             return util.delay().then(() => exports.addGame(searchTerm.replace(':', ''), false));
           }
 
-          var item;
-          if (json.items.item.length > 1) {
-            item = _.orderBy(
-              json.items.item,
-              [(item) => parseInt(item.yearpublished.$.value), (item) => parseInt(item.$.id)],
-              ['desc', 'desc']
-            )[0];
-          } else {
-            item = json.items.item;
-          }
+          const item =
+            json.items.item.length > 1
+              ? _.orderBy(
+                  json.items.item,
+                  [(item) => parseInt(item.yearpublished.$.value), (item) => parseInt(item.$.id)],
+                  ['desc', 'desc']
+                )[0]
+              : json.items.item;
 
           if (item.name.$.value.replace(':', '').toUpperCase() !== searchTerm.toUpperCase()) {
             return Promise.reject(`Found a result, but it did not match your search: ${item.name.$.value}`);
@@ -65,15 +63,15 @@ exports.addGame = (searchTerm, exact) =>
                 .delay(item.$.id)
                 .then((id) => axios.get(`https://api.geekdo.com/xmlapi2/things?id=${id}`))
                 .then((result) => {
-                  var item = convert.xml2js(result.data, {
+                  const item = convert.xml2js(result.data, {
                     compact: true,
                     attributesKey: '$',
                   }).items.item;
-                  var name = Array.isArray(item.name)
+                  const name = Array.isArray(item.name)
                     ? _.find(item.name, (name) => name.$.type === 'primary').$.value
                     : item.name.$.value;
-                  var suggestedplayerspoll = _.find(item.poll, (poll) => poll.$.name === 'suggested_numplayers');
-                  var suggestedplayers = _.reduce(
+                  const suggestedplayerspoll = _.find(item.poll, (poll) => poll.$.name === 'suggested_numplayers');
+                  const suggestedplayers = _.reduce(
                     suggestedplayerspoll.results,
                     (redPoll, results) => {
                       redPoll[results.$.numplayers] = _.reduce(
@@ -89,7 +87,7 @@ exports.addGame = (searchTerm, exact) =>
                     {}
                   );
 
-                  var newGame = {
+                  const newGame = {
                     id: item.$.id,
                     name: name,
                     thumbnail: item.thumbnail._text,

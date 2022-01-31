@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -26,33 +26,31 @@ const styles = () => ({
   },
 });
 
-class Menu extends Component {
-  render() {
-    const classes = this.props.classes;
+const Menu = (props) => {
+  const classes = props.classes;
 
-    return (
-      <AppBar position="static" color="default" display="flex">
-        <Toolbar>
-          <Box display="flex" flexGrow={1}>
-            <Link className={classes.logo} to="/">
-              <Typography component="span" variant="h4" color="textPrimary">
-                {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
-              </Typography>
-              <Typography component="span" variant="subtitle2" color="textPrimary">
-                &nbsp;beta
-              </Typography>
-            </Link>
-          </Box>
-          <a className={classes.twitter} href="https://twitter.com/GoodAtDotGames" target="_blank" rel="noreferrer">
-            <Typography component="span" color="textSecondary">
-              @GoodAtDotGames
+  return (
+    <AppBar position="static" color="default" display="flex">
+      <Toolbar>
+        <Box display="flex" flexGrow={1}>
+          <Link className={classes.logo} to="/">
+            <Typography component="span" variant="h4" color="textPrimary">
+              {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
             </Typography>
-          </a>
-        </Toolbar>
-      </AppBar>
-    );
-  }
-}
+            <Typography component="span" variant="subtitle2" color="textPrimary">
+              &nbsp;beta
+            </Typography>
+          </Link>
+        </Box>
+        <a className={classes.twitter} href="https://twitter.com/GoodAtDotGames" target="_blank" rel="noreferrer">
+          <Typography component="span" color="textSecondary">
+            @GoodAtDotGames
+          </Typography>
+        </a>
+      </Toolbar>
+    </AppBar>
+  );
+};
 
 Menu.propTypes = {
   classes: PropTypes.object,

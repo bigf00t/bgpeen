@@ -3,27 +3,27 @@ const db = admin.firestore();
 
 const { mean, mode, median, std } = require('mathjs');
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 exports.updateResults = (game, newPlays) => {
   console.info('-'.repeat(100));
   console.info(`Updating results for ${game.name}`);
 
-  let resultsRef = db.collection('results').doc(game.id);
+  const resultsRef = db.collection('results').doc(game.id);
 
   return resultsRef
     .get()
     .then((resultsSnapshot) => {
-      var existingResults = resultsSnapshot.data();
-      var existingAllScoreCount = existingResults
+      const existingResults = resultsSnapshot.data();
+      const existingAllScoreCount = existingResults
         ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
         : 0;
-      var resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
-      var validPlays = getCleanPlays(newPlays);
-      var rawResults = addPlaysToResults(validPlays, resultsToAddTo);
+      const resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
+      const validPlays = getCleanPlays(newPlays);
+      const rawResults = addPlaysToResults(validPlays, resultsToAddTo);
 
       // We only want results with scores and valid player counts
-      var results = _(rawResults)
+      const results = _(rawResults)
         .filter(
           (result) =>
             !_.isEmpty(result.scores) &&
@@ -39,17 +39,17 @@ exports.updateResults = (game, newPlays) => {
         return Promise.reject('No valid results found!');
       }
 
-      var playerCounts = getPlayersCounts(results);
-      var playerCountResults = [];
+      const playerCounts = getPlayersCounts(results);
+      const playerCountResults = [];
 
       _.forEach(playerCounts, (playerCount) => {
-        var playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
+        const playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
         playerCountResults.push(playerCountResult);
         results.push(playerCountResult);
       });
 
-      var allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
-      var newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
+      const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
+      const newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
 
       console.info(`Adding ${newScoresCount} new scores to results`);
 
@@ -82,15 +82,15 @@ const getPlayersCounts = (results) =>
     .value();
 
 const getGroupedResultsForPlayerCount = (results, playerCount) => {
-  var playerCountResults = _.filter(results, (result) => playerCount === '' || result.playerCount === playerCount);
+  const playerCountResults = _.filter(results, (result) => playerCount === '' || result.playerCount === playerCount);
 
-  var allScores = _.reduce(
+  const allScores = _.reduce(
     playerCountResults,
     (scores, result) => _.mergeWith(scores, result.scores, (val1, val2) => (val1 || 0) + val2),
     {}
   );
 
-  var groupedResult = getStats(allScores);
+  const groupedResult = getStats(allScores);
   groupedResult.trimmedScoreCount = _.reduce(
     playerCountResults,
     (count, result) => count + result.trimmedScoreCount,
@@ -103,9 +103,9 @@ const getGroupedResultsForPlayerCount = (results, playerCount) => {
   return groupedResult;
 };
 const getTrimmedScores = (explodedScores, scores) => {
-  var meanVal = mean(explodedScores);
-  var stdVal = std(explodedScores);
-  var stdToRemove = 3;
+  const meanVal = mean(explodedScores);
+  const stdVal = std(explodedScores);
+  const stdToRemove = 3;
 
   // Three standard deviations from the mean is a common cut-off in practice
   return _.pickBy(
@@ -115,7 +115,7 @@ const getTrimmedScores = (explodedScores, scores) => {
 };
 
 const getStats = (scores) => {
-  var explodedScores = getExplodedScores(scores);
+  const explodedScores = getExplodedScores(scores);
 
   return {
     // TODO: Don't parse int, parse dec
@@ -128,11 +128,11 @@ const getStats = (scores) => {
 };
 
 const addStatsToResult = (result) => {
-  var explodedScores = getExplodedScores(result.scores);
-  var trimmedScores = getTrimmedScores(explodedScores, result.scores);
+  const explodedScores = getExplodedScores(result.scores);
+  const trimmedScores = getTrimmedScores(explodedScores, result.scores);
   result.scores = trimmedScores;
 
-  var stats = getStats(trimmedScores);
+  const stats = getStats(trimmedScores);
   stats.trimmedScoreCount = explodedScores.length - stats.scoreCount;
 
   return {
@@ -152,12 +152,12 @@ const getExplodedScores = (scores) =>
 
 const addPlaysToResults = (plays, results) => {
   _.forEach(plays, (play) => {
-    var cleanPlayerScores = getCleanPlayerScores(play.players);
+    const cleanPlayerScores = getCleanPlayerScores(play.players);
     if (cleanPlayerScores.length > 0) {
       _.forEach(cleanPlayerScores, (score, i) => {
-        var playerPlace = i + 1;
+        const playerPlace = i + 1;
         // Find an existing result or create a new one
-        var resultIndex = _.findIndex(
+        let resultIndex = _.findIndex(
           results,
           (result) => result.playerCount == play.playerCount && result.playerPlace == playerPlace
         );

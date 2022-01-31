@@ -1,0 +1,31 @@
+games
+-id
+-name
+-thumbnail
+-mean
+-totalScores
+-popularity
+
+playsinfo
+-totalPlays: 0,
+-unusablePlays: 0,
+-remainingPlays: 0,
+-newestPlayDate: '',
+-oldestPlayDate: '',
+-maxDate: '',
+-minDate: '',
+-hasMinPlays: false,
+-hasNoPlays: true,
+playsLastUpdated
+
+details
+-addedDate: new Date(),
+-image: item.image._text,
+-description: item.description._text,
+-yearpublished: parseInt(item.yearpublished.$.value),
+-minplayers: parseInt(item.minplayers.$.value),
+-maxplayers: parseInt(item.maxplayers.$.value),
+-playingtime: parseInt(item.playingtime.$.value),
+-suggestedplayers: suggestedplayers,
+-yearpublished
+

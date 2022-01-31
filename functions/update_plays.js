@@ -10,11 +10,11 @@ const _ = require('lodash');
 const util = require('./util');
 
 exports.updateGamePlays = (game, maxPages) => {
-  let gameRef = db.collection('games').doc(game.id);
+  const gameRef = db.collection('games').doc(game.id);
   console.info('-'.repeat(100));
   console.info(`Getting plays for ${game.name} (${game.id})`);
 
-  let playsUrl = getPlaysUrl(game);
+  const playsUrl = getPlaysUrl(game);
   console.info(`Using BGG API Url: ${playsUrl}`);
 
   return updatePlaysRecursively(game, gameRef, playsUrl, maxPages)
@@ -23,15 +23,15 @@ exports.updateGamePlays = (game, maxPages) => {
 };
 
 const updateGame = (game, gameRef, pageResults) => {
-  let plays = _.flatMap(pageResults, 'plays');
-  let newUnusablePlayCount = _.reduce(pageResults, (sum, pageResult) => sum + pageResult.unusablePlays, 0);
-  let pageResultsWithPlays = pageResults.filter((pageResult) => pageResult.plays.length > 0);
+  const plays = _.flatMap(pageResults, 'plays');
+  const newUnusablePlayCount = _.reduce(pageResults, (sum, pageResult) => sum + pageResult.unusablePlays, 0);
+  const pageResultsWithPlays = pageResults.filter((pageResult) => pageResult.plays.length > 0);
   let newestPlayDate = game.newestPlayDate;
   let currentOldestPlayDate = '';
   let oldestPlayDate = game.oldestPlayDate;
 
   if (pageResultsWithPlays.length > 0) {
-    let newNewestPlayDate = pageResultsWithPlays[0].plays[0].date;
+    const newNewestPlayDate = pageResultsWithPlays[0].plays[0].date;
     newestPlayDate =
       !game.newestPlayDate || dayjs(newNewestPlayDate).isAfter(game.newestPlayDate)
         ? newNewestPlayDate
@@ -44,8 +44,8 @@ const updateGame = (game, gameRef, pageResults) => {
         : game.oldestPlayDate;
   }
 
-  let remainingPlays = pageResults.slice(-1)[0].remainingPlays;
-  let totalPlays = _.defaultTo(game.totalPlays, 0) + plays.length;
+  const remainingPlays = pageResults.slice(-1)[0].remainingPlays;
+  const totalPlays = _.defaultTo(game.totalPlays, 0) + plays.length;
 
   console.info(
     `Added ${plays.length} total plays for ${game.name} - ${remainingPlays} unloaded plays remaining on BGG`
@@ -99,7 +99,7 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
   axios
     .get(playsUrl + page)
     .then((result) => {
-      let json = convert.xml2js(result.data, {
+      const json = convert.xml2js(result.data, {
         compact: true,
         attributesKey: '$',
       });
@@ -109,21 +109,21 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
         return Promise.reject();
       }
 
-      let cleanPlays = getCleanPlaysFromJson(json.plays.play);
+      const cleanPlays = getCleanPlaysFromJson(json.plays.play);
 
       return getNonExistingPlays(game, gameRef, cleanPlays).then((plays) => {
-        let totalPlays = json.plays.$.total;
-        let totalPages = _.ceil(totalPlays / 100);
-        let actualTotalPages = _.min([maxPages, totalPages]);
-        let totalRemainingPages = actualTotalPages - page;
-        let finished = (maxPages > 0 && page >= maxPages) || totalRemainingPages == 0;
+        const totalPlays = json.plays.$.total;
+        const totalPages = _.ceil(totalPlays / 100);
+        const actualTotalPages = _.min([maxPages, totalPages]);
+        const totalRemainingPages = actualTotalPages - page;
+        const finished = (maxPages > 0 && page >= maxPages) || totalRemainingPages == 0;
 
         // Get plays that don't exist in the db yet
-        let duplicatePlaysCount = cleanPlays.length - plays.length;
+        const duplicatePlaysCount = cleanPlays.length - plays.length;
 
         // This may be double-counting some invalid plays, but there's not much to be done
-        let unusablePlaysCount = json.plays.play.length - cleanPlays.length;
-        let remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
+        const unusablePlaysCount = json.plays.play.length - cleanPlays.length;
+        const remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
 
         console.info(
           `${game.name} - Page ${page} of ${actualTotalPages} - ${
@@ -133,7 +133,7 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
           }`
         );
 
-        let batch = db.batch();
+        const batch = db.batch();
 
         _.forEach(plays, (play) => batch.set(gameRef.collection('plays').doc(play.id), play));
 
@@ -155,8 +155,8 @@ const getCleanPlaysFromJson = (plays) =>
   _(plays)
     .filter((play) => _.get(play, 'players.player[0]'))
     .map((play) => {
-      let players = getCleanPlayersFromJson(play.players.player);
-      let cleanPlay = { ...play.$ };
+      const players = getCleanPlayersFromJson(play.players.player);
+      const cleanPlay = { ...play.$ };
       cleanPlay.players = players;
       cleanPlay.playerCount = players.length.toString();
       cleanPlay.playerUserIds = getPlayerUserIds(players);

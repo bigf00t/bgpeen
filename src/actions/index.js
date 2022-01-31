@@ -9,7 +9,7 @@ export const loadGames = () => async (dispatch) => {
     .orderBy('name', 'asc')
     .get()
     .then((snapshot) => {
-      let games = [];
+      const games = [];
       snapshot.forEach((doc) => {
         if (!_.isEmpty(doc.data())) {
           games.push(doc.data());
@@ -28,7 +28,7 @@ export const loadGame = (gameId) => async (dispatch) => {
     .doc(gameId)
     .get()
     .then((snapshot) => {
-      var gameRef = db.collection('games').doc(gameId);
+      const gameRef = db.collection('games').doc(gameId);
       gameRef.get().then((doc) => {
         gameRef.update({
           popularity: (doc.data().popularity || 0) + 1,
