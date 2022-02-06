@@ -171,7 +171,7 @@ const Result = (props) => {
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
-      console.log(filters);
+      // console.log(filters);
       updateResult();
     }
   }, [filters.players, filters.place]);
@@ -179,7 +179,7 @@ const Result = (props) => {
   // Result changed
   useEffect(() => {
     if (filters.score && !_.isEmpty(result)) {
-      console.log('updatePercentile');
+      // console.log('updatePercentile');
       updatePercentile();
     }
   }, [filters, result]);

@@ -104,9 +104,9 @@ const Graph = (props) => {
     // console.log('componentDidUpdate');
     // console.log(props.result);
     if (!_.isEmpty(props.result)) {
-      console.log(props.result);
-      console.log(props.score);
-      console.log('updateGraphData');
+      // console.log(props.result);
+      // console.log(props.score);
+      // console.log('updateGraphData');
       updateGraphData();
     }
   }, [props.result]);

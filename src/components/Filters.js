@@ -54,9 +54,9 @@ const Filters = (props) => {
 
   // Dropdowns changed
   useEffect(() => {
-    console.log(params);
-    console.log(players);
-    console.log(!params.score);
+    // console.log(params);
+    // console.log(players);
+    // console.log(!params.score);
     if (filtersChanged()) {
       updateHistory();
       sendFiltersUpdate();
@@ -127,14 +127,14 @@ const Filters = (props) => {
     if (score || players || place) {
       urlParams = urlParams.concat([score || '-', players || '-', place || '-']);
     }
-    console.log('navigate: ' + `/${urlParams.join('/')}`);
+    // console.log('navigate: ' + `/${urlParams.join('/')}`);
     navigate(`/${urlParams.join('/')}`);
   };
 
   const setFiltersFromUrl = () => {
     // if (params.score || params.players || params.place) {
-    console.log('setFiltersFromUrl');
-    console.log(params);
+    // console.log('setFiltersFromUrl');
+    // console.log(params);
     setScore(getIntFromParam(params.score));
     setPlayers(getIntFromParam(params.players));
     setValidPlayerPlaces(getValidPlayerPlaces());
@@ -147,7 +147,7 @@ const Filters = (props) => {
   };
 
   const sendFiltersUpdate = () => {
-    console.log('sendFiltersUpdate');
+    // console.log('sendFiltersUpdate');
     props.handleChange({
       players: players === '' ? null : players,
       place: place === '' ? null : place,
@@ -157,7 +157,7 @@ const Filters = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    console.log(params);
+    // console.log(params);
     setFiltersFromUrl();
   }, [params.score, params.players, params.place]);
 
