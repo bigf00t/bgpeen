@@ -40,9 +40,9 @@ const styles = (theme) => ({
 });
 
 const Filters = (props) => {
-  const [score, setScore] = useState(null);
-  const [place, setPlace] = useState(null);
-  const [players, setPlayers] = useState(null);
+  const [score, setScore] = useState();
+  const [place, setPlace] = useState();
+  const [players, setPlayers] = useState();
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
   const [playersHighlightValue, setPlayersHighlightValue] = useState('');
   const [placeHighlightValue, setPlaceHighlightValue] = useState('');
@@ -54,17 +54,26 @@ const Filters = (props) => {
 
   // Dropdowns changed
   useEffect(() => {
+    console.log(params);
+    console.log(players);
+    console.log(!params.score);
     if (filtersChanged()) {
       updateHistory();
+      sendFiltersUpdate();
+    } else if (!params.score || score || players || place) {
       sendFiltersUpdate();
     }
   }, [score, place, players]);
 
   const filtersChanged = () => {
+    // console.log(players);
+    // console.log((score || '-') !== params.score);
+    // console.log((players || '-') !== params.players);
+    // console.log((place || '-') !== params.place);
     return (
-      (score !== null && score !== (params.score ?? '')) ||
-      (players !== null && players !== (params.players ?? '')) ||
-      (place !== null && place !== (params.place ?? ''))
+      (score !== undefined && (score || '-') !== (parseInt(params.score) || '-')) ||
+      (players !== undefined && (players || '-') !== (parseInt(params.players) || '-')) ||
+      (place !== undefined && (place || '-') !== (parseInt(params.place) || '-'))
     );
   };
 
@@ -118,15 +127,19 @@ const Filters = (props) => {
     if (score || players || place) {
       urlParams = urlParams.concat([score || '-', players || '-', place || '-']);
     }
+    console.log('navigate: ' + `/${urlParams.join('/')}`);
     navigate(`/${urlParams.join('/')}`);
   };
 
   const setFiltersFromUrl = () => {
+    // if (params.score || params.players || params.place) {
+    console.log('setFiltersFromUrl');
+    console.log(params);
     setScore(getIntFromParam(params.score));
     setPlayers(getIntFromParam(params.players));
     setValidPlayerPlaces(getValidPlayerPlaces());
     setPlace(getIntFromParam(params.place));
-    sendFiltersUpdate();
+    // }
   };
 
   const getIntFromParam = (param) => {
@@ -134,30 +147,34 @@ const Filters = (props) => {
   };
 
   const sendFiltersUpdate = () => {
+    console.log('sendFiltersUpdate');
     props.handleChange({
-      players: players,
-      place: place,
-      score: score,
+      players: players === '' ? null : players,
+      place: place === '' ? null : place,
+      score: score === '' ? null : score,
     });
   };
 
   // componentDidMount
   useEffect(() => {
+    console.log(params);
     setFiltersFromUrl();
-  }, []);
+  }, [params.score, params.players, params.place]);
 
   // componentDidUpdate game
   useEffect(() => {
-    setPlayers(getIntFromParam(params.players));
-    setScore(getIntFromParam(params.score));
-    setValidPlayerPlaces(getValidPlayerPlaces());
-    setPlace(getIntFromParam(params.place));
-    sendFiltersUpdate();
-    // if (props.data.game && props.data.game.id !== prevProps.data.game.id) {
-    //   setState({ players: '', place: '', score: '' }, () => {
-    //     sendFiltersUpdate();
-    //   });
-    // }
+    if (props.data.game) {
+      setPlayers(getIntFromParam(params.players));
+      setScore(getIntFromParam(params.score));
+      setValidPlayerPlaces(getValidPlayerPlaces());
+      setPlace(getIntFromParam(params.place));
+      // sendFiltersUpdate();
+      // if (props.data.game && props.data.game.id !== prevProps.data.game.id) {
+      //   setState({ players: '', place: '', score: '' }, () => {
+      //     sendFiltersUpdate();
+      //   });
+      // }
+    }
   }, [props.data.game]);
 
   const handlePlayersKeyDown = (event) => {
@@ -221,7 +238,7 @@ const Filters = (props) => {
             onHighlightChange={handlePlayersHighlightChange}
             options={props.data.game.playerCounts}
             fullWidth
-            getOptionLabel={(count) => (count ? String(count) : '')}
+            getOptionLabel={(count) => (count ? count.toString() : '')}
             renderInput={(params) => {
               params.inputProps.onKeyDown = handlePlayersKeyDown;
               return (

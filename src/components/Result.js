@@ -114,42 +114,38 @@ const Result = (props) => {
 
   const classes = props.classes;
 
-  document.title = `Good at ${props.data.game?.name}`;
-
   const updateResult = () => {
-    const result = props.data.game
+    const newResult = props.data.game
       ? _.find(props.data.game.results, (result) => {
           return (
             (filters.players || null) === (result.playerCount || null) &&
             (filters.place || null) === (result.playerPlace || null)
           );
         })
-      : {};
+      : null;
+    // console.log(newResult);
 
-    setResult(result);
-    updatePercentile();
+    setResult(newResult);
   };
 
   const updatePercentile = () => {
-    const percentile = getPercentile(result.scores, filters.score);
-    setPercentile(percentile);
-  };
-
-  const getPercentile = (scores, score) => {
-    if (!score) {
-      return null;
+    if (!filters.score) {
+      setPercentile(null);
     }
 
     // Based on https://www.30secondsofcode.org/js/s/percentile
-    return (
+    const newPercentile =
       (_.reduce(
-        scores,
-        (result, c, s) => result + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c / 0.5 : 0),
+        result.scores,
+        (result, c, s) =>
+          result + (parseInt(s) < filters.score ? c : 0) + (parseInt(s) === filters.score ? c / 0.5 : 0),
         0
       ) *
         100) /
-      _.sum(_.values(scores))
-    );
+      _.sum(_.values(result.scores));
+
+    // console.log(newPercentile);
+    setPercentile(newPercentile);
   };
 
   const setGameFromUrl = () => {
@@ -164,40 +160,70 @@ const Result = (props) => {
 
   const setOrLoadGame = (newGame) => {
     if (!newGame || !newGame.results) {
+      // console.log('loadGame');
       props.loadGame(params.id);
     } else {
+      // console.log('setGame');
       props.setGame(newGame.id);
     }
   };
 
+  // Filters changed
+  useEffect(() => {
+    if (!_.isEmpty(filters)) {
+      console.log(filters);
+      updateResult();
+    }
+  }, [filters.players, filters.place]);
+
+  // Result changed
+  useEffect(() => {
+    if (filters.score && !_.isEmpty(result)) {
+      console.log('updatePercentile');
+      updatePercentile();
+    }
+  }, [filters, result]);
+
+  // // Filters changed
+  // useEffect(() => {
+  //   // console.log('Filters changed');
+  //   // console.log(filters);
+  //   if (filters) {
+  //     updateResult();
+  //     updatePercentile();
+  //   }
+  // }, [filters]);
+
   // componentDidMount
   useEffect(() => {
-    // console.log('componentDidMount');
-    // console.log(props);
-    props.setGame(null);
-
     if (_.isEmpty(props.data.games)) {
-      props.loadGames().then(() => {
-        // console.log(props);
-        setGameFromUrl();
-        updateResult();
-      });
-    } else {
-      setGameFromUrl();
-      updateResult();
+      props.loadGames();
     }
   }, []);
 
+  // Games loaded
+  useEffect(() => {
+    // console.log('componentDidMount');
+    // console.log(props);
+    // props.setGame(null);
+    if (!_.isEmpty(props.data.games) && !props.data.game) {
+      // console.log('Games loaded');
+      setGameFromUrl();
+    }
+  }, [props.data.games]);
+
   const handleFiltersChange = (filters) => {
     // console.log('handleFiltersChange');
+    // console.log(filters);
     setFilters(filters);
-    updateResult();
   };
 
   // No data loaded
   if (!props.data.game) {
     return <div />;
   }
+
+  document.title = `Good at ${props.data.game.name}`;
 
   return (
     <Box component="div">
@@ -246,7 +272,7 @@ const Result = (props) => {
             path="/:id/:name/:score?/:players?/:place?"
             render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
           /> */}
-          {filters.score && (
+          {filters && filters.score && (
             <Box component="div">
               <Box component="div" mb={2} justifyContent="center" alignItems="center">
                 <Typography component="div" align="center" className={classes.credit}>
@@ -263,7 +289,7 @@ const Result = (props) => {
             </Box>
           )}
         </Box>
-        <Graph result={result} score={filters.score !== '' ? filters.score : null} percentile={percentile}></Graph>
+        <Graph result={result} score={filters.score} percentile={percentile}></Graph>
       </Paper>
       <Box mt={2}>
         <Accordion>

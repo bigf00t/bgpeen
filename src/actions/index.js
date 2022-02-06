@@ -39,7 +39,8 @@ export const loadGame = (gameId) => async (dispatch) => {
 };
 
 export const setGame = (gameId) => async (dispatch) => {
-  return dispatch({
+  // console.log('actions setGame');
+  dispatch({
     type: SET_GAME,
     payload: { id: gameId },
   });

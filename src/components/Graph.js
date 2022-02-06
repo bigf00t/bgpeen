@@ -1,214 +1,126 @@
-import React, { Component } from 'react';
-import { Line } from 'react-chartjs-2';
-import * as ChartAnnotation from 'chartjs-plugin-annotation';
+import React, { useState, useEffect } from 'react';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import { withTheme } from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
-const getScoreColor = (percentile) => {
-  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
-};
+import { Chart } from 'react-chartjs-2';
+import { Chart as ChartJS, Filler, LineElement, PointElement, CategoryScale, LinearScale, Title } from 'chart.js';
 
-const getOptions = (props) => {
-  return {
-    legend: {
-      display: false,
-      labels: {
-        fontColor: props.theme.palette.text.secondary,
+ChartJS.register(LineElement, Filler, PointElement, CategoryScale, LinearScale, Title, annotationPlugin);
+
+const Graph = (props) => {
+  const [graphData, setGraphData] = useState(null);
+
+  const getScoreColor = (percentile) => {
+    return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
+  };
+
+  const options = {
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: props.theme.palette.text.secondary,
+        },
+        grid: {
+          color: props.theme.palette.divider,
+        },
+      },
+      x: {
+        type: 'linear',
+        position: 'bottom',
+        grid: {
+          color: props.theme.palette.divider,
+        },
+        ticks: {
+          color: props.theme.palette.text.secondary,
+        },
       },
     },
-    scales: {
-      yAxes: [
-        {
-          scaleLabel: {
-            display: false,
-            labelString: 'Valid Scores',
-            fontColor: props.theme.palette.text.secondary,
+    plugins: {
+      annotation: {
+        animation: false,
+        annotations: {
+          line1: {
+            type: 'line',
+            mode: 'vertical',
+            scaleID: 'x',
+            value: props.result.mean,
+            borderColor: props.theme.palette.text.secondary,
+            borderDash: [5],
+            borderWidth: 2,
+            // drawTime: 'beforeDraw',
           },
-          ticks: {
-            beginAtZero: true,
-            fontColor: props.theme.palette.text.secondary,
-          },
-          gridLines: {
-            color: props.theme.palette.divider,
-            zeroLineColor: props.theme.palette.divider,
-          },
-        },
-      ],
-      xAxes: [
-        {
-          scaleLabel: {
-            display: false,
-            labelString: 'Score',
-            fontColor: props.theme.palette.text.secondary,
-          },
-          type: 'linear',
-          position: 'bottom',
-          gridLines: {
-            color: props.theme.palette.divider,
-            zeroLineColor: props.theme.palette.divider,
-          },
-          ticks: {
-            fontColor: props.theme.palette.text.secondary,
+          line2: {
+            type: 'line',
+            mode: 'vertical',
+            scaleID: 'x',
+            value: props.score === '' ? null : props.score,
+            borderColor: getScoreColor(props.percentile),
+            borderWidth: 4,
+            // drawTime: 'beforeDraw',
           },
         },
-      ],
-    },
-    annotation: {
-      annotations: [
-        {
-          type: 'line',
-          mode: 'vertical',
-          scaleID: 'x-axis-0',
-          value: props.result.mean,
-          borderColor: props.theme.palette.text.secondary,
-          borderDash: [5],
-          borderWidth: 2,
-          // label: {
-          //   // content: `Average: ${props.result.mean}`,
-          //   content: `Average Score`,
-          //   enabled: true,
-          //   fontColor: props.theme.palette.background.default,
-          //   backgroundColor: props.theme.palette.text.secondary,
-          //   position: 'top',
-          //   xPadding: 10,
-          //   yPadding: 6,
-          //   // yAdjust: 0,
-          // },
-        },
-        {
-          type: 'line',
-          mode: 'vertical',
-          scaleID: 'x-axis-0',
-          value: props.score,
-          borderColor: getScoreColor(props.percentile),
-          borderWidth: 4,
-          // label: {
-          //   // TODO: Make this multiline when v1.0 of annotation plugin is released
-          //   // content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
-          //   content: [`Your Score`],
-          //   enabled: true,
-          //   fontColor: props.theme.palette.background.default,
-          //   backgroundColor: getScoreColor(props.percentile),
-          //   position: 'top',
-          //   xPadding: 10,
-          //   yPadding: 6,
-          //   yAdjust: 24,
-          // },
-        },
-        {
-          type: 'line',
-          mode: 'vertical',
-          scaleID: 'x-axis-0',
-          value: props.score,
-          borderWidth: 0,
-          // label: {
-          //   // TODO: Make this multiline when v1.0 of annotation plugin is released
-          //   // content: [`Your score: ${props.score} - ${ordinal(Math.ceil(props.percentile || 0))} percentile`],
-          //   content: [`Your Score`],
-          //   enabled: true,
-          //   fontColor: props.theme.palette.background.default,
-          //   backgroundColor: getScoreColor(props.percentile),
-          //   position: 'top',
-          //   xPadding: 10,
-          //   yPadding: 6,
-          //   yAdjust: 25,
-          // },
-        },
-        {
-          type: 'line',
-          mode: 'vertical',
-          scaleID: 'x-axis-0',
-          value: props.result.mean,
-          borderWidth: 0,
-          // label: {
-          //   // content: `Average: ${props.result.mean}`,
-          //   content: `Average Score`,
-          //   enabled: true,
-          //   fontColor: props.theme.palette.background.default,
-          //   backgroundColor: props.theme.palette.text.secondary,
-          //   position: 'top',
-          //   xPadding: 10,
-          //   yPadding: 6,
-          //   yAdjust: 2,
-          // },
-        },
-      ],
+      },
     },
   };
-};
 
-class Graph extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      graphData: {},
-    };
-  }
-
-  setGraphData = () => {
-    if (!this.props.result) {
-      return;
-    }
-
-    const graphPoints = _.chain(this.props.result.scores)
+  const updateGraphData = () => {
+    const graphPoints = _.chain(props.result.scores)
       .reduce((points, count, score) => {
         return points.concat([{ x: parseInt(score), y: count }]);
       }, [])
       .orderBy(['x'])
       .value();
 
-    const graphData = {
+    const newGraphData = {
       datasets: [
         {
           data: graphPoints,
           label: ['Scores'],
-          // color: 'rgba(63, 81, 181, 1)',
-          // backgroundColor: 'rgba(63, 81, 181, 0.25)',
-          backgroundColor: this.props.theme.palette.graph.background[this.props.theme.palette.type],
-          borderColor: this.props.theme.palette.graph.border[this.props.theme.palette.type],
-          pointBackgroundColor: this.props.theme.palette.graph.point[this.props.theme.palette.type],
-          // borderColor: 'rgba(63, 81, 181, 0.5)',
-          // pointBackgroundColor: 'rgba(63, 81, 181, 1)',
-          // borderWidth: 1,
+          backgroundColor: props.theme.palette.graph.background[props.theme.palette.type],
+          borderColor: props.theme.palette.graph.border[props.theme.palette.type],
+          pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.type],
           fill: true,
-          // showLine: false,
-          // lineWidth: 0.5,
           spanGaps: true,
           lineTension: 0,
-          // cubicInterpolationMode: 'monotone',
-          // steppedLine: true,
-          // trendlineLinear: {
-          //     style: "rgba(255,105,180, .8)",
-          //     lineStyle: "solid",
-          //     width: 2
-          // }
         },
       ],
     };
 
-    // return graphData;
-    this.setState({ graphData: graphData });
+    setGraphData(newGraphData);
   };
 
-  componentDidUpdate(prevProps) {
-    if (this.props.result !== prevProps.result || this.props.score !== prevProps.score) {
-      this.setGraphData();
+  // // componentDidMount
+  // useEffect(() => {
+  //   console.log('componentDidMount');
+  //   console.log(graphData);
+  //   setGraphData(null);
+  // }, []);
+
+  // componentDidUpdate result, score
+  useEffect(() => {
+    // console.log('componentDidUpdate');
+    // console.log(props.result);
+    if (!_.isEmpty(props.result)) {
+      console.log(props.result);
+      console.log(props.score);
+      console.log('updateGraphData');
+      updateGraphData();
     }
+  }, [props.result]);
+
+  if (!graphData) {
+    return <div />;
   }
 
-  render() {
-    if (this.props.result) {
-      return <Line data={this.state.graphData} options={getOptions(this.props)} plugins={[ChartAnnotation]} />;
-    } else {
-      return '';
-    }
-  }
-}
+  return <Chart type="line" data={graphData} options={options} />;
+};
 
 Graph.propTypes = {
   result: PropTypes.object,
-  score: PropTypes.number,
+  score: PropTypes.any,
   percentile: PropTypes.number,
   theme: PropTypes.any,
 };

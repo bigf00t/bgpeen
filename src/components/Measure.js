@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ScoreCounter from './ScoreCounter';
 import SelectGame from './SelectGame';
 import PopularGames from './PopularGames';
@@ -16,6 +16,12 @@ const Measure = (props) => {
   const classes = props.classes;
   document.title = 'Good at Games';
 
+  // Game changed
+  useEffect(() => {
+    // console.log(props.data.game);
+    props.setGame(null);
+  }, []);
+
   return (
     <Box component="div" className={classes.root}>
       <SelectGame />
@@ -28,6 +34,7 @@ const Measure = (props) => {
 Measure.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
+  setGame: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {
