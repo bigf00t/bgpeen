@@ -10,7 +10,7 @@ import { Chart as ChartJS, Filler, LineElement, PointElement, CategoryScale, Lin
 ChartJS.register(LineElement, Filler, PointElement, CategoryScale, LinearScale, Title, annotationPlugin);
 
 const Graph = (props) => {
-  const [graphData, setGraphData] = useState(null);
+  const [graphData, setGraphData] = useState({ datasets: [] });
 
   const getScoreColor = (percentile) => {
     return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
@@ -110,10 +110,6 @@ const Graph = (props) => {
       updateGraphData();
     }
   }, [props.result]);
-
-  if (!graphData) {
-    return <div />;
-  }
 
   return <Chart type="line" data={graphData} options={options} />;
 };
