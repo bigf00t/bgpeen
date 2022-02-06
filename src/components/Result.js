@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { withStyles, withTheme } from '@material-ui/core/styles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
 
-import Paper from '@material-ui/core/Paper';
-import Box from '@material-ui/core/Box';
-import Link from '@material-ui/core/Link';
-import { Link as RouterLink } from 'react-router-dom';
-import Typography from '@material-ui/core/Typography';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import ArrowBack from '@material-ui/icons/ArrowBack';
+// import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
+// import { Link as RouterLink } from 'react-router-dom';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+// import ArrowBack from '@mui/icons-material/ArrowBack';
 
 import Filters from './Filters';
 import Graph from './Graph';
@@ -101,7 +102,7 @@ const getPercentileQuip = (percentile) => {
 
 const Result = (props) => {
   const [filters, setFilters] = useState({});
-  const [result, setResult] = useState({});
+  const [result, setResult] = useState();
   const [percentile, setPercentile] = useState(null);
   // const [players, setPlayers] = useState(null);
   // const [place, setPlace] = useState(null);
@@ -123,7 +124,7 @@ const Result = (props) => {
           );
         })
       : null;
-    // console.log(newResult);
+    console.log(newResult);
 
     setResult(newResult);
   };
@@ -158,6 +159,26 @@ const Result = (props) => {
     }
   };
 
+  const setFiltersFromUrl = () => {
+    // if (params.score || params.players || params.place) {
+    console.log('setFiltersFromUrl');
+    // console.log(params);
+    // setScore(getIntFromParam(params.score));
+    // setPlayers(getIntFromParam(params.players));
+    // setValidPlayerPlaces(getValidPlayerPlaces());
+    // setPlace(getIntFromParam(params.place));
+    // }
+    setFilters({
+      score: getIntFromParam(params.score),
+      players: getIntFromParam(params.players),
+      place: getIntFromParam(params.place),
+    });
+  };
+
+  const getIntFromParam = (param) => {
+    return param && !isNaN(param) ? parseInt(param) : '';
+  };
+
   const setOrLoadGame = (newGame) => {
     if (!newGame || !newGame.results) {
       // console.log('loadGame');
@@ -171,7 +192,7 @@ const Result = (props) => {
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
-      // console.log(filters);
+      console.log(filters);
       updateResult();
     }
   }, [filters.players, filters.place]);
@@ -182,7 +203,7 @@ const Result = (props) => {
       // console.log('updatePercentile');
       updatePercentile();
     }
-  }, [filters, result]);
+  }, [filters.score, result]);
 
   // // Filters changed
   // useEffect(() => {
@@ -210,87 +231,89 @@ const Result = (props) => {
       // console.log('Games loaded');
       setGameFromUrl();
     }
-  }, [props.data.games]);
+  }, [props.data.game, props.data.games]);
 
-  const handleFiltersChange = (filters) => {
-    // console.log('handleFiltersChange');
-    // console.log(filters);
-    setFilters(filters);
-  };
+  // Game loaded
+  useEffect(() => {
+    if (props.data.game) {
+      // console.log('Game loaded');
+      setFiltersFromUrl();
+    }
+  }, [props.data.game, params]);
+
+  // const handleFiltersChange = (filters) => {
+  //   // console.log('handleFiltersChange');
+  //   // console.log(filters);
+  //   setFilters(filters);
+  // };
 
   // No data loaded
-  if (!props.data.game) {
+  if (!result) {
     return <div />;
   }
 
   document.title = `Good at ${props.data.game.name}`;
 
   return (
-    <Box component="div">
-      <Paper className={classes.paper} square>
-        <Box component="div">
-          <RouterLink className={classes.link} to="/">
-            <Typography component="span" variant="h6">
-              <ArrowBack fontSize="small" className={classes.arrow} /> Find another game
-            </Typography>
-          </RouterLink>
-          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-            <Image
-              src={props.data.game.thumbnail}
-              imageStyle={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'scale-down',
-              }}
-              style={{ width: 100, height: 100, padding: 0 }}
-              color='"none"'
-              className={classes.image}
-            />
-            <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-              <Link
-                className={classes.link}
-                href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
-                target="_blank"
-                title="View on boardgamegeek.com"
-              >
-                {props.data.game.name}
-              </Link>
-            </Typography>
-          </Box>
-          <Box component="div">
-            <Box component="div" justifyContent="center" alignItems="center">
-              <Typography component="div" variant="h3" align="center" className={classes.credit}>
-                {result.scoreCount} Scores - Average {result.mean}
-              </Typography>
-              <Typography component="div" variant="h4" align="center" className={classes.credit}>
-                How good are you?
-              </Typography>
-            </Box>
-          </Box>
-          <Filters handleChange={handleFiltersChange} />
-          {/* <Route
+    <Box component="div" m={2}>
+      {/* <Paper className={classes.paper} square> */}
+      {/* <Box component="div"> */}
+      {/* <RouterLink className={classes.link} to="/">
+        <Typography component="span" variant="h6">
+          <ArrowBack fontSize="small" className={classes.arrow} /> Find another game
+        </Typography>
+      </RouterLink> */}
+      <Box component="div" m={4} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+        <Image
+          src={props.data.game.thumbnail}
+          imageStyle={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'scale-down',
+          }}
+          style={{ width: 100, height: 100, padding: 0 }}
+          color='"none"'
+          className={classes.image}
+        />
+        <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+          <Link
+            className={classes.link}
+            href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
+            target="_blank"
+            title="View on boardgamegeek.com"
+            underline="hover"
+          >
+            {props.data.game.name}
+          </Link>
+        </Typography>
+        <Typography mt={2} ml={8} component="h4" variant="h4" align="center">
+          {result.scoreCount} Scores - Average {result.mean}
+        </Typography>
+      </Box>
+      <Filters filters={filters} />
+      {/* <Route
             path="/:id/:name/:score?/:players?/:place?"
             render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
           /> */}
-          {filters && filters.score && (
-            <Box component="div">
-              <Box component="div" mb={2} justifyContent="center" alignItems="center">
-                <Typography component="div" align="center" className={classes.credit}>
-                  {filters.score
-                    ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of ${
-                        result.scoreCount
-                      } valid scores.`
-                    : ''}
-                </Typography>
-                <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-                  {percentile !== null ? getScoreTitle(percentile) : ''}
-                </Typography>
-              </Box>
-            </Box>
-          )}
+      {filters && filters.score && (
+        <Box component="div">
+          <Box component="div" mb={2} justifyContent="center" alignItems="center">
+            <Typography component="div" align="center" className={classes.credit}>
+              {filters.score
+                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of ${
+                    result.scoreCount
+                  } valid scores.`
+                : ''}
+            </Typography>
+            <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+              {percentile !== null ? getScoreTitle(percentile) : ''}
+            </Typography>
+          </Box>
         </Box>
-        <Graph result={result} score={filters.score} percentile={percentile}></Graph>
-      </Paper>
+      )}
+      {/* </Box> */}
+      <Graph result={result} score={filters.score} percentile={percentile}></Graph>
+      {/* </Paper> */}
       <Box mt={2}>
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
@@ -366,7 +389,7 @@ const Result = (props) => {
       </Box>
       <Typography component="div" align="center" className={classes.credit}>
         {'Scores provided by '}
-        <Link className={classes.link} href="https://boardgamegeek.com" target="_blank">
+        <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
           boardgamegeek.com
         </Link>
       </Typography>

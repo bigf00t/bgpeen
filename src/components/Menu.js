@@ -1,11 +1,12 @@
 import React from 'react';
 
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import { Link } from 'react-router-dom';
-import { withStyles, withTheme } from '@material-ui/core/styles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 import PropTypes from 'prop-types';
 
 const styles = () => ({
@@ -30,7 +31,7 @@ const Menu = (props) => {
   const classes = props.classes;
 
   return (
-    <AppBar position="static" color="default" display="flex">
+    <AppBar position="static" color="appbar" enableColorOnDark={true} display="flex">
       <Toolbar>
         <Box display="flex" flexGrow={1}>
           <Link className={classes.logo} to="/">

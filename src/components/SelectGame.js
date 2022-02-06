@@ -7,15 +7,16 @@ import { db } from '../fire';
 
 import { connect } from 'react-redux';
 
-import { withStyles, withTheme } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControl from '@material-ui/core/FormControl';
-import Box from '@material-ui/core/Box';
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import TextField from '@mui/material/TextField';
+import FormGroup from '@mui/material/FormGroup';
+import FormControl from '@mui/material/FormControl';
+import Box from '@mui/material/Box';
+import Autocomplete from '@mui/material/Autocomplete';
 import PropTypes from 'prop-types';
-import { Button } from '@material-ui/core';
-import Typography from '@material-ui/core/Typography';
+import { Button } from '@mui/material';
+import Typography from '@mui/material/Typography';
 
 import { getGameSlug } from '../utils';
 

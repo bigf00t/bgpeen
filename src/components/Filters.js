@@ -5,14 +5,16 @@ import _ from 'lodash';
 import ordinal from 'ordinal';
 import { DebounceInput } from 'react-debounce-input';
 
-import { withStyles, withTheme } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControl from '@material-ui/core/FormControl';
-import Box from '@material-ui/core/Box';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import TextField from '@mui/material/TextField';
+import FormGroup from '@mui/material/FormGroup';
+import FormControl from '@mui/material/FormControl';
+import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import Autocomplete from '@mui/material/Autocomplete';
+import Typography from '@mui/material/Typography';
 
 const styles = (theme) => ({
   root: {},
@@ -23,13 +25,13 @@ const styles = (theme) => ({
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 160,
+    minWidth: 180,
     height: 60,
   },
   selectEmpty: {},
   formGroup: {
     // margin: theme.spacing(2),
-    marginTop: theme.spacing(-2),
+    // marginTop: theme.spacing(-2),
     justifyContent: 'center',
   },
   floatingLabelFocusStyle: {
@@ -59,10 +61,11 @@ const Filters = (props) => {
     // console.log(!params.score);
     if (filtersChanged()) {
       updateHistory();
-      sendFiltersUpdate();
-    } else if (!params.score || score || players || place) {
-      sendFiltersUpdate();
+      // sendFiltersUpdate();
     }
+    // else if (!params.score || score || players || place) {
+    //   // sendFiltersUpdate();
+    // }
   }, [score, place, players]);
 
   const filtersChanged = () => {
@@ -131,51 +134,55 @@ const Filters = (props) => {
     navigate(`/${urlParams.join('/')}`);
   };
 
-  const setFiltersFromUrl = () => {
-    // if (params.score || params.players || params.place) {
-    // console.log('setFiltersFromUrl');
-    // console.log(params);
-    setScore(getIntFromParam(params.score));
-    setPlayers(getIntFromParam(params.players));
-    setValidPlayerPlaces(getValidPlayerPlaces());
-    setPlace(getIntFromParam(params.place));
-    // }
-  };
+  // const setFiltersFromUrl = () => {
+  //   // if (params.score || params.players || params.place) {
+  //   // console.log('setFiltersFromUrl');
+  //   // console.log(params);
+  //   setScore(getIntFromParam(params.score));
+  //   setPlayers(getIntFromParam(params.players));
+  //   setValidPlayerPlaces(getValidPlayerPlaces());
+  //   setPlace(getIntFromParam(params.place));
+  //   // }
+  // };
 
   const getIntFromParam = (param) => {
     return param && !isNaN(param) ? parseInt(param) : '';
   };
 
-  const sendFiltersUpdate = () => {
-    // console.log('sendFiltersUpdate');
-    props.handleChange({
-      players: players === '' ? null : players,
-      place: place === '' ? null : place,
-      score: score === '' ? null : score,
-    });
-  };
+  // const sendFiltersUpdate = () => {
+  //   // console.log('sendFiltersUpdate');
+  //   props.handleChange({
+  //     players: players === '' ? null : players,
+  //     place: place === '' ? null : place,
+  //     score: score === '' ? null : score,
+  //   });
+  // };
 
   // componentDidMount
   useEffect(() => {
     // console.log(params);
-    setFiltersFromUrl();
-  }, [params.score, params.players, params.place]);
+    // setFiltersFromUrl();
+    setScore(props.filters.score);
+    setPlayers(props.filters.players);
+    setValidPlayerPlaces(getValidPlayerPlaces());
+    setPlace(props.filters.place);
+  }, []);
 
-  // componentDidUpdate game
-  useEffect(() => {
-    if (props.data.game) {
-      setPlayers(getIntFromParam(params.players));
-      setScore(getIntFromParam(params.score));
-      setValidPlayerPlaces(getValidPlayerPlaces());
-      setPlace(getIntFromParam(params.place));
-      // sendFiltersUpdate();
-      // if (props.data.game && props.data.game.id !== prevProps.data.game.id) {
-      //   setState({ players: '', place: '', score: '' }, () => {
-      //     sendFiltersUpdate();
-      //   });
-      // }
-    }
-  }, [props.data.game]);
+  // // componentDidUpdate game
+  // useEffect(() => {
+  //   if (props.data.game) {
+  //     setPlayers(getIntFromParam(params.players));
+  //     setScore(getIntFromParam(params.score));
+  //     setValidPlayerPlaces(getValidPlayerPlaces());
+  //     setPlace(getIntFromParam(params.place));
+  //     // sendFiltersUpdate();
+  //     // if (props.data.game && props.data.game.id !== prevProps.data.game.id) {
+  //     //   setState({ players: '', place: '', score: '' }, () => {
+  //     //     sendFiltersUpdate();
+  //     //   });
+  //     // }
+  //   }
+  // }, [props.data.game]);
 
   const handlePlayersKeyDown = (event) => {
     switch (event.key) {
@@ -202,7 +209,10 @@ const Filters = (props) => {
   };
 
   return (
-    <Box component="div" className={classes.root}>
+    <Box component="div" m={2} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+      <Typography component="h5" variant="h5" align="center" mr={1}>
+        How good are you?
+      </Typography>
       <FormGroup row className={classes.formGroup}>
         <FormControl className={classes.formControl}>
           <DebounceInput
@@ -213,7 +223,7 @@ const Filters = (props) => {
             name="score"
             label="Your Score"
             value={score}
-            style={{ maxWidth: 160 }}
+            style={{ maxWidth: 180 }}
             onChange={handleScoreChange}
             InputLabelProps={{
               className: classes.floatingLabelFocusStyle,
@@ -321,7 +331,7 @@ const Filters = (props) => {
 Filters.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  handleChange: PropTypes.func,
+  filters: PropTypes.object,
 };
 
 const mapStateToProps = ({ data }) => {

@@ -5,10 +5,11 @@ import * as actions from '../actions';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import { withStyles, withTheme } from '@material-ui/core/styles';
-import Box from '@material-ui/core/Box';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
+import Typography from '@mui/material/Typography';
 import FlipNumbers from 'react-flip-numbers';
 
 const styles = (theme) => ({
