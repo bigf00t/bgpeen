@@ -1,7 +1,7 @@
-import firebase from 'firebase/app';
-import 'firebase/analytics';
-import 'firebase/performance';
-import 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
+import { getPerformance } from 'firebase/performance';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAYdGDedLLPfXINfadAJiALOrmZLRaToH8',
@@ -13,10 +13,12 @@ const firebaseConfig = {
   measurementId: 'G-D31H7RXK79',
 };
 
-export const fire = firebase.initializeApp(firebaseConfig);
-fire.analytics();
-export const perf = fire.performance();
-export const db = fire.firestore();
+const firebaseApp = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(firebaseApp);
+const perf = getPerformance(firebaseApp);
+export const db = getFirestore(firebaseApp);
+
 if (window.location.hostname === 'localhost') {
-  db.useEmulator('localhost', 5002);
+  connectFirestoreEmulator(db, 'localhost', 5002);
 }

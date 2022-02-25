@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 const db = admin.firestore();
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 const util = require('./util');
 const update = require('./update_results');
@@ -17,7 +17,7 @@ exports.manualStatsUpdate = (games) =>
           console.info(`Started updating stats for: ${game.name}`);
 
           // Expensive query!
-          var playsRef = db.collection('games').doc(game.id).collection('plays');
+          const playsRef = db.collection('games').doc(game.id).collection('plays');
 
           return playsRef
             .get()

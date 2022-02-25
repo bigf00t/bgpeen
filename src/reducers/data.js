@@ -13,6 +13,7 @@ export default (state = dataState, action) => {
         games: action.payload,
       };
     case LOAD_GAME:
+      // console.log('LOAD_GAME');
       var loadedGame = state.games.find((game) => game.id == action.payload.id, null);
       return {
         ...state,
@@ -25,13 +26,13 @@ export default (state = dataState, action) => {
 
             return {
               ...game,
-              // popularity: (game.popularity || 0) + 1,
               ...action.payload,
             };
           }),
         ],
       };
     case SET_GAME:
+      // console.log('SET_GAME');
       return {
         ...state,
         game: state.games.find((game) => game.id == action.payload.id, null),

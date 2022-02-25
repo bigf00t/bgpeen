@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 const db = admin.firestore();
 
-var _ = require('lodash');
+const _ = require('lodash');
 
 const util = require('./util');
 const update_plays = require('./update_plays');

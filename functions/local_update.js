@@ -1,11 +1,11 @@
-var argv = require('minimist')(process.argv.slice(2));
+const argv = require('minimist')(process.argv.slice(2));
+
 if (!argv.prod) {
   process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:5002';
 } else {
   delete ['FIRESTORE_EMULATOR_HOST'];
 }
 
-// The Firebase Admin SDK to access the Firebase Realtime Database.
 const admin = require('firebase-admin');
 admin.initializeApp();
 
