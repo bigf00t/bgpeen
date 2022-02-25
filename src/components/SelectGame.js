@@ -4,7 +4,6 @@ import * as actions from '../actions';
 import { db } from '../fire';
 
 import { connect } from 'react-redux';
-import _ from 'lodash';
 
 import { withStyles, withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
@@ -43,23 +42,29 @@ class SelectGame extends Component {
     super(props);
     this.state = {
       game: null,
+      gameText: null,
       added: false,
     };
   }
 
+  handleGameTextChange = (event) => {
+    if (!this.state.game) {
+      this.setState({ gameText: event.target.value });
+      // console.log(event.target.value);
+    }
+  };
+
+  handleGameBlur = () => {
+    this.setState({ game: this.state.gameText, added: false });
+    this.props.setGame(null);
+  };
+
   handleGameChange = (event, newGame) => {
-    // console.log(newGame);
     this.setState({ game: newGame });
     if (newGame) {
-      if (!newGame.id) {
-        this.setState({ added: false });
-        this.props.setGame(null);
-      } else {
-        // this.setOrLoadGame(newGame);
-        this.props.history.push({
-          pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
-        });
-      }
+      this.props.history.push({
+        pathname: `/${newGame.id}/${getGameSlug(newGame)}`,
+      });
     }
   };
 
@@ -69,7 +74,7 @@ class SelectGame extends Component {
         name: this.state.game,
       })
       .then(() => {
-        this.setState({ added: true });
+        this.setState({ added: true, game: null, gameText: null });
       });
   };
 
@@ -80,7 +85,6 @@ class SelectGame extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.location !== prevProps.location) {
       this.setState({ added: false });
-      // this.setGameFromUrl();
     }
   }
 
@@ -88,7 +92,7 @@ class SelectGame extends Component {
     const classes = this.props.classes;
 
     return (
-      <Box component="div" mt={2}>
+      <Box component="div" mt={5}>
         <Typography variant="h4" component="h4" align="center">
           Find a Game
         </Typography>
@@ -97,12 +101,13 @@ class SelectGame extends Component {
             <Autocomplete
               freeSolo
               autoHighlight
-              autoSelect
+              // autoSelect
               blurOnSelect
               id="game"
               name="game"
               value={this.state.game}
               onChange={this.handleGameChange}
+              onBlur={this.handleGameBlur}
               options={this.props.data.games}
               fullWidth
               getOptionLabel={(option) => option.name || option}
@@ -111,6 +116,7 @@ class SelectGame extends Component {
                   {...params}
                   placeholder="Start typing..."
                   // label="Game"
+                  onChange={this.handleGameTextChange}
                   fullWidth
                   InputLabelProps={{
                     shrink: true,
@@ -130,14 +136,15 @@ class SelectGame extends Component {
                 disabled={this.state.added}
                 onClick={this.handleAddClick}
               >
-                {this.state.added ? 'Added!' : 'Add Game'}
+                Add Game
+                {/* {this.state.added ? 'Added!' : 'Add Game'} */}
               </Button>
             </FormControl>
           )}
         </FormGroup>
         {this.state.added ? (
           <Box component="div" className={classes.message}>
-            Game has been added to the queue, but it could take up to 10 minutes for the data to be available. <br />
+            Game has been added to the queue, but it could take up to 10 minutes for score data to be available. <br />
             Please wait and refresh in a little while. Thanks!
           </Box>
         ) : (

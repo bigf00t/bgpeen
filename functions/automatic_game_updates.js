@@ -6,72 +6,108 @@ const add_game = require('./add_game');
 const update_plays = require('./update_plays');
 const update_results = require('./update_results');
 
-exports.runAutomaticGameUpdates = () => {
-  return db
+const dayjs = require('dayjs');
+var duration = require('dayjs/plugin/duration');
+dayjs.extend(duration);
+
+exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorical = false) =>
+  db
     .collection('searches')
     .limit(50)
     .get()
     .then((searchesSnapshot) => {
       if (searchesSnapshot.size > 0) {
-        return addSearchedGames(searchesSnapshot);
+        return addSearchedGames(searchesSnapshot, maxPages);
       } else {
-        // Where last updated more than two weeks ago, and no remainingPlays
-        // totalPlays < 1000
-        // order by: totalPlays asc, popularity desc, dateAdded desc
-        return db
-          .collection('games')
-          .where('totalPlays', '<', 1000)
-          .get()
-          .then((gamesSnapshot) => {
-            console.info(`Found ${gamesSnapshot.size} games to update`);
-            if (gamesSnapshot.size > 0) {
-              return updatePlaysForEligibleGames(gamesSnapshot);
+        let oneMonthAgo = dayjs().subtract(1, 'month').toDate();
+        let oneWeekAgo = dayjs().subtract(1, 'week').toDate();
+
+        let queries = [
+          db
+            .collection('games')
+            .where('playsLastUpdated', '<', oneWeekAgo)
+            .where('hasMinPlays', '==', false)
+            .orderBy('playsLastUpdated', 'asc'),
+          db.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
+        ];
+
+        if (includeHistorical) {
+          queries = queries.concat([
+            db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
+            db.collection('games').orderBy('playsLastUpdated', 'asc'),
+          ]);
+        }
+
+        let chain = Promise.resolve();
+        queries.forEach((query) => {
+          chain = chain.then((result) => {
+            if (result) {
+              // Already loaded a query
+              return Promise.resolve(true);
             }
-            // console.info('Nothing for runAutomaticGameUpdates to do!');
-            return Promise.resolve();
+
+            if (maxGames > 0) {
+              query = query.limit(maxGames);
+            }
+
+            return query.get().then((gamesSnapshot) => {
+              if (gamesSnapshot.size === 0) {
+                return Promise.resolve();
+              }
+              return updatePlaysForEligibleGames(gamesSnapshot, maxPages).then(() => Promise.resolve(true));
+            });
           });
+        });
+        return chain.then((result) => {
+          if (!result) {
+            return Promise.reject('Did not find any games to update!');
+          }
+          return Promise.resolve();
+        });
       }
     });
+
+const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
+  let startTime = new Date();
+  let chain = Promise.resolve();
+  gamesSnapshot.docs.forEach((doc, index) => {
+    chain = chain.then(() => {
+      console.info('='.repeat(100));
+
+      let elapsedTime = dayjs.duration(dayjs().diff(startTime));
+      console.info(
+        `Updating game ${index + 1} of ${gamesSnapshot.size} - ${doc.data().name} (${
+          doc.data().id
+        }) - Elapsed time ${elapsedTime.format('HH:mm:ss')}`
+      );
+
+      return update_plays
+        .updateGamePlays(doc.data(), maxPages)
+        .then((plays) => update_results.updateResults(doc.data(), plays, false))
+        .then(() => util.delay())
+        .catch((err) => Promise.reject(err));
+    });
+  });
+  return chain.then(() => Promise.resolve());
 };
 
-function updatePlaysForEligibleGames(gamesSnapshot) {
-  let chain = Promise.resolve();
-  gamesSnapshot.forEach((doc) => {
-    chain = chain.then(() =>
-      update_plays
-        .updateGamePlays(doc.data(), 100)
-        .then((plays) => {
-          // console.info('Finished updatePlaysPagesRecursively');
-          var resultsRef = db.collection('results').doc(doc.data().id);
-          return update_results.updateResults(resultsRef, doc.data(), plays, false);
-        })
-        .then(() => {
-          return util.delay();
-        })
-    );
-  });
-  return chain.then(function () {
-    // console.info('Finished updatePlaysForNewGames');
-    return Promise.resolve();
-  });
-}
-
-function addSearchedGames(searchesSnapshot) {
+const addSearchedGames = (searchesSnapshot, maxPages) => {
   let chain = Promise.resolve();
   searchesSnapshot.forEach((doc) => {
     chain = chain.then(() =>
       add_game
         .addGame(doc.data().name, true)
-        .then((result) => {
-          // console.info(result);
-          db.collection('searches').doc(doc.id).delete();
-          return Promise.resolve(result);
-        })
+        .then((newGame) => util.delay(newGame))
+        .then((newGame) =>
+          update_plays
+            .updateGamePlays(newGame, maxPages)
+            .then((plays) => update_results.updateResults(newGame, plays, false))
+            .catch((err) => Promise.reject(err))
+        )
         .then(() => util.delay())
+        .catch((err) => Promise.reject(err))
+        .finally(() => db.collection('searches').doc(doc.id).delete())
     );
   });
-  return chain.then(function () {
-    // console.info('Finished addSearchedGames');
-    return Promise.resolve();
-  });
-}
+  return chain.then(() => Promise.resolve());
+};

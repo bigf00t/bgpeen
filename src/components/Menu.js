@@ -11,14 +11,17 @@ import PropTypes from 'prop-types';
 const styles = () => ({
   logo: {
     textDecoration: 'none',
+    '&:hover': {
+      opacity: 0.75,
+    },
     '& span': {
       verticalAlign: 'top',
     },
   },
   twitter: {
     textDecoration: 'none',
-    '& span': {
-      verticalAlign: 'top',
+    '&:hover': {
+      opacity: 0.75,
     },
   },
 });

@@ -6,31 +6,22 @@ var _ = require('lodash');
 const util = require('./util');
 const update = require('./update_results');
 
-exports.manualStatsUpdate = (games) => {
-  // console.info(games);
-  return (
-    db
-      .collection('games')
-      // .where("needsUpdate", "==", true)
-      .where('id', 'in', games)
-      .get()
-      .then(function (gamesSnapshot) {
-        return Promise.all(
-          _.map(util.docsToArray(gamesSnapshot), (game) => {
-            console.info(`Started updating stats for: ${game.name}`);
+exports.manualStatsUpdate = (games) =>
+  db
+    .collection('games')
+    .where('id', 'in', games)
+    .get()
+    .then((gamesSnapshot) =>
+      Promise.all(
+        _.map(util.docsToArray(gamesSnapshot), (game) => {
+          console.info(`Started updating stats for: ${game.name}`);
 
-            var playsRef = db.collection('games').doc(game.id).collection('plays');
-            var resultsRef = db.collection('results').doc(game.id);
+          // Expensive query!
+          var playsRef = db.collection('games').doc(game.id).collection('plays');
 
-            return playsRef.get().then(function (playsSnapshot) {
-              var plays = util.docsToArray(playsSnapshot);
-              return update.updateResults(resultsRef, game, plays, true);
-            });
-          })
-        );
-      })
-      .then(function () {
-        console.info('Finished manualStatsUpdate');
-      })
-  );
-};
+          return playsRef
+            .get()
+            .then((playsSnapshot) => update.updateResults(game, util.docsToArray(playsSnapshot), true));
+        })
+      )
+    );

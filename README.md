@@ -2,6 +2,12 @@ To run site locally:
 - npm start
 - browse to http://localhost:3000/
 
+To run function locally against prod database:
+- $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json" ; $env:NODE_OPTIONS="--max-old-space-size=8192" ; node .\functions\local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
+- In /functions 
+  - ./node_modules/.bin/env-cmd node local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
+  - ./node_modules/.bin/env-cmd node local_update.js --function runAutomaticGameUpdates --maxPages 10 --prod
+
 To run emulators:
 - firebase emulators:start --only functions,firestore --import=./data
 
@@ -27,8 +33,10 @@ To test production functions in postman:
 
 Troubleshooting:
 - If emulator won't close
--- netstat -ano | findstr :<PORT>
--- taskkill /PID <PID> /F
+  - netstat -ano | findstr :5002
+  - taskkill /F /PID <PID>
+
+----------------------------------------------------------------------------------------------------
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
