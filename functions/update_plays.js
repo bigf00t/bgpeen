@@ -105,8 +105,13 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
       });
 
       if (json.plays.play === undefined) {
-        console.error(`${game.name} - Page ${page} did not have any plays`);
-        return Promise.reject();
+        console.info(`${game.name} - Page ${page} did not have any plays`);
+        return Promise.resolve({
+          unusablePlays: 0,
+          remainingPlays: 0,
+          plays: [],
+          finished: true,
+        });
       }
 
       const cleanPlays = getCleanPlaysFromJson(json.plays.play);
