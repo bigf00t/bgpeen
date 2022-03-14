@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const util = require('./util');
 const add_game = require('./add_game');
@@ -11,7 +11,7 @@ const duration = require('dayjs/plugin/duration');
 dayjs.extend(duration);
 
 exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorical = false) =>
-  db
+  firestore
     .collection('searches')
     .limit(50)
     .get()
@@ -23,18 +23,18 @@ exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorica
         const oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
         let queries = [
-          db
+          firestore
             .collection('games')
             .where('playsLastUpdated', '<', oneWeekAgo)
             .where('hasMinPlays', '==', false)
             .orderBy('playsLastUpdated', 'asc'),
-          db.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
+          firestore.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
         ];
 
         if (includeHistorical) {
           queries = queries.concat([
-            db.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
-            db.collection('games').orderBy('playsLastUpdated', 'asc'),
+            firestore.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
+            firestore.collection('games').orderBy('playsLastUpdated', 'asc'),
           ]);
         }
 
@@ -106,7 +106,7 @@ const addSearchedGames = (searchesSnapshot, maxPages) => {
         )
         .then(() => util.delay())
         .catch((err) => Promise.reject(err))
-        .finally(() => db.collection('searches').doc(doc.id).deconste())
+        .finally(() => firestore.collection('searches').doc(doc.id).deconste())
     );
   });
   return chain.then(() => Promise.resolve());

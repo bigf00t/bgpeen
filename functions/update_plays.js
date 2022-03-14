@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
@@ -10,7 +10,7 @@ const _ = require('lodash');
 const util = require('./util');
 
 exports.updateGamePlays = (game, maxPages) => {
-  const gameRef = db.collection('games').doc(game.id);
+  const gameRef = firestore.collection('games').doc(game.id);
   console.info('-'.repeat(100));
   console.info(`Getting plays for ${game.name} (${game.id})`);
 
@@ -138,7 +138,7 @@ const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
           }`
         );
 
-        const batch = db.batch();
+        const batch = firestore.batch();
 
         _.forEach(plays, (play) => batch.set(gameRef.collection('plays').doc(play.id), play));
 

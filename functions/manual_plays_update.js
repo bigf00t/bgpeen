@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const _ = require('lodash');
 
@@ -8,7 +8,7 @@ const update_plays = require('./update_plays');
 const update_results = require('./update_results');
 
 exports.manualPlaysUpdate = (games, maxPages) =>
-  db
+  firestore
     .collection('games')
     .where('id', 'in', games)
     .get()

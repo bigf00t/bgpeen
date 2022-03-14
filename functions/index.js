@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp();
+
+const { initializeApp } = require('firebase-admin/app');
+initializeApp();
 
 const automatic = require('./automatic_game_updates');
 

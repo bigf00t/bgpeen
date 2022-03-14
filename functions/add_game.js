@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const axios = require('axios');
 const convert = require('xml-js');
@@ -9,7 +9,7 @@ const _ = require('lodash');
 const util = require('./util');
 
 exports.addGame = (searchTerm, exact) =>
-  db
+  firestore
     .collection('games')
     .where('name', '==', searchTerm)
     .get()
@@ -50,7 +50,7 @@ exports.addGame = (searchTerm, exact) =>
             return Promise.reject(`Found a result, but it did not match your search: ${item.name.$.value}`);
           }
 
-          return db
+          return firestore
             .collection('games')
             .doc(item.$.id)
             .get()
@@ -115,7 +115,7 @@ exports.addGame = (searchTerm, exact) =>
 
                   console.info(`Adding ${newGame.name} (${newGame.id})`);
 
-                  return db
+                  return firestore
                     .collection('games')
                     .doc(newGame.id)
                     .set(newGame)
