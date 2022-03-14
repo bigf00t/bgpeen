@@ -12,21 +12,16 @@ import Measure from './components/Measure';
 import Result from './components/Result';
 
 function App() {
-  // document.title = window.location.toString().includes('bgpeen') ? 'bgpeen - measure your scores' : 'Good at games?';
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   const theme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          // mode: prefersDarkMode ? 'dark' : 'light',
           mode: 'dark',
-          appbar: {
-            main: '#181818',
-          },
           background: {
-            default: '#424242',
-            paper: '#424242',
+            default: '#303030',
+            paper: '#303030',
           },
           graph: {
             background: {

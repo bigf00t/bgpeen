@@ -47,25 +47,20 @@ const ScoreCounter = (props) => {
 
   const classes = props.classes;
 
-  // componentDidMount
   useEffect(() => {
-    props.loadGames();
-  }, []);
-
-  useEffect(() => {
-    if (props.data.games.length > 0 && !(totalScores && totalGames)) {
+    if (props.data.gameNames.length > 0 && !(totalScores && totalGames)) {
       const newTotalScores = _.reduce(
-        props.data.games,
+        props.data.gameNames,
         (sum, game) => sum + (game.totalScores || 0),
         0
       ).toLocaleString();
-      const newTotalGames = props.data.games.length.toLocaleString();
+      const newTotalGames = props.data.gameNames.length.toLocaleString();
       setTotalScores(newTotalScores);
       setTotalGames(newTotalGames);
       setScoreValue('0'.repeat(newTotalScores.length));
       setGameValue('0'.repeat(newTotalGames.length));
     }
-  }, [props.data.games]);
+  }, [props.data.gameNames]);
 
   useEffect(() => {
     if (totalScores && totalGames) {
@@ -97,7 +92,7 @@ const ScoreCounter = (props) => {
             nonNumberStyle={nonNumberStyle}
           />
         </Box>
-        <Typography variant="h4" component="h4" align="center" mt={2}>
+        <Typography variant="h4" component="h4" align="center">
           scores for
         </Typography>
         <Box component="div" className={classes.counter}>
@@ -113,7 +108,7 @@ const ScoreCounter = (props) => {
             nonNumberStyle={nonNumberStyle}
           />
         </Box>
-        <Typography variant="h4" component="h4" align="center" mt={2}>
+        <Typography variant="h4" component="h4" align="center">
           games and counting!
         </Typography>
       </Box>
@@ -124,7 +119,6 @@ const ScoreCounter = (props) => {
 ScoreCounter.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  loadGames: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {

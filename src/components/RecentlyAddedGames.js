@@ -22,15 +22,15 @@ const styles = (theme) => ({
   },
 });
 
-const PopularGames = (props) => {
+const RecentlyAddedGames = (props) => {
   const classes = props.classes;
 
   // componentDidMount
   useEffect(() => {
-    props.loadPopularGames();
+    props.loadNewGames();
   }, []);
 
-  if (props.data.popularGames.length === 0) {
+  if (props.data.newGames.length === 0) {
     return <div />;
   }
 
@@ -38,15 +38,15 @@ const PopularGames = (props) => {
     <Box component="div">
       <Box component="div" mt={5}>
         <Typography variant="h4" component="h4" align="center">
-          Most Popular Games
+          Recently Added Games
         </Typography>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
-          {props.data.popularGames.map((game) => (
+          {props.data.newGames.map((game) => (
             <Card key={game.id} className={classes.card}>
               <CardActionArea
                 component={Link}
                 to={`/${game.id}/${getGameSlug(game)}`}
-                title={`${game.name} - ${game.popularity}`}
+                title={`${game.name} - ${game.addedDate}`}
               >
                 <CardMedia component="img" image={game.thumbnail} alt={game.name} />
                 <Box
@@ -101,14 +101,14 @@ const PopularGames = (props) => {
   );
 };
 
-PopularGames.propTypes = {
+RecentlyAddedGames.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  loadPopularGames: PropTypes.func,
+  loadNewGames: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(PopularGames)));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(RecentlyAddedGames)));

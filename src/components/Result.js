@@ -5,10 +5,8 @@ import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
 
-// import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-// import { Link as RouterLink } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -16,14 +14,13 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-// import ArrowBack from '@mui/icons-material/ArrowBack';
 
 import Filters from './Filters';
 import Graph from './Graph';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
-import Image from 'material-ui-image';
+import Image from 'mui-image';
 
 const styles = (theme) => ({
   paper: {
@@ -40,11 +37,12 @@ const styles = (theme) => ({
   card: {
     margin: theme.spacing(1),
   },
-  image: {
+  imageWrapper: {
     margin: theme.spacing(0, 0, 0, 0),
     maxWidth: 100,
     maxHeight: 100,
   },
+  image: {},
   title: {
     margin: theme.spacing(0, 0, 0, 2),
   },
@@ -104,14 +102,8 @@ const Result = (props) => {
   const [filters, setFilters] = useState({});
   const [result, setResult] = useState();
   const [percentile, setPercentile] = useState(null);
-  // const [players, setPlayers] = useState(null);
-  // const [place, setPlace] = useState(null);
-  // const [game, setGame] = useState(null);
 
   let params = useParams();
-  // console.log(props);
-  // console.log(params);
-  // console.log(game);
 
   const classes = props.classes;
 
@@ -124,7 +116,6 @@ const Result = (props) => {
           );
         })
       : null;
-    console.log(newResult);
 
     setResult(newResult);
   };
@@ -145,29 +136,17 @@ const Result = (props) => {
         100) /
       _.sum(_.values(result.scores));
 
-    // console.log(newPercentile);
     setPercentile(newPercentile);
   };
 
-  const setGameFromUrl = () => {
+  const loadGameFromUrl = () => {
     if (params.id) {
-      // console.log(props.data.games);
-      const newGame = props.data.games.find((game) => game.id == params.id, null);
-      // console.log(newGame);
-      setOrLoadGame(newGame);
-      // setGame(newGame);
+      props.loadGame(params.id);
+      updateResult();
     }
   };
 
   const setFiltersFromUrl = () => {
-    // if (params.score || params.players || params.place) {
-    console.log('setFiltersFromUrl');
-    // console.log(params);
-    // setScore(getIntFromParam(params.score));
-    // setPlayers(getIntFromParam(params.players));
-    // setValidPlayerPlaces(getValidPlayerPlaces());
-    // setPlace(getIntFromParam(params.place));
-    // }
     setFilters({
       score: getIntFromParam(params.score),
       players: getIntFromParam(params.players),
@@ -179,20 +158,9 @@ const Result = (props) => {
     return param && !isNaN(param) ? parseInt(param) : '';
   };
 
-  const setOrLoadGame = (newGame) => {
-    if (!newGame || !newGame.results) {
-      // console.log('loadGame');
-      props.loadGame(params.id);
-    } else {
-      // console.log('setGame');
-      props.setGame(newGame.id);
-    }
-  };
-
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
-      console.log(filters);
       updateResult();
     }
   }, [filters.players, filters.place]);
@@ -200,79 +168,42 @@ const Result = (props) => {
   // Result changed
   useEffect(() => {
     if (filters.score && !_.isEmpty(result)) {
-      // console.log('updatePercentile');
       updatePercentile();
     }
   }, [filters.score, result]);
 
-  // // Filters changed
-  // useEffect(() => {
-  //   // console.log('Filters changed');
-  //   // console.log(filters);
-  //   if (filters) {
-  //     updateResult();
-  //     updatePercentile();
-  //   }
-  // }, [filters]);
-
   // componentDidMount
   useEffect(() => {
-    if (_.isEmpty(props.data.games)) {
-      props.loadGames();
+    if (props.data.game === null || props.data.game.id !== params.id) {
+      props.data.game = null;
+      loadGameFromUrl();
     }
   }, []);
-
-  // Games loaded
-  useEffect(() => {
-    // console.log('componentDidMount');
-    // console.log(props);
-    // props.setGame(null);
-    if (!_.isEmpty(props.data.games) && !props.data.game) {
-      // console.log('Games loaded');
-      setGameFromUrl();
-    }
-  }, [props.data.game, props.data.games]);
 
   // Game loaded
   useEffect(() => {
     if (props.data.game) {
-      // console.log('Game loaded');
       setFiltersFromUrl();
     }
   }, [props.data.game, params]);
-
-  // const handleFiltersChange = (filters) => {
-  //   // console.log('handleFiltersChange');
-  //   // console.log(filters);
-  //   setFilters(filters);
-  // };
 
   // No data loaded
   if (!result) {
     return <div />;
   }
 
-  document.title = `Good at ${props.data.game.name}`;
+  document.title = `Good at ${props.data.game.name}
+  ${filters.score ? ' - Score ' + filters.score : ''}
+  ${filters.players ? ' - ' + filters.players + ' players' : ''}
+  ${filters.place ? ' - ' + filters.place + ' place' : ''}`;
 
   return (
     <Box component="div" m={2}>
-      {/* <Paper className={classes.paper} square> */}
-      {/* <Box component="div"> */}
-      {/* <RouterLink className={classes.link} to="/">
-        <Typography component="span" variant="h6">
-          <ArrowBack fontSize="small" className={classes.arrow} /> Find another game
-        </Typography>
-      </RouterLink> */}
       <Box component="div" m={4} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
         <Image
           src={props.data.game.thumbnail}
-          imageStyle={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'scale-down',
-          }}
-          style={{ width: 100, height: 100, padding: 0 }}
-          color='"none"'
+          duration={1000}
+          wrapperClassName={classes.imageWrapper}
           className={classes.image}
         />
         <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
@@ -291,10 +222,6 @@ const Result = (props) => {
         </Typography>
       </Box>
       <Filters filters={filters} />
-      {/* <Route
-            path="/:id/:name/:score?/:players?/:place?"
-            render={(routeProps) => <Filters {...routeProps} handleChange={this.handleFiltersChange} />}
-          /> */}
       {filters && filters.score && (
         <Box component="div">
           <Box component="div" mb={2} justifyContent="center" alignItems="center">
@@ -311,9 +238,7 @@ const Result = (props) => {
           </Box>
         </Box>
       )}
-      {/* </Box> */}
       <Graph result={result} score={filters.score} percentile={percentile}></Graph>
-      {/* </Paper> */}
       <Box mt={2}>
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMore />}>
@@ -401,7 +326,6 @@ Result.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
   loadGames: PropTypes.func,
-  setGame: PropTypes.func,
   loadGame: PropTypes.func,
 };
 

@@ -10,6 +10,9 @@ import withTheme from '@mui/styles/withTheme';
 import PropTypes from 'prop-types';
 
 const styles = () => ({
+  appbar: {
+    backgroundColor: '#090909',
+  },
   logo: {
     textDecoration: 'none',
     '&:hover': {
@@ -31,7 +34,7 @@ const Menu = (props) => {
   const classes = props.classes;
 
   return (
-    <AppBar position="static" color="appbar" enableColorOnDark={true} display="flex">
+    <AppBar className={classes.appbar} position="static" enableColorOnDark={true} display="flex">
       <Toolbar>
         <Box display="flex" flexGrow={1}>
           <Link className={classes.logo} to="/">

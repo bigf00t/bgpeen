@@ -23,11 +23,10 @@ import { getGameSlug } from '../utils';
 const styles = (theme) => ({
   button: {
     marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1),
+    marginLeft: theme.spacing(2),
   },
   formControl: {
     maxWidth: 330,
-    height: 60,
   },
   formGroup: {
     margin: theme.spacing(2),
@@ -43,10 +42,15 @@ const SelectGame = (props) => {
   const [game, setGame] = useState(null);
   const [gameText, setGameText] = useState(null);
   const [added, setAdded] = useState(false);
+  const [gameHighlightValue, setGameHighlightValue] = useState('');
 
   let navigate = useNavigate();
 
   const classes = props.classes;
+
+  const handleGameHighlightChange = (event, option) => {
+    setGameHighlightValue(option);
+  };
 
   const handleGameTextChange = (event) => {
     if (!game) {
@@ -55,16 +59,32 @@ const SelectGame = (props) => {
   };
 
   const handleGameBlur = () => {
-    // TODO: Handle tab
     setGame(gameText);
     setAdded(false);
-    props.setGame(null);
+  };
+
+  const handleGameKeyDown = (event) => {
+    switch (event.key) {
+      case 'Tab': {
+        if (gameHighlightValue) {
+          handleGameChange(event, gameHighlightValue);
+        }
+        break;
+      }
+      default:
+    }
   };
 
   const handleGameChange = (event, newGame) => {
     setGame(newGame);
     if (newGame && newGame.id) {
       navigate(`/${newGame.id}/${getGameSlug(newGame)}`);
+    }
+  };
+
+  const handleGameInputChange = (event, newInputValue) => {
+    if (newInputValue === '') {
+      setGameText('');
     }
   };
 
@@ -81,7 +101,7 @@ const SelectGame = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    props.loadGames();
+    props.loadGameNames();
   }, []);
 
   // componentDidUpdate game
@@ -99,28 +119,31 @@ const SelectGame = (props) => {
           <Autocomplete
             freeSolo
             autoHighlight
-            // autoSelect
             blurOnSelect
             id="game"
             name="game"
             value={game}
             onChange={handleGameChange}
+            onInputChange={handleGameInputChange}
+            onHighlightChange={handleGameHighlightChange}
             onBlur={handleGameBlur}
-            options={props.data.games}
+            options={props.data.gameNames}
             fullWidth
             getOptionLabel={(option) => option.name || option}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                placeholder="Start typing..."
-                // label="Game"
-                onChange={handleGameTextChange}
-                fullWidth
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-            )}
+            renderInput={(params) => {
+              params.inputProps.onKeyDown = handleGameKeyDown;
+              return (
+                <TextField
+                  {...params}
+                  placeholder="Start typing..."
+                  onChange={handleGameTextChange}
+                  fullWidth
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              );
+            }}
           />
         </FormControl>
         {!game || game.id ? (
@@ -135,7 +158,6 @@ const SelectGame = (props) => {
               onClick={handleAddClick}
             >
               Add Game
-              {/* {added ? 'Added!' : 'Add Game'} */}
             </Button>
           </FormControl>
         )}
@@ -156,9 +178,7 @@ SelectGame.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
   location: PropTypes.object,
-  loadGames: PropTypes.func,
-  loadGame: PropTypes.func,
-  setGame: PropTypes.func,
+  loadGameNames: PropTypes.func,
   handleChange: PropTypes.func,
 };
 

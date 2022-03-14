@@ -1,41 +1,51 @@
-import { LOAD_GAMES, LOAD_GAME, SET_GAME } from '../actions/types';
+import { LOAD_GAME_NAMES, LOAD_POPULAR_GAMES, LOAD_NEW_GAMES, LOAD_GAME } from '../actions/types';
 
 const dataState = {
   game: null,
-  games: [],
+  loadedGames: [],
+  gameNames: [],
+  popularGames: [],
+  newGames: [],
 };
 
 export default (state = dataState, action) => {
   switch (action.type) {
-    case LOAD_GAMES:
+    case LOAD_GAME_NAMES:
       return {
         ...state,
-        games: action.payload,
+        gameNames: action.payload,
+      };
+    case LOAD_POPULAR_GAMES:
+      return {
+        ...state,
+        popularGames: action.payload,
+      };
+    case LOAD_NEW_GAMES:
+      return {
+        ...state,
+        newGames: action.payload,
       };
     case LOAD_GAME:
-      // console.log('LOAD_GAME');
-      var loadedGame = state.games.find((game) => game.id == action.payload.id, null);
+      var foundGame = state.loadedGames.find((game) => game.id == action.payload.id, null);
+      if (foundGame) {
+        return {
+          ...state,
+          game: foundGame,
+        };
+      }
+      var newGame = { ...action.payload.game, ...action.payload.results };
       return {
         ...state,
-        game: loadedGame ? { ...loadedGame, ...action.payload } : null,
-        games: [
-          ...state.games.map((game) => {
+        game: newGame,
+        loadedGames: [
+          ...state.loadedGames.map((game) => {
             if (game.id !== action.payload.id) {
               return game;
             }
 
-            return {
-              ...game,
-              ...action.payload,
-            };
+            return newGame;
           }),
         ],
-      };
-    case SET_GAME:
-      // console.log('SET_GAME');
-      return {
-        ...state,
-        game: state.games.find((game) => game.id == action.payload.id, null),
       };
     default:
       return state;
