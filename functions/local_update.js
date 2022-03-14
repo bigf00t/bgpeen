@@ -6,8 +6,8 @@ if (!argv.prod) {
   delete ['FIRESTORE_EMULATOR_HOST'];
 }
 
-const admin = require('firebase-admin');
-admin.initializeApp();
+const { initializeApp } = require('firebase-admin/app');
+initializeApp();
 
 const manual_games = require('./manual_games_update');
 // const manual_stats = require('./manual_stats_update');

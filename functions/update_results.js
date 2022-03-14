@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const { mean, mode, median, std } = require('mathjs');
 
@@ -9,7 +9,7 @@ exports.updateResults = (game, newPlays) => {
   console.info('-'.repeat(100));
   console.info(`Updating results for ${game.name}`);
 
-  const resultsRef = db.collection('results').doc(game.id);
+  const resultsRef = firestore.collection('results').doc(game.id);
 
   return resultsRef
     .get()
@@ -64,7 +64,7 @@ exports.updateResults = (game, newPlays) => {
           { merge: true }
         )
         .then(() =>
-          db.collection('games').doc(game.id).update({
+          firestore.collection('games').doc(game.id).update({
             totalScores: allScoresResult.scoreCount,
             mean: allScoresResult.mean,
           })

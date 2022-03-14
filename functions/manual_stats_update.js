@@ -1,5 +1,5 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const _ = require('lodash');
 
@@ -7,7 +7,7 @@ const util = require('./util');
 const update = require('./update_results');
 
 exports.manualStatsUpdate = (games) =>
-  db
+  firestore
     .collection('games')
     .where('id', 'in', games)
     .get()
@@ -17,7 +17,7 @@ exports.manualStatsUpdate = (games) =>
           console.info(`Started updating stats for: ${game.name}`);
 
           // Expensive query!
-          const playsRef = db.collection('games').doc(game.id).collection('plays');
+          const playsRef = firestore.collection('games').doc(game.id).collection('plays');
 
           return playsRef
             .get()

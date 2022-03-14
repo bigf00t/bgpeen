@@ -1,12 +1,12 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const { getFirestore } = require('firebase-admin/firestore');
+const firestore = getFirestore();
 
 const _ = require('lodash');
 
 const util = require('./util');
 
 exports.manualGamesUpdate = (games) => {
-  let query = db.collection('games');
+  let query = firestore.collection('games');
   console.log(games);
 
   if (games && games.length > 0) {
@@ -14,16 +14,16 @@ exports.manualGamesUpdate = (games) => {
   }
 
   return query.get().then(function (gamesSnapshot) {
-    const batch = db.batch();
+    const batch = firestore.batch();
 
     return Promise.all(
       _.map(util.docsToArray(gamesSnapshot), (game) => {
-        return db
+        return firestore
           .collection('results')
           .doc(game.id)
           .get()
           .then((resultsSnapshot) => {
-            const gameRef = db.collection('games').doc(game.id);
+            const gameRef = firestore.collection('games').doc(game.id);
             const allScoresResult = _.find(resultsSnapshot.data().results, (result) => result.playerCount === '');
 
             return batch.update(gameRef, {
