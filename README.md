@@ -17,7 +17,7 @@ To save local data state:
 To test emulated functions in postman:
 - POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames
 
-To deploy
+To deploy. If getting "Error: There was an error deploying functions"
 - $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
 - firebase login --reauth
 

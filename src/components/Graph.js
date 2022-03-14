@@ -68,7 +68,6 @@ const Graph = (props) => {
             borderColor: props.theme.palette.text.secondary,
             borderDash: [5],
             borderWidth: 2,
-            // drawTime: 'beforeDraw',
           },
           line2: {
             type: 'line',
@@ -77,7 +76,6 @@ const Graph = (props) => {
             value: props.score === '' ? null : props.score,
             borderColor: getScoreColor(props.percentile),
             borderWidth: 4,
-            // drawTime: 'beforeDraw',
           },
         },
       },
@@ -110,21 +108,9 @@ const Graph = (props) => {
     setGraphData(newGraphData);
   };
 
-  // // componentDidMount
-  // useEffect(() => {
-  //   console.log('componentDidMount');
-  //   console.log(graphData);
-  //   setGraphData(null);
-  // }, []);
-
   // componentDidUpdate result, score
   useEffect(() => {
-    // console.log('componentDidUpdate');
-    // console.log(props.result);
     if (!_.isEmpty(props.result)) {
-      // console.log(props.result);
-      // console.log(props.score);
-      // console.log('updateGraphData');
       updateGraphData();
     }
   }, [props.result]);

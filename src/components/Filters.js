@@ -30,8 +30,6 @@ const styles = (theme) => ({
   },
   selectEmpty: {},
   formGroup: {
-    // margin: theme.spacing(2),
-    // marginTop: theme.spacing(-2),
     justifyContent: 'center',
   },
   floatingLabelFocusStyle: {
@@ -56,23 +54,12 @@ const Filters = (props) => {
 
   // Dropdowns changed
   useEffect(() => {
-    // console.log(params);
-    // console.log(players);
-    // console.log(!params.score);
     if (filtersChanged()) {
       updateHistory();
-      // sendFiltersUpdate();
     }
-    // else if (!params.score || score || players || place) {
-    //   // sendFiltersUpdate();
-    // }
   }, [score, place, players]);
 
   const filtersChanged = () => {
-    // console.log(players);
-    // console.log((score || '-') !== params.score);
-    // console.log((players || '-') !== params.players);
-    // console.log((place || '-') !== params.place);
     return (
       (score !== undefined && (score || '-') !== (parseInt(params.score) || '-')) ||
       (players !== undefined && (players || '-') !== (parseInt(params.players) || '-')) ||
@@ -87,7 +74,6 @@ const Filters = (props) => {
     if (place && validPlayerPlaces.indexOf(place) === -1) {
       setPlace('');
     }
-    // console.log(validPlayerPlaces);
     setValidPlayerPlaces(validPlayerPlaces);
   }, [players]);
 
@@ -130,59 +116,20 @@ const Filters = (props) => {
     if (score || players || place) {
       urlParams = urlParams.concat([score || '-', players || '-', place || '-']);
     }
-    // console.log('navigate: ' + `/${urlParams.join('/')}`);
     navigate(`/${urlParams.join('/')}`);
   };
-
-  // const setFiltersFromUrl = () => {
-  //   // if (params.score || params.players || params.place) {
-  //   // console.log('setFiltersFromUrl');
-  //   // console.log(params);
-  //   setScore(getIntFromParam(params.score));
-  //   setPlayers(getIntFromParam(params.players));
-  //   setValidPlayerPlaces(getValidPlayerPlaces());
-  //   setPlace(getIntFromParam(params.place));
-  //   // }
-  // };
 
   const getIntFromParam = (param) => {
     return param && !isNaN(param) ? parseInt(param) : '';
   };
 
-  // const sendFiltersUpdate = () => {
-  //   // console.log('sendFiltersUpdate');
-  //   props.handleChange({
-  //     players: players === '' ? null : players,
-  //     place: place === '' ? null : place,
-  //     score: score === '' ? null : score,
-  //   });
-  // };
-
   // componentDidMount
   useEffect(() => {
-    // console.log(params);
-    // setFiltersFromUrl();
     setScore(props.filters.score);
     setPlayers(props.filters.players);
     setValidPlayerPlaces(getValidPlayerPlaces());
     setPlace(props.filters.place);
   }, []);
-
-  // // componentDidUpdate game
-  // useEffect(() => {
-  //   if (props.data.game) {
-  //     setPlayers(getIntFromParam(params.players));
-  //     setScore(getIntFromParam(params.score));
-  //     setValidPlayerPlaces(getValidPlayerPlaces());
-  //     setPlace(getIntFromParam(params.place));
-  //     // sendFiltersUpdate();
-  //     // if (props.data.game && props.data.game.id !== prevProps.data.game.id) {
-  //     //   setState({ players: '', place: '', score: '' }, () => {
-  //     //     sendFiltersUpdate();
-  //     //   });
-  //     // }
-  //   }
-  // }, [props.data.game]);
 
   const handlePlayersKeyDown = (event) => {
     switch (event.key) {
@@ -232,19 +179,13 @@ const Filters = (props) => {
         </FormControl>
         <span>{players == undefined}</span>
         <FormControl className={classes.formControl}>
-          {/* <InputLabel id="players-label">Your Player Count</InputLabel> */}
           <Autocomplete
-            // freeSolo
             autoHighlight
-            // autoSelect
             blurOnSelect
             disableClearable={players == ''}
             id="players"
-            // name="players"
             value={players || null}
-            // inputValue={playersInputValue}
             onChange={handlePlayersChange}
-            // onBlur={handlePlayersBlur}
             onHighlightChange={handlePlayersHighlightChange}
             options={props.data.game.playerCounts}
             fullWidth
@@ -255,8 +196,6 @@ const Filters = (props) => {
                 <TextField
                   {...params}
                   label="Your Player Count"
-                  // placeholder="Your Player Count"
-                  // label="Game"
                   fullWidth
                   labelid="players-label"
                   InputLabelProps={{
@@ -266,33 +205,10 @@ const Filters = (props) => {
               );
             }}
           />
-          {/* <Select
-            labelid="players-label"
-            id="players"
-            name="players"
-            value={players}
-            onChange={handlePlayersChange}
-            // displayEmpty
-            MenuProps={MenuProps}
-          >
-            {/* <MenuItem key="" value="">
-            Any
-            </MenuItem>
-            {props.data.game.playerCounts
-              ? props.data.game.playerCounts.map((count) => (
-                  <MenuItem key={count} value={count}>
-                    {count}
-                  </MenuItem>
-                ))
-              : ''}
-          </Select> */}
         </FormControl>
         <FormControl className={classes.formControl}>
-          {/* <InputLabel id="place-label">Your Finish</InputLabel> */}
           <Autocomplete
-            // freeSolo
             autoHighlight
-            // autoSelect
             blurOnSelect
             disableClearable={place == ''}
             id="place"
@@ -300,7 +216,6 @@ const Filters = (props) => {
             value={place || null}
             onChange={handlePlaceChange}
             onHighlightChange={handlePlaceHighlightChange}
-            // inputValue={playersInputValue}
             options={validPlayerPlaces}
             fullWidth
             getOptionLabel={(count) => (count ? ordinal(count) : '')}
@@ -311,8 +226,6 @@ const Filters = (props) => {
                 <TextField
                   {...params}
                   label="Your Finish Place"
-                  // placeholder="Your Player Count"
-                  // label="Game"
                   fullWidth
                   labelid="place-label"
                   InputLabelProps={{
