@@ -1,13 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { withTheme } from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import { Chart } from 'react-chartjs-2';
-import { Chart as ChartJS, Filler, LineElement, PointElement, CategoryScale, LinearScale, Title } from 'chart.js';
+import {
+  Chart as ChartJS,
+  Filler,
+  LineController,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Title,
+} from 'chart.js';
 
-ChartJS.register(LineElement, Filler, PointElement, CategoryScale, LinearScale, Title, annotationPlugin);
+ChartJS.register(
+  LineController,
+  LineElement,
+  Filler,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Title,
+  annotationPlugin
+);
 
 const Graph = (props) => {
   const [graphData, setGraphData] = useState({ datasets: [] });
@@ -79,9 +97,9 @@ const Graph = (props) => {
         {
           data: graphPoints,
           label: ['Scores'],
-          backgroundColor: props.theme.palette.graph.background[props.theme.palette.type],
-          borderColor: props.theme.palette.graph.border[props.theme.palette.type],
-          pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.type],
+          backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
+          borderColor: props.theme.palette.graph.border[props.theme.palette.mode],
+          pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.mode],
           fill: true,
           spanGaps: true,
           lineTension: 0,
@@ -104,9 +122,9 @@ const Graph = (props) => {
     // console.log('componentDidUpdate');
     // console.log(props.result);
     if (!_.isEmpty(props.result)) {
-      console.log(props.result);
-      console.log(props.score);
-      console.log('updateGraphData');
+      // console.log(props.result);
+      // console.log(props.score);
+      // console.log('updateGraphData');
       updateGraphData();
     }
   }, [props.result]);

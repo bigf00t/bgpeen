@@ -5,14 +5,15 @@ import * as actions from '../actions';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import { withStyles, withTheme } from '@material-ui/core/styles';
-import Box from '@material-ui/core/Box';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import Typography from '@material-ui/core/Typography';
-import Card from '@material-ui/core/Card';
-import CardActionArea from '@material-ui/core/CardActionArea';
-import CardMedia from '@material-ui/core/CardMedia';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardActionArea from '@mui/material/CardActionArea';
+import CardMedia from '@mui/material/CardMedia';
 
 import { getGameSlug } from '../utils';
 

@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { createTheme } from '@material-ui/core/styles';
-import { ThemeProvider } from '@material-ui/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import './App.css';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import { StyledEngineProvider } from '@mui/styled-engine';
+import CssBaseline from '@mui/material/CssBaseline';
+// import './App.css';
 
 import Menu from './components/Menu';
 import Measure from './components/Measure';
@@ -18,7 +19,15 @@ function App() {
     () =>
       createTheme({
         palette: {
-          type: prefersDarkMode ? 'dark' : 'light',
+          // mode: prefersDarkMode ? 'dark' : 'light',
+          mode: 'dark',
+          appbar: {
+            main: '#181818',
+          },
+          background: {
+            default: '#424242',
+            paper: '#424242',
+          },
           graph: {
             background: {
               light: 'rgba(63, 81, 181, 0.25)',
@@ -40,18 +49,20 @@ function App() {
 
   return (
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <div className="App">
-          <Menu />
-          <Routes>
-            <Route path="/:id/:name" element={<Result />}>
-              <Route path=":score/:players/:place" element={<Result />} />
-            </Route>
-            <Route path="/" element={<Measure />} />
-          </Routes>
-        </div>
-      </ThemeProvider>
+      <StyledEngineProvider injectFirst>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <div className="App">
+            <Menu />
+            <Routes>
+              <Route path="/:id/:name" element={<Result />}>
+                <Route path=":score/:players/:place" element={<Result />} />
+              </Route>
+              <Route path="/" element={<Measure />} />
+            </Routes>
+          </div>
+        </ThemeProvider>
+      </StyledEngineProvider>
     </BrowserRouter>
   );
 }
