@@ -20,8 +20,8 @@ const Measure = (props) => {
 
   return (
     <Box component="div" className={classes.root}>
-      <SelectGame />
       <ScoreCounter />
+      <SelectGame />
       <PopularGames />
       <NewestGames />
     </Box>

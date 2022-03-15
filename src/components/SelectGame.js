@@ -101,7 +101,9 @@ const SelectGame = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    props.loadGameNames();
+    if (props.data.gameNames.length == 0) {
+      props.loadGameNames();
+    }
   }, []);
 
   // componentDidUpdate game

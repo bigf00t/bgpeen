@@ -4,12 +4,12 @@ To run site locally:
 
 To run function locally against prod database:
 - $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json" ; $env:NODE_OPTIONS="--max-old-space-size=8192" ; node .\functions\local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
-- In /functions 
+- In functions with .env file
   - ./node_modules/.bin/env-cmd node local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
   - ./node_modules/.bin/env-cmd node local_update.js --function runAutomaticGameUpdates --maxPages 10 --prod
 
 To run emulators:
-- firebase emulators:start --only functions,firestore --import=./data
+- firebase emulators:start --only "functions,firestore"--import=./data
 
 To save local data state:
 - firebase emulators:export ./data --only firestore

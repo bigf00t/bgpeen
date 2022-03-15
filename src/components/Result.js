@@ -139,10 +139,18 @@ const Result = (props) => {
     setPercentile(newPercentile);
   };
 
-  const loadGameFromUrl = () => {
+  const getGameFromUrl = () => {
     if (params.id) {
+      findOrLoadGame();
+    }
+  };
+
+  const findOrLoadGame = () => {
+    var foundGame = props.data.loadedGames.find((game) => game.id == params.id, null);
+    if (foundGame) {
+      props.data.game = foundGame;
+    } else {
       props.loadGame(params.id);
-      updateResult();
     }
   };
 
@@ -176,7 +184,7 @@ const Result = (props) => {
   useEffect(() => {
     if (props.data.game === null || props.data.game.id !== params.id) {
       props.data.game = null;
-      loadGameFromUrl();
+      getGameFromUrl();
     }
   }, []);
 

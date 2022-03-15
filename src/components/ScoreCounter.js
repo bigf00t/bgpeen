@@ -13,6 +13,10 @@ import Typography from '@mui/material/Typography';
 import FlipNumbers from 'react-flip-numbers';
 
 const styles = (theme) => ({
+  container: {
+    backgroundColor: '#282828',
+    padding: theme.spacing(1),
+  },
   counter: {
     margin: theme.spacing(1),
   },
@@ -74,44 +78,51 @@ const ScoreCounter = (props) => {
   }
 
   return (
-    <Box component="div">
-      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1} mt={5}>
-        <Typography variant="h4" component="h4" align="center">
-          Now serving
-        </Typography>
-        <Box component="div" className={classes.counter}>
-          <FlipNumbers
-            height={60}
-            width={42}
-            color="white"
-            background=""
-            play
-            numbers={scoreValue}
-            duration="2"
-            numberStyle={numberStyle}
-            nonNumberStyle={nonNumberStyle}
-          />
-        </Box>
-        <Typography variant="h4" component="h4" align="center">
-          scores for
-        </Typography>
-        <Box component="div" className={classes.counter}>
-          <FlipNumbers
-            height={60}
-            width={42}
-            color="white"
-            background=""
-            play
-            numbers={gameValue}
-            duration="2"
-            numberStyle={numberStyle}
-            nonNumberStyle={nonNumberStyle}
-          />
-        </Box>
-        <Typography variant="h4" component="h4" align="center">
-          games and counting!
-        </Typography>
+    <Box
+      component="div"
+      className={classes.container}
+      display="flex"
+      flexWrap="wrap"
+      justifyContent="center"
+      alignItems="center"
+      width={1}
+      elevation={2}
+    >
+      <Typography variant="h4" component="h4" align="center">
+        Now serving
+      </Typography>
+      <Box component="div" className={classes.counter}>
+        <FlipNumbers
+          height={60}
+          width={42}
+          color="white"
+          background=""
+          play
+          numbers={scoreValue}
+          duration="2"
+          numberStyle={numberStyle}
+          nonNumberStyle={nonNumberStyle}
+        />
       </Box>
+      <Typography variant="h4" component="h4" align="center">
+        scores for
+      </Typography>
+      <Box component="div" className={classes.counter}>
+        <FlipNumbers
+          height={60}
+          width={42}
+          color="white"
+          background=""
+          play
+          numbers={gameValue}
+          duration="2"
+          numberStyle={numberStyle}
+          nonNumberStyle={nonNumberStyle}
+        />
+      </Box>
+      <Typography variant="h4" component="h4" align="center">
+        games and counting!
+      </Typography>
     </Box>
   );
 };

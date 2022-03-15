@@ -27,7 +27,9 @@ const PopularGames = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    props.loadPopularGames();
+    if (props.data.popularGames.length == 0) {
+      props.loadPopularGames();
+    }
   }, []);
 
   if (props.data.popularGames.length === 0) {

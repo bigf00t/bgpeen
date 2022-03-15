@@ -113,8 +113,8 @@ const Filters = (props) => {
 
   const updateHistory = () => {
     var urlParams = [params.id, params.name];
-    if (score || players || place) {
-      urlParams = urlParams.concat([score || '-', players || '-', place || '-']);
+    if (score || players) {
+      urlParams = urlParams.concat([score || '-', players || '-', players ? place || '-' : '-']);
     }
     navigate(`/${urlParams.join('/')}`);
   };

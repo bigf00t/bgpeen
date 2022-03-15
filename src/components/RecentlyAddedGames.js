@@ -27,7 +27,9 @@ const RecentlyAddedGames = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    props.loadNewGames();
+    if (props.data.newGames.length == 0) {
+      props.loadNewGames();
+    }
   }, []);
 
   if (props.data.newGames.length === 0) {

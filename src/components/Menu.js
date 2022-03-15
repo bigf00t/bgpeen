@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 
 const styles = () => ({
   appbar: {
-    backgroundColor: '#090909',
+    backgroundColor: '#050505',
   },
   logo: {
     textDecoration: 'none',
@@ -34,7 +34,7 @@ const Menu = (props) => {
   const classes = props.classes;
 
   return (
-    <AppBar className={classes.appbar} position="static" enableColorOnDark={true} display="flex">
+    <AppBar className={classes.appbar} position="relative" enableColorOnDark={true} display="flex" elevation={3}>
       <Toolbar>
         <Box display="flex" flexGrow={1}>
           <Link className={classes.logo} to="/">

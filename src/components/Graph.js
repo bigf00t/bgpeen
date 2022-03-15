@@ -1,40 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import withTheme from '@mui/styles/withTheme';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
-import { Chart } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   Filler,
-  LineController,
   LineElement,
   PointElement,
   CategoryScale,
   LinearScale,
   Title,
+  Tooltip,
 } from 'chart.js';
 
-ChartJS.register(
-  LineController,
-  LineElement,
-  Filler,
-  PointElement,
-  CategoryScale,
-  LinearScale,
-  Title,
-  annotationPlugin
-);
+ChartJS.register(LineElement, Filler, PointElement, CategoryScale, LinearScale, Title, Tooltip, annotationPlugin);
 
 const Graph = (props) => {
-  const [graphData, setGraphData] = useState({ datasets: [] });
-
   const getScoreColor = (percentile) => {
     return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
   };
 
   const options = {
+    responsive: true,
     scales: {
       y: {
         beginAtZero: true,
@@ -79,43 +69,37 @@ const Graph = (props) => {
           },
         },
       },
+      tooltip: {
+        usePointStyle: true,
+      },
     },
   };
 
-  const updateGraphData = () => {
-    const graphPoints = _.chain(props.result.scores)
-      .reduce((points, count, score) => {
-        return points.concat([{ x: parseInt(score), y: count }]);
-      }, [])
+  const getDataFromResult = () =>
+    _.chain(props.result.scores)
+      .reduce((points, count, score) => points.concat([{ x: parseInt(score), y: count }]), [])
       .orderBy(['x'])
       .value();
 
-    const newGraphData = {
-      datasets: [
-        {
-          data: graphPoints,
-          label: ['Scores'],
-          backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
-          borderColor: props.theme.palette.graph.border[props.theme.palette.mode],
-          pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.mode],
-          fill: true,
-          spanGaps: true,
-          lineTension: 0,
-        },
-      ],
-    };
+  const labels = getDataFromResult().map((item) => item.x, []);
 
-    setGraphData(newGraphData);
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Scores',
+        data: getDataFromResult().map((item) => item.y, []),
+        backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
+        borderColor: props.theme.palette.graph.border[props.theme.palette.mode],
+        pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.mode],
+        fill: true,
+        spanGaps: true,
+        lineTension: 0,
+      },
+    ],
   };
 
-  // componentDidUpdate result, score
-  useEffect(() => {
-    if (!_.isEmpty(props.result)) {
-      updateGraphData();
-    }
-  }, [props.result]);
-
-  return <Chart type="line" data={graphData} options={options} />;
+  return <Line data={data} options={options} />;
 };
 
 Graph.propTypes = {
