@@ -16,6 +16,7 @@ const styles = (theme) => ({
   container: {
     backgroundColor: '#282828',
     padding: theme.spacing(1),
+    height: 92,
   },
   counter: {
     margin: theme.spacing(1),
@@ -73,56 +74,47 @@ const ScoreCounter = (props) => {
     }
   }, [totalScores, totalGames]);
 
-  if (!(totalScores && totalGames)) {
-    return <div />;
-  }
-
   return (
-    <Box
-      component="div"
-      className={classes.container}
-      display="flex"
-      flexWrap="wrap"
-      justifyContent="center"
-      alignItems="center"
-      width={1}
-      elevation={2}
-    >
-      <Typography variant="h4" component="h4" align="center">
-        Now serving
-      </Typography>
-      <Box component="div" className={classes.counter}>
-        <FlipNumbers
-          height={60}
-          width={42}
-          color="white"
-          background=""
-          play
-          numbers={scoreValue}
-          duration="2"
-          numberStyle={numberStyle}
-          nonNumberStyle={nonNumberStyle}
-        />
-      </Box>
-      <Typography variant="h4" component="h4" align="center">
-        scores for
-      </Typography>
-      <Box component="div" className={classes.counter}>
-        <FlipNumbers
-          height={60}
-          width={42}
-          color="white"
-          background=""
-          play
-          numbers={gameValue}
-          duration="2"
-          numberStyle={numberStyle}
-          nonNumberStyle={nonNumberStyle}
-        />
-      </Box>
-      <Typography variant="h4" component="h4" align="center">
-        games and counting!
-      </Typography>
+    <Box component="div" className={classes.container} width={1} elevation={2}>
+      {totalScores && totalGames && (
+        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+          <Typography variant="h4" component="h4" align="center">
+            Now serving
+          </Typography>
+          <Box component="div" className={classes.counter}>
+            <FlipNumbers
+              height={60}
+              width={42}
+              color="white"
+              background=""
+              play
+              numbers={scoreValue}
+              duration="2"
+              numberStyle={numberStyle}
+              nonNumberStyle={nonNumberStyle}
+            />
+          </Box>
+          <Typography variant="h4" component="h4" align="center">
+            scores for
+          </Typography>
+          <Box component="div" className={classes.counter}>
+            <FlipNumbers
+              height={60}
+              width={42}
+              color="white"
+              background=""
+              play
+              numbers={gameValue}
+              duration="2"
+              numberStyle={numberStyle}
+              nonNumberStyle={nonNumberStyle}
+            />
+          </Box>
+          <Typography variant="h4" component="h4" align="center">
+            games and counting!
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };

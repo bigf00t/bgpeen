@@ -32,73 +32,71 @@ const RecentlyAddedGames = (props) => {
     }
   }, []);
 
-  if (props.data.newGames.length === 0) {
-    return <div />;
-  }
-
   return (
-    <Box component="div">
-      <Box component="div" mt={5}>
-        <Typography variant="h4" component="h4" align="center">
-          Recently Added Games
-        </Typography>
-        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
-          {props.data.newGames.map((game) => (
-            <Card key={game.id} className={classes.card}>
-              <CardActionArea
-                component={Link}
-                to={`/${game.id}/${getGameSlug(game)}`}
-                title={`${game.name} - ${game.addedDate}`}
-              >
-                <CardMedia component="img" image={game.thumbnail} alt={game.name} />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    height: '100%',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    bgcolor: 'rgba(0, 0, 0, 0.75)',
-                    color: 'white',
-                    padding: '10px',
-                    textAlign: 'center',
-                    opacity: 0,
-                    transition: '0.3s',
-                    '&:hover': {
-                      opacity: 1,
-                    },
-                  }}
+    <Box component="div" width={1} mt={5}>
+      {props.data.newGames.length > 0 && (
+        <Box component="div">
+          <Typography variant="h4" component="h4" align="center">
+            Recently Added Games
+          </Typography>
+          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+            {props.data.newGames.map((game) => (
+              <Card key={game.id} className={classes.card}>
+                <CardActionArea
+                  component={Link}
+                  to={`/${game.id}/${getGameSlug(game)}`}
+                  title={`${game.name} - ${game.addedDate}`}
                 >
+                  <CardMedia component="img" image={game.thumbnail} alt={game.name} />
                   <Box
                     sx={{
                       position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      padding: '10px',
-                    }}
-                  >
-                    <Typography variant="body2">Scores</Typography>
-                    <Typography variant="h5">{game.totalScores}</Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      position: 'absolute',
+                      height: '100%',
                       bottom: 0,
                       left: 0,
                       width: '100%',
+                      bgcolor: 'rgba(0, 0, 0, 0.75)',
+                      color: 'white',
                       padding: '10px',
+                      textAlign: 'center',
+                      opacity: 0,
+                      transition: '0.3s',
+                      '&:hover': {
+                        opacity: 1,
+                      },
                     }}
                   >
-                    <Typography variant="body2">Average</Typography>
-                    <Typography variant="h5">{game.mean}</Typography>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        padding: '10px',
+                      }}
+                    >
+                      <Typography variant="body2">Scores</Typography>
+                      <Typography variant="h5">{game.totalScores}</Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        width: '100%',
+                        padding: '10px',
+                      }}
+                    >
+                      <Typography variant="body2">Average</Typography>
+                      <Typography variant="h5">{game.mean}</Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </CardActionArea>
-            </Card>
-          ))}
+                </CardActionArea>
+              </Card>
+            ))}
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   );
 };
