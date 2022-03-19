@@ -15,8 +15,11 @@ import FlipNumbers from 'react-flip-numbers';
 const styles = (theme) => ({
   container: {
     backgroundColor: '#282828',
-    padding: theme.spacing(1),
-    height: 92,
+    minHeight: 82,
+    '& h4': {
+      fontSize: '1.5rem',
+      lineHeight: '60px',
+    },
   },
   counter: {
     margin: theme.spacing(1),
@@ -24,10 +27,10 @@ const styles = (theme) => ({
 });
 
 const numberStyle = {
-  width: 30,
-  height: 50,
-  fontSize: '2rem',
-  borderRadius: '6px',
+  width: 20,
+  height: 40,
+  fontSize: '1.5rem',
+  borderRadius: '4px',
   marginLeft: '0.3rem',
   marginTop: '0.3rem',
   background: 'rgba(0, 0, 0, 0.75)',
@@ -35,9 +38,9 @@ const numberStyle = {
 
 const nonNumberStyle = {
   width: 20,
-  height: 60,
-  fontSize: '2rem',
-  borderRadius: '6px',
+  height: 50,
+  fontSize: '1.5rem',
+  borderRadius: '4px',
   marginRight: '0.2rem',
   paddingTop: '0.6rem',
   paddingLeft: '0.4rem',
@@ -75,7 +78,7 @@ const ScoreCounter = (props) => {
   }, [totalScores, totalGames]);
 
   return (
-    <Box component="div" className={classes.container} width={1} elevation={2}>
+    <Box component="div" className={classes.container} width={1} elevation={2} p={1}>
       {totalScores && totalGames && (
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
           <Typography variant="h4" component="h4" align="center">
@@ -83,8 +86,8 @@ const ScoreCounter = (props) => {
           </Typography>
           <Box component="div" className={classes.counter}>
             <FlipNumbers
-              height={60}
-              width={42}
+              height={50}
+              width={32}
               color="white"
               background=""
               play
@@ -99,8 +102,8 @@ const ScoreCounter = (props) => {
           </Typography>
           <Box component="div" className={classes.counter}>
             <FlipNumbers
-              height={60}
-              width={42}
+              height={50}
+              width={32}
               color="white"
               background=""
               play
@@ -111,7 +114,10 @@ const ScoreCounter = (props) => {
             />
           </Box>
           <Typography variant="h4" component="h4" align="center">
-            games and counting!
+            games
+          </Typography>
+          <Typography variant="h4" component="h4" align="center">
+            ...and counting!
           </Typography>
         </Box>
       )}

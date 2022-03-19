@@ -112,7 +112,7 @@ const SelectGame = (props) => {
   }, [props.location]);
 
   return (
-    <Box component="div" mt={5}>
+    <Box component="div">
       <Typography variant="h4" component="h4" align="center">
         Find a Game
       </Typography>

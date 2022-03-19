@@ -33,7 +33,7 @@ const RecentlyAddedGames = (props) => {
   }, []);
 
   return (
-    <Box component="div" width={1} mt={5}>
+    <Box component="div" width={1}>
       {props.data.newGames.length > 0 && (
         <Box component="div">
           <Typography variant="h4" component="h4" align="center">

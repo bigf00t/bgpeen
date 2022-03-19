@@ -14,9 +14,20 @@ import {
   LinearScale,
   Title,
   Tooltip,
+  Legend,
 } from 'chart.js';
 
-ChartJS.register(LineElement, Filler, PointElement, CategoryScale, LinearScale, Title, Tooltip, annotationPlugin);
+ChartJS.register(
+  LineElement,
+  Filler,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  annotationPlugin
+);
 
 const Graph = (props) => {
   const getScoreColor = (percentile) => {
@@ -71,6 +82,23 @@ const Graph = (props) => {
       },
       tooltip: {
         usePointStyle: true,
+        callbacks: {
+          title: function (context) {
+            return ;
+          },
+          label: function (context) {
+            return ` Score: ${context.parsed.x} - Count: ${context.parsed.y}`;
+          },
+        },
+      },
+      legend: {
+        display: false,
+        labels: {
+          color: props.theme.palette.text.primary,
+          font: {
+            size: 16,
+          },
+        },
       },
     },
   };
@@ -83,11 +111,16 @@ const Graph = (props) => {
 
   const labels = getDataFromResult().map((item) => item.x, []);
 
+  const getLabelText = () =>
+    `${!props.result.playerCount ? 'All' : 'Filtered'} Scores - Total ${props.result.scoreCount} - Avg ${
+      props.result.mean
+    }`;
+
   const data = {
     labels,
     datasets: [
       {
-        label: 'Scores',
+        label: getLabelText(),
         data: getDataFromResult().map((item) => item.y, []),
         backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
         borderColor: props.theme.palette.graph.border[props.theme.palette.mode],
@@ -103,6 +136,7 @@ const Graph = (props) => {
 };
 
 Graph.propTypes = {
+  label: PropTypes.string,
   result: PropTypes.object,
   score: PropTypes.any,
   percentile: PropTypes.number,

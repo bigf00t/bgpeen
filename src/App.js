@@ -21,7 +21,7 @@ function App() {
           mode: 'dark',
           background: {
             default: '#303030',
-            paper: '#303030',
+            paper: '#282828',
           },
           graph: {
             background: {

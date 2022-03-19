@@ -17,7 +17,11 @@ import Autocomplete from '@mui/material/Autocomplete';
 import Typography from '@mui/material/Typography';
 
 const styles = (theme) => ({
-  root: {},
+  root: {
+    backgroundColor: '#282828',
+    padding: theme.spacing(2),
+    margin: theme.spacing(0, -2),
+  },
   select: {},
   textField: {},
   button: {
@@ -156,8 +160,16 @@ const Filters = (props) => {
   };
 
   return (
-    <Box component="div" m={2} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-      <Typography component="h5" variant="h5" align="center" mr={1}>
+    <Box
+      className={classes.root}
+      component="div"
+      m={2}
+      display="flex"
+      flexWrap="wrap"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Typography component="h5" variant="h5" align="center" m={1}>
         How good are you?
       </Typography>
       <FormGroup row className={classes.formGroup}>

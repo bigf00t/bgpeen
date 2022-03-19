@@ -14,6 +14,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import Filters from './Filters';
 import Graph from './Graph';
@@ -34,24 +35,32 @@ const styles = (theme) => ({
       opacity: 0.75,
     },
   },
+  details: {
+    backgroundColor: '#282828',
+  },
   card: {
     margin: theme.spacing(1),
   },
   imageWrapper: {
-    margin: theme.spacing(0, 0, 0, 0),
-    maxWidth: 100,
-    maxHeight: 100,
+    margin: theme.spacing(0, 2, 0, 2),
+    maxWidth: 150,
+    // maxHeight: 100,
   },
-  image: {},
+  image: {
+    height: '150px !important',
+    width: '150px !important',
+    objectFit: 'scale-down !important',
+  },
   title: {
-    margin: theme.spacing(0, 0, 0, 2),
+    margin: theme.spacing(2, 2, 0, 2),
   },
-  credit: {
-    padding: theme.spacing(2),
-  },
+  credit: {},
   arrow: {
     top: 2,
     position: 'relative',
+  },
+  progress: {
+    // color: theme.palette.action.active,
   },
 });
 
@@ -197,7 +206,11 @@ const Result = (props) => {
 
   // No data loaded
   if (!result) {
-    return <div />;
+    return (
+      <Box component="div" height="50vh" justifyContent="center" w={1} display="flex" m={4} alignItems="center">
+        <CircularProgress size={60} className={classes.progress} color="inherit" />
+      </Box>
+    );
   }
 
   document.title = `Good at ${props.data.game.name}
@@ -225,19 +238,17 @@ const Result = (props) => {
             {props.data.game.name}
           </Link>
         </Typography>
-        <Typography mt={2} ml={8} component="h4" variant="h4" align="center">
-          {result.scoreCount} Scores - Average {result.mean}
-        </Typography>
       </Box>
       <Filters filters={filters} />
+      <Typography mt={2} component="h4" variant="h4" align="center">
+        {result.scoreCount} Scores - Average {result.mean}
+      </Typography>
       {filters && filters.score && (
-        <Box component="div">
+        <Box component="div" mt={2}>
           <Box component="div" mb={2} justifyContent="center" alignItems="center">
             <Typography component="div" align="center" className={classes.credit}>
               {filters.score
-                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of ${
-                    result.scoreCount
-                  } valid scores.`
+                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of valid scores.`
                 : ''}
             </Typography>
             <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
@@ -246,16 +257,88 @@ const Result = (props) => {
           </Box>
         </Box>
       )}
-      <Graph result={result} score={filters.score} percentile={percentile}></Graph>
+      <Box mt={2} mb={2}>
+        <Graph result={result} score={filters.score} percentile={percentile}></Graph>
+      </Box>
       <Box mt={2}>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMore />}>
+          <AccordionSummary className={classes.details} expandIcon={<ExpandMore />}>
             <Typography align="center" variant="h5">
               See More Details
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails className={classes.details}>
             <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" width={1}>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Total Plays
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {props.data.game.totalPlays}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Usable Plays
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {props.data.game.totalPlays - props.data.game.unusablePlays}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Unusable Percent
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {((props.data.game.unusablePlays / props.data.game.totalPlays) * 100).toFixed(2)}%
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Remaining Plays to Load
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {props.data.game.remainingPlays}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Oldest Play
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {props.data.game.oldestPlayDate}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Newest Play
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {props.data.game.newestPlayDate}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography align="center" color="textSecondary" gutterBottom>
+                    Added Date
+                  </Typography>
+                  <Typography variant="h3" component="h3" align="center">
+                    {Date(props.data.game.addedDate.seconds * 1000).toLocaleString()}
+                  </Typography>
+                </CardContent>
+              </Card>
               <Card className={classes.card}>
                 <CardContent>
                   <Typography align="center" color="textSecondary" gutterBottom>
@@ -320,7 +403,7 @@ const Result = (props) => {
           </AccordionDetails>
         </Accordion>
       </Box>
-      <Typography component="div" align="center" className={classes.credit}>
+      <Typography component="div" align="center" className={classes.credit} mt={2}>
         {'Scores provided by '}
         <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
           boardgamegeek.com
