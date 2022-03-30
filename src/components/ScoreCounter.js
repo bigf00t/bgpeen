@@ -27,7 +27,7 @@ const styles = (theme) => ({
 });
 
 const numberStyle = {
-  width: 20,
+  width: 24,
   height: 40,
   fontSize: '1.5rem',
   borderRadius: '4px',
@@ -37,13 +37,13 @@ const numberStyle = {
 };
 
 const nonNumberStyle = {
-  width: 20,
-  height: 50,
+  width: 26,
+  height: 48,
   fontSize: '1.5rem',
   borderRadius: '4px',
   marginRight: '0.2rem',
   paddingTop: '0.6rem',
-  paddingLeft: '0.4rem',
+  paddingLeft: '0.6rem',
   background: 'rgba(0, 0, 0, 0.75)',
 };
 
@@ -87,7 +87,7 @@ const ScoreCounter = (props) => {
           <Box component="div" className={classes.counter}>
             <FlipNumbers
               height={50}
-              width={32}
+              width={36}
               color="white"
               background=""
               play
@@ -103,7 +103,7 @@ const ScoreCounter = (props) => {
           <Box component="div" className={classes.counter}>
             <FlipNumbers
               height={50}
-              width={32}
+              width={36}
               color="white"
               background=""
               play
@@ -117,7 +117,7 @@ const ScoreCounter = (props) => {
             games
           </Typography>
           <Typography variant="h4" component="h4" align="center">
-            ...and counting!
+            &nbsp;...and counting!
           </Typography>
         </Box>
       )}

@@ -83,12 +83,8 @@ const Graph = (props) => {
       tooltip: {
         usePointStyle: true,
         callbacks: {
-          title: function (context) {
-            return ;
-          },
-          label: function (context) {
-            return ` Score: ${context.parsed.x} - Count: ${context.parsed.y}`;
-          },
+          title: () => '',
+          label: (context) => ` Score: ${context.parsed.x} - Count: ${context.parsed.y}`,
         },
       },
       legend: {
@@ -120,7 +116,7 @@ const Graph = (props) => {
     labels,
     datasets: [
       {
-        label: getLabelText(),
+        // label: getLabelText(),
         data: getDataFromResult().map((item) => item.y, []),
         backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
         borderColor: props.theme.palette.graph.border[props.theme.palette.mode],

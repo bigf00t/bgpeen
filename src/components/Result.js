@@ -240,15 +240,20 @@ const Result = (props) => {
         </Typography>
       </Box>
       <Filters filters={filters} />
-      <Typography mt={2} component="h4" variant="h4" align="center">
-        {result.scoreCount} Scores - Average {result.mean}
-      </Typography>
+      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" mt={2}>
+        <Typography m={2} component="h4" variant="h4" align="center">
+          Scores - {result.scoreCount}
+        </Typography>
+        <Typography m={2} component="h4" variant="h4" align="center">
+          Average - {result.mean}
+        </Typography>
+      </Box>
       {filters && filters.score && (
         <Box component="div" mt={2}>
           <Box component="div" mb={2} justifyContent="center" alignItems="center">
             <Typography component="div" align="center" className={classes.credit}>
               {filters.score
-                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of valid scores.`
+                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`
                 : ''}
             </Typography>
             <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
@@ -257,7 +262,7 @@ const Result = (props) => {
           </Box>
         </Box>
       )}
-      <Box mt={2} mb={2}>
+      <Box>
         <Graph result={result} score={filters.score} percentile={percentile}></Graph>
       </Box>
       <Box mt={2}>
