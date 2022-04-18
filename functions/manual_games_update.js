@@ -30,9 +30,9 @@ exports.manualGamesUpdate = (games) => {
               totalScores: allScoresResult ? allScoresResult.scoreCount : 0,
               mean: allScoresResult ? allScoresResult.mean : 0,
               // hasNoPlays: game.totalPlays === 0,
-              // dateAdded: admin.firestore.FieldValue.deconste(),
-              // startDate: admin.firestore.FieldValue.deconste(),
-              // isNew: admin.firestore.FieldValue.deconste(),
+              // dateAdded: admin.firestore.FieldValue.delete(),
+              // startDate: admin.firestore.FieldValue.delete(),
+              // isNew: admin.firestore.FieldValue.delete(),
             });
           });
 
@@ -58,9 +58,9 @@ exports.manualGamesUpdate = (games) => {
         //       maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
         //       minDate: _.defaultTo(game.minDate, ''),
         //       addedDate: _.defaultTo(game.addedDate, now),
-        //       // dateAdded: admin.firestore.FieldValue.deconste(),
+        //       // dateAdded: admin.firestore.FieldValue.delete(),
         //       playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
-        //       // startDate: admin.firestore.FieldValue.deconste(),
+        //       // startDate: admin.firestore.FieldValue.delete(),
         //     });
         //   });
       })

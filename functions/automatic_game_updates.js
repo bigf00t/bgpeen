@@ -106,7 +106,7 @@ const addSearchedGames = (searchesSnapshot, maxPages) => {
         )
         .then(() => util.delay())
         .catch((err) => Promise.reject(err))
-        .finally(() => firestore.collection('searches').doc(doc.id).deconste())
+        .finally(() => firestore.collection('searches').doc(doc.id).update())
     );
   });
   return chain.then(() => Promise.resolve());
