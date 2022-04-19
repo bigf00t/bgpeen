@@ -13,7 +13,8 @@ dayjs.extend(duration);
 exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorical = false) =>
   firestore
     .collection('searches')
-    .limit(50)
+    .where('completed', '!=', true)
+    .limit(maxGames)
     .get()
     .then((searchesSnapshot) => {
       if (searchesSnapshot.size > 0) {
@@ -91,23 +92,23 @@ const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
   return chain.then(() => Promise.resolve());
 };
 
-const addSearchedGames = (searchesSnapshot, maxPages) => {
-  let chain = Promise.resolve();
-  searchesSnapshot.forEach((doc) => {
-    chain = chain.then(() =>
-      add_game
-        .addGame(doc.data().name, true)
-        .then((newGame) => util.delay(newGame))
-        .then((newGame) =>
-          update_plays
-            .updateGamePlays(newGame, maxPages)
-            .then((plays) => update_results.updateResults(newGame, plays, false))
-            .catch((err) => Promise.reject(err))
-        )
-        .then(() => util.delay())
-        .catch((err) => Promise.reject(err))
-        .finally(() => firestore.collection('searches').doc(doc.id).update())
-    );
+const addSearchedGames = async (searchesSnapshot, maxPages) => {
+  await searchesSnapshot.forEach(async (doc) => {
+    try {
+      const newGame = await add_game.addGame(doc.data().term, true);
+      await util.delay();
+
+      const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
+      await update_results.updateResults(newGame, newPlays, false);
+
+      firestore.collection('searches').doc(doc.id).update({ completed: true, succeeded: true });
+      await util.delay();
+    } catch (e) {
+      console.error(e);
+      firestore.collection('searches').doc(doc.id).update({ completed: true, succeeded: false });
+      await util.delay();
+    }
   });
-  return chain.then(() => Promise.resolve());
+
+  return Promise.resolve();
 };

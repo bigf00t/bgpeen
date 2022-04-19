@@ -91,7 +91,9 @@ const SelectGame = (props) => {
   const handleAddClick = async () => {
     // TODO: Should be action?
     await addDoc(collection(db, 'searches'), {
-      name: gameText,
+      term: gameText,
+      completed: false,
+      date: new Date(),
     });
 
     setGame(null);
