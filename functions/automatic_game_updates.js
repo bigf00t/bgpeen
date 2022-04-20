@@ -1,6 +1,7 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
+const _ = require('lodash');
 const util = require('./util');
 const add_game = require('./add_game');
 const update_plays = require('./update_plays');
@@ -93,22 +94,23 @@ const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
 };
 
 const addSearchedGames = async (searchesSnapshot, maxPages) => {
-  await searchesSnapshot.forEach(async (doc) => {
-    try {
-      const newGame = await add_game.addGame(doc.data().term, true);
-      await util.delay();
+  return Promise.all(
+    _.map(util.docsToArray(searchesSnapshot), async (search) => {
+      try {
+        const newGame = await add_game.addGame(search.term, true);
+        await util.delay();
 
-      const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
-      await update_results.updateResults(newGame, newPlays, false);
+        const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
+        await update_results.updateResults(newGame, newPlays, false);
 
-      firestore.collection('searches').doc(doc.id).update({ completed: true, succeeded: true });
-      await util.delay();
-    } catch (e) {
-      console.error(e);
-      firestore.collection('searches').doc(doc.id).update({ completed: true, succeeded: false });
-      await util.delay();
-    }
-  });
+        firestore.collection('searches').doc(search.id).update({ completed: true, succeeded: true });
+      } catch (e) {
+        console.error(e);
+        firestore.collection('searches').doc(search.id).update({ completed: true, succeeded: false });
+      }
 
-  return Promise.resolve();
+      await util.delay();
+      return Promise.resolve();
+    })
+  );
 };

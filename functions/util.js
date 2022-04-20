@@ -8,7 +8,7 @@ exports.docsToArray = (snapshot) => {
 
   snapshot.forEach((doc) => {
     if (!_.isEmpty(doc.data())) {
-      array.push(doc.data());
+      array.push({ id: doc.id, ...doc.data() });
     }
   });
 
