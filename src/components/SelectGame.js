@@ -39,9 +39,9 @@ const styles = (theme) => ({
 });
 
 const SelectGame = (props) => {
-  const [game, setGame] = useState(null);
-  const [gameText, setGameText] = useState(null);
-  const [added, setAdded] = useState(false);
+  const [game, setGame] = useState('');
+  const [gameText, setGameText] = useState('');
+  const [addedGame, setAddedGame] = useState('');
   const [gameHighlightValue, setGameHighlightValue] = useState('');
 
   let navigate = useNavigate();
@@ -60,7 +60,7 @@ const SelectGame = (props) => {
 
   const handleGameBlur = () => {
     setGame(gameText);
-    setAdded(false);
+    setAddedGame('');
   };
 
   const handleGameKeyDown = (event) => {
@@ -96,9 +96,9 @@ const SelectGame = (props) => {
       date: new Date(),
     });
 
-    setGame(null);
-    setGameText(null);
-    setAdded(true);
+    setAddedGame(gameText);
+    setGame('');
+    setGameText('');
   };
 
   // componentDidMount
@@ -110,7 +110,7 @@ const SelectGame = (props) => {
 
   // componentDidUpdate game
   useEffect(() => {
-    setAdded(false);
+    setAddedGame('');
   }, [props.location]);
 
   return (
@@ -150,26 +150,29 @@ const SelectGame = (props) => {
             }}
           />
         </FormControl>
-        {!game || game.id ? (
-          ''
-        ) : (
+        {gameText && !gameHighlightValue && !addedGame ? (
           <FormControl className={classes.formControl}>
-            <Button
-              className={classes.button}
-              variant="contained"
-              color="primary"
-              disabled={added}
-              onClick={handleAddClick}
-            >
+            <Button className={classes.button} variant="contained" color="primary" onClick={handleAddClick}>
               Add Game
             </Button>
           </FormControl>
+        ) : (
+          ''
         )}
       </FormGroup>
-      {added ? (
+      {gameText && !gameHighlightValue && !addedGame ? (
         <Box component="div" className={classes.message}>
-          Game has been added to the queue, but it could take up to 10 minutes for score data to be available. <br />
-          Please wait and refresh in a little while. Thanks!
+          No games were found matching your search term. <br />
+          Enter the exact name (including punctuation) or BGG ID of a game and press Add Game.
+        </Box>
+      ) : (
+        ''
+      )}
+      {addedGame ? (
+        <Box component="div" className={classes.message}>
+          {addedGame} has been added to the queue, but it could take up to 10 minutes for the data to be available.{' '}
+          <br />
+          Please wait and refresh the site in a little while. Thanks!
         </Box>
       ) : (
         ''
