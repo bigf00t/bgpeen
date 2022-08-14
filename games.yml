@@ -8,6 +8,7 @@ games
 -addedDate: new Date()
 -playerScores
 -image
+-lastLoadedDate
 
 play-details
 -totalPlays: 0,

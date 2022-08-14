@@ -19,7 +19,7 @@ import Typography from '@mui/material/Typography';
 const styles = (theme) => ({
   root: {
     backgroundColor: '#282828',
-    // 
+    //
     // margin: theme.spacing(0, -2),
   },
   select: {},
@@ -99,7 +99,7 @@ const Filters = (props) => {
   };
 
   const getValidPlayerPlaces = () => {
-    return props.data.game && players ? _.range(1, players + 1) : [];
+    return props.data.game && players ? _.range(1, parseInt(players) + 1) : [];
   };
 
   const handlePlaceChange = (event, newPlace) => {
@@ -198,7 +198,7 @@ const Filters = (props) => {
             value={players || null}
             onChange={handlePlayersChange}
             onHighlightChange={handlePlayersHighlightChange}
-            options={props.data.game.playerCounts}
+            options={props.data.game.playerCounts.split(',')}
             fullWidth
             getOptionLabel={(count) => (count ? count.toString() : '')}
             renderInput={(params) => {

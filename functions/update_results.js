@@ -5,72 +5,74 @@ const { mean, mode, median, std } = require('mathjs');
 
 const _ = require('lodash');
 
-exports.updateResults = (game, newPlays) => {
+exports.updateResults = async (game, newPlays) => {
   console.info('-'.repeat(100));
   console.info(`Updating results for ${game.name}`);
 
   const resultsRef = firestore.collection('results').doc(game.id);
+  const detailsRef = firestore.collection('details').doc(game.id);
 
-  return resultsRef
-    .get()
-    .then((resultsSnapshot) => {
-      const existingResults = resultsSnapshot.data();
-      const existingAllScoreCount = existingResults
-        ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
-        : 0;
-      const resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
-      const validPlays = getCleanPlays(newPlays);
-      const rawResults = addPlaysToResults(validPlays, resultsToAddTo);
+  const resultsSnapshot = await resultsRef.get();
+  const detailsSnapshot = await detailsRef.get();
 
-      // We only want results with scores and valid player counts
-      const results = _(rawResults)
-        .filter(
-          (result) =>
-            !_.isEmpty(result.scores) &&
-            result.playerCount >= game.minplayers &&
-            result.playerCount <= game.maxplayers &&
-            result.playerPlace
-        )
-        .map((result) => addStatsToResult(result))
-        .value();
+  const existingResults = resultsSnapshot.data();
+  const details = detailsSnapshot.data();
 
-      // No valid results
-      if (results.length === 0) {
-        return Promise.reject('No valid results found!');
-      }
+  const existingAllScoreCount = existingResults
+    ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
+    : 0;
+  const resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
+  const validPlays = getCleanPlays(newPlays);
+  const rawResults = addPlaysToResults(validPlays, resultsToAddTo);
 
-      const playerCounts = getPlayersCounts(results);
-      const playerCountResults = [];
+  // We only want results with scores and valid player counts
+  const results = _(rawResults)
+    .filter(
+      (result) =>
+        !_.isEmpty(result.scores) &&
+        result.playerCount >= details.minplayers &&
+        result.playerCount <= details.maxplayers &&
+        result.playerPlace
+    )
+    .map((result) => addStatsToResult(result))
+    .value();
 
-      _.forEach(playerCounts, (playerCount) => {
-        const playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
-        playerCountResults.push(playerCountResult);
-        results.push(playerCountResult);
-      });
+  if (results.length === 0) {
+    console.log('No valid results found!');
+    return;
+  }
 
-      const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
-      const newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
+  const playerCounts = getPlayersCounts(results);
+  const playerCountResults = [];
 
-      console.info(`Adding ${newScoresCount} new scores to results`);
+  _.forEach(playerCounts, (playerCount) => {
+    const playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
+    playerCountResults.push(playerCountResult);
+    results.push(playerCountResult);
+  });
 
-      results.push(allScoresResult);
+  const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
+  const newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
 
-      return resultsRef
-        .set(
-          {
-            results: results,
-          },
-          { merge: true }
-        )
-        .then(() =>
-          firestore.collection('games').doc(game.id).update({
-            totalScores: allScoresResult.scoreCount,
-            mean: allScoresResult.mean,
-            playerCounts: playerCounts,
-          })
-        );
-    })
-    .catch((error) => Promise.reject(error));
+  console.info(`Adding ${newScoresCount} new scores to results`);
+
+  results.push(allScoresResult);
+
+  await resultsRef.set(
+    {
+      results: results,
+    },
+    { merge: true }
+  );
+
+  await firestore
+    .collection('games')
+    .doc(game.id)
+    .update({
+      totalScores: allScoresResult.scoreCount,
+      mean: allScoresResult.mean,
+      playerCounts: playerCounts.join(','),
+    });
 };
 
 const getPlayersCounts = (results) =>

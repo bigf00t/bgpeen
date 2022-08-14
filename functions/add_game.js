@@ -19,7 +19,8 @@ exports.addGame = async (searchTerm, exact) => {
     const existingGamesByNameSnapshot = await firestore.collection('games').where('name', '==', searchTerm).get();
 
     if (existingGamesByNameSnapshot.size > 0) {
-      return Promise.reject('Game already exists');
+      console.log('Game already exists');
+      return;
     }
 
     // eslint-disable-next-line prettier/prettier
@@ -34,7 +35,8 @@ exports.addGame = async (searchTerm, exact) => {
     });
 
     if (json.items.item === undefined) {
-      return Promise.reject('No search results found');
+      console.log('No search results found');
+      return;
     }
 
     // Use the newest result
@@ -47,16 +49,13 @@ exports.addGame = async (searchTerm, exact) => {
           )[0]
         : json.items.item;
 
-    // if (item.name.$.value.replace(':', '').toUpperCase() !== searchTerm.toUpperCase()) {
-    //   return Promise.reject(`Found a result, but it did not match your search: ${item.name.$.value}`);
-    // }
-
     gameId = foundGame.$.id;
   }
 
   const gameByIdSnapshot = await firestore.collection('games').doc(gameId).get();
   if (gameByIdSnapshot.exists) {
-    return Promise.reject('Game already exists');
+    console.log('Game already exists');
+    return;
   }
 
   await util.delay();
@@ -95,6 +94,24 @@ exports.addGame = async (searchTerm, exact) => {
     name: name,
     thumbnail: thumbnail,
     image: image,
+    popularity: 0,
+    totalScores: 0,
+    mean: 0,
+    addedDate: new Date(),
+    playerCounts: '',
+    totalPlays: 0,
+    unusablePlays: 0,
+    remainingPlays: 0,
+    newestPlayDate: '',
+    oldestPlayDate: '',
+    maxDate: '',
+    minDate: '',
+    hasMinPlays: false,
+    hasNoPlays: true,
+    playsLastUpdated: null,
+  };
+
+  const newDetails = {
     bggThumbnail: item.thumbnail._text,
     bggImage: item.image._text,
     description: item.description._text,
@@ -103,27 +120,13 @@ exports.addGame = async (searchTerm, exact) => {
     maxplayers: parseInt(item.maxplayers.$.value),
     playingtime: parseInt(item.playingtime.$.value),
     suggestedplayers: suggestedplayers,
-    popularity: 0,
-    totalPlays: 0,
-    totalScores: 0,
-    mean: 0,
-    unusablePlays: 0,
-    remainingPlays: 0,
-    addedDate: new Date(),
-    newestPlayDate: '',
-    oldestPlayDate: '',
-    maxDate: '',
-    minDate: '',
-    hasMinPlays: false,
-    hasNoPlays: true,
-    playerCounts: [],
   };
 
   console.info(`Adding ${newGame.name} (${newGame.id})`);
 
-  return firestore
-    .collection('games')
-    .doc(newGame.id)
-    .set(newGame)
-    .then(() => newGame);
+  await firestore.collection('games').doc(newGame.id).set(newGame);
+
+  await firestore.collection('details').doc(newGame.id).set(newDetails);
+
+  return newGame;
 };
