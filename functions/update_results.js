@@ -18,12 +18,14 @@ exports.updateResults = async (game, newPlays) => {
   const existingResults = resultsSnapshot.data();
   const details = detailsSnapshot.data();
 
-  const existingAllScoreCount = existingResults
-    ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
-    : 0;
+  // const existingAllScoreCount = existingResults
+  //   ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
+  //   : 0;
   const resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
   const validPlays = getCleanPlays(newPlays);
+  // console.log(validPlays);
   const rawResults = addPlaysToResults(validPlays, resultsToAddTo);
+  // console.log(rawResults);
 
   // We only want results with scores and valid player counts
   const results = _(rawResults)
@@ -36,6 +38,7 @@ exports.updateResults = async (game, newPlays) => {
     )
     .map((result) => addStatsToResult(result))
     .value();
+  // console.log(results);
 
   if (results.length === 0) {
     console.log('No valid results found!');
@@ -51,9 +54,13 @@ exports.updateResults = async (game, newPlays) => {
     results.push(playerCountResult);
   });
 
-  const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
-  const newScoresCount = allScoresResult.scoreCount - existingAllScoreCount;
+  // console.log(playerCountResults);
 
+  const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
+  const newScoresCount = allScoresResult.scoreCount - game.totalScores;
+  // console.log(allScoresResult);
+
+  // TODO: Figure out how this can be negative
   console.info(`Adding ${newScoresCount} new scores to results`);
 
   results.push(allScoresResult);

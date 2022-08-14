@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { db } from '../fire';
 
 export const loadGameNames = () => async (dispatch) => {
-  const q = query(collection(db, 'games'), where('hasNoPlays', '==', false), orderBy('name', 'asc'));
+  const q = query(collection(db, 'games'), where('totalScores', '>', 0));
   const querySnapshot = await getDocs(q);
 
   const gameNames = [];
@@ -18,9 +18,12 @@ export const loadGameNames = () => async (dispatch) => {
       });
     }
   });
+
+  const sortedGameNames = _.sortBy(gameNames, 'name');
+
   dispatch({
     type: LOAD_GAME_NAMES,
-    payload: gameNames,
+    payload: sortedGameNames,
   });
 };
 
@@ -39,13 +42,13 @@ export const loadNewGames = () => async (dispatch) => {
 };
 
 export const loadSortedGames = async (sortBy) => {
-  const q = query(collection(db, 'games'), where('hasNoPlays', '==', false), orderBy(sortBy, 'desc'), limit(10));
+  const q = query(collection(db, 'games'), where('totalScores', '>', 0), limit(10));
   const querySnapshot = await getDocs(q);
 
-  const sortedGames = [];
+  const games = [];
   querySnapshot.forEach((doc) => {
     if (!_.isEmpty(doc.data())) {
-      sortedGames.push({
+      games.push({
         id: doc.data().id,
         name: doc.data().name,
         totalScores: doc.data().totalScores,
@@ -56,6 +59,9 @@ export const loadSortedGames = async (sortBy) => {
       });
     }
   });
+
+  const sortedGames = _.sortBy(games, sortBy).reverse();
+
   return sortedGames;
 };
 

@@ -99,16 +99,6 @@ exports.addGame = async (searchTerm, exact) => {
     mean: 0,
     addedDate: new Date(),
     playerCounts: '',
-    totalPlays: 0,
-    unusablePlays: 0,
-    remainingPlays: 0,
-    newestPlayDate: '',
-    oldestPlayDate: '',
-    maxDate: '',
-    minDate: '',
-    hasMinPlays: false,
-    hasNoPlays: true,
-    playsLastUpdated: null,
   };
 
   const newDetails = {
@@ -122,11 +112,28 @@ exports.addGame = async (searchTerm, exact) => {
     suggestedplayers: suggestedplayers,
   };
 
+  const newPlays = {
+    totalPlays: 0,
+    unusablePlays: 0,
+    remainingPlays: 0,
+    newestPlayDate: '',
+    oldestPlayDate: '',
+    maxDate: '',
+    minDate: '',
+    hasMinPlays: false,
+    hasNoPlays: true,
+    playsLastUpdated: null,
+    minDatePlayIds: '',
+    maxDatePlayIds: '',
+  };
+
   console.info(`Adding ${newGame.name} (${newGame.id})`);
 
   await firestore.collection('games').doc(newGame.id).set(newGame);
 
   await firestore.collection('details').doc(newGame.id).set(newDetails);
+
+  await firestore.collection('plays').doc(newGame.id).set(newPlays);
 
   return newGame;
 };

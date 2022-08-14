@@ -11,107 +11,101 @@ const dayjs = require('dayjs');
 const duration = require('dayjs/plugin/duration');
 dayjs.extend(duration);
 
-exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorical = false) =>
-  firestore
-    .collection('searches')
-    .where('completed', '!=', true)
-    .limit(maxGames)
-    .get()
-    .then((searchesSnapshot) => {
-      if (searchesSnapshot.size > 0) {
-        return addSearchedGames(searchesSnapshot, maxPages);
-      } else {
-        const oneMonthAgo = dayjs().subtract(1, 'month').toDate();
-        const oneWeekAgo = dayjs().subtract(1, 'week').toDate();
+exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 80, includeHistorical = false) => {
+  const searchesSnapshot = await firestore.collection('searches').where('completed', '!=', true).limit(maxGames).get();
 
-        let queries = [
-          firestore
-            .collection('games')
-            .where('playsLastUpdated', '<', oneWeekAgo)
-            .where('hasMinPlays', '==', false)
-            .orderBy('playsLastUpdated', 'asc'),
-          firestore.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
-          // firestore.collection('games').where('hasNoPlays', '==', true),
-        ];
+  if (searchesSnapshot.size > 0) {
+    const searches = util.docsToArray(searchesSnapshot);
+    await addSearchedGames(searches, maxPages);
+    return;
+  }
 
-        if (includeHistorical) {
-          queries = queries.concat([
-            firestore.collection('games').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
-            firestore.collection('games').orderBy('playsLastUpdated', 'asc'),
-          ]);
-        }
+  const oneMonthAgo = dayjs().subtract(1, 'month').toDate();
+  const oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
-        let chain = Promise.resolve();
-        queries.forEach((query) => {
-          chain = chain.then((result) => {
-            if (result) {
-              // Already loaded a query
-              return Promise.resolve(true);
-            }
+  let queries = [
+    firestore
+      .collection('plays')
+      .where('playsLastUpdated', '<', oneWeekAgo)
+      .where('hasMinPlays', '==', false)
+      .orderBy('playsLastUpdated', 'asc'),
+    firestore.collection('plays').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
+    // firestore.collection('plays').where('hasNoPlays', '==', true),
+  ];
 
-            if (maxGames > 0) {
-              query = query.limit(maxGames);
-            }
+  if (includeHistorical) {
+    queries = queries.concat([
+      firestore.collection('plays').where('remainingPlays', '>', 0).orderBy('remainingPlays', 'asc'),
+      firestore.collection('plays').orderBy('playsLastUpdated', 'asc'),
+    ]);
+  }
 
-            return query.get().then((gamesSnapshot) => {
-              if (gamesSnapshot.size === 0) {
-                return Promise.resolve();
-              }
-              return updatePlaysForEligibleGames(gamesSnapshot, maxPages).then(() => Promise.resolve(true));
-            });
-          });
-        });
-        return chain.then((result) => {
-          if (!result) {
-            return Promise.reject('Did not find any games to update!');
-          }
-          return Promise.resolve();
-        });
-      }
-    });
+  // Execute queries in order, update based on the first one with results
+  for (let query of queries) {
+    if (maxGames > 0) {
+      query = query.limit(maxGames);
+    }
 
-const updatePlaysForEligibleGames = (gamesSnapshot, maxPages) => {
-  const startTime = new Date();
-  let chain = Promise.resolve();
-  gamesSnapshot.docs.forEach((doc, index) => {
-    chain = chain.then(() => {
-      console.info('='.repeat(100));
+    const gamePlaysSnapshot = await query.get();
 
-      const elapsedTime = dayjs.duration(dayjs().diff(startTime));
-      console.info(
-        `Updating game ${index + 1} of ${gamesSnapshot.size} - ${doc.data().name} (${
-          doc.data().id
-        }) - Elapsed time ${elapsedTime.format('HH:mm:ss')}`
-      );
+    if (gamePlaysSnapshot.size === 0) {
+      continue;
+    }
 
-      return update_plays
-        .updateGamePlays(doc.data(), maxPages)
-        .then((plays) => update_results.updateResults(doc.data(), plays, false))
-        .then(() => util.delay())
-        .catch((err) => Promise.reject(err));
-    });
-  });
-  return chain.then(() => Promise.resolve());
+    const gamePlays = util.docsToArray(gamePlaysSnapshot);
+
+    await updatePlaysForEligibleGames(gamePlays, maxPages);
+
+    return;
+  }
+
+  console.log('Did not find any games to add or update!');
 };
 
-const addSearchedGames = async (searchesSnapshot, maxPages) => {
-  return Promise.all(
-    _.map(util.docsToArray(searchesSnapshot), async (search) => {
-      try {
-        const newGame = await add_game.addGame(search.term, true);
-        await util.delay();
+const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
+  const startTime = new Date();
+  let gameNum = 0;
 
-        const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
-        await update_results.updateResults(newGame, newPlays, false);
+  for (const gamePlay of gamePlays) {
+    // gamePlay.id is added by util.docsToArray()
+    const gameSnapshot = await firestore.collection('games').doc(gamePlay.id).get();
+    const game = gameSnapshot.data();
 
-        firestore.collection('searches').doc(search.id).update({ completed: true, succeeded: true });
-      } catch (e) {
-        console.error(e);
-        firestore.collection('searches').doc(search.id).update({ completed: true, succeeded: false });
-      }
+    gameNum++;
 
-      await util.delay();
-      return Promise.resolve();
-    })
-  );
+    console.info('='.repeat(100));
+
+    const elapsedTime = dayjs.duration(dayjs().diff(startTime));
+    console.info(
+      `Updating game ${gameNum} of ${gamePlays.length} - ${game.name} (${game.id}) - Elapsed time ${elapsedTime.format(
+        'HH:mm:ss'
+      )}`
+    );
+
+    const newPlays = await update_plays.updateGamePlays(game, maxPages);
+
+    await update_results.updateResults(game, newPlays, false);
+
+    await util.delay();
+  }
+};
+
+const addSearchedGames = async (searches, maxPages) => {
+  for (const search of searches) {
+    const newGame = await add_game.addGame(search.term, true);
+
+    await util.delay();
+
+    if (newGame) {
+      const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
+      await update_results.updateResults(newGame, newPlays, false);
+    }
+
+    await firestore
+      .collection('searches')
+      .doc(search.id)
+      .update({ completed: true, succeeded: Boolean(newGame) });
+
+    await util.delay();
+  }
 };

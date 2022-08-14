@@ -32,19 +32,44 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     const gameDetailsRef = firestore.collection('details').doc(game.id);
     const gamePlaysRef = firestore.collection('plays').doc(game.id);
+    // const gamePlaysSnapshot = await gamePlaysRef.get();
 
-    batch.set(gamePlaysRef, {
-      totalPlays: game.totalPlays,
-      unusablePlays: game.unusablePlays,
-      remainingPlays: game.remainingPlays,
-      newestPlayDate: game.newestPlayDate,
-      oldestPlayDate: game.oldestPlayDate,
-      maxDate: game.maxDate,
-      minDate: game.minDate,
-      hasMinPlays: game.hasMinPlays,
-      hasNoPlays: game.hasNoPlays,
-      playsLastUpdated: game.playsLastUpdated,
-    });
+    // TODO: Calc min/max play ids
+
+    const minDatePlaysRef = firestore
+      .collection('games')
+      .doc(game.id)
+      .collection('plays')
+      .where('date', '==', game.minDate);
+
+    const minDatePlaysSnapshot = await minDatePlaysRef.get();
+    const minPlays = util.docsToArray(minDatePlaysSnapshot);
+    const minDatePlayIds = _.map(minPlays, (play) => play.id);
+
+    const maxDatePlaysRef = firestore
+      .collection('games')
+      .doc(game.id)
+      .collection('plays')
+      .where('date', '==', game.maxDate);
+
+    const maxDatePlaysSnapshot = await maxDatePlaysRef.get();
+    const maxPlays = util.docsToArray(maxDatePlaysSnapshot);
+    const maxDatePlayIds = _.map(maxPlays, (play) => play.id);
+
+    // batch.set(gamePlaysRef, {
+    //   minDatePlayIds: minDatePlayIds.join(','),
+    //   maxDatePlayIds: maxDatePlayIds.join(','),
+    //   totalPlays: game.totalPlays,
+    //   unusablePlays: game.unusablePlays,
+    //   remainingPlays: game.remainingPlays,
+    //   newestPlayDate: game.newestPlayDate,
+    //   oldestPlayDate: game.oldestPlayDate,
+    //   maxDate: game.maxDate,
+    //   minDate: game.minDate,
+    //   hasMinPlays: game.hasMinPlays,
+    //   hasNoPlays: game.hasNoPlays,
+    //   playsLastUpdated: game.playsLastUpdated,
+    // });
 
     // batch.set(gameDetailsRef, {
     //   bggThumbnail: game.bggThumbnail,
@@ -57,26 +82,18 @@ exports.manualGamesUpdate = async (gameIds) => {
     //   suggestedplayers: game.suggestedplayers,
     // });
 
-    // const bggThumbnail = game.bggThumbnail ?? game.thumbnail;
-    // const bggImage = game.bggImage ?? game.image;
-    // const thumbnail = await util.uploadGameImage('thumbnails', game.id, bggThumbnail);
-    // const image = await util.uploadGameImage('images', game.id, bggImage);
-
-    await batch.update(gameRef, {
-      totalPlays: admin.firestore.FieldValue.delete(),
-      unusablePlays: admin.firestore.FieldValue.delete(),
-      remainingPlays: admin.firestore.FieldValue.delete(),
-      newestPlayDate: admin.firestore.FieldValue.delete(),
-      oldestPlayDate: admin.firestore.FieldValue.delete(),
-      maxDate: admin.firestore.FieldValue.delete(),
-      minDate: admin.firestore.FieldValue.delete(),
-      hasMinPlays: admin.firestore.FieldValue.delete(),
-      hasNoPlays: admin.firestore.FieldValue.delete(),
-      playsLastUpdated: admin.firestore.FieldValue.delete(),
-    });
-
-    // await batch.update(gameRef, {
+    // batch.update(gameRef, {
     //   playerCounts: game.playerCounts.join(','),
+    //   totalPlays: admin.firestore.FieldValue.delete(),
+    //   unusablePlays: admin.firestore.FieldValue.delete(),
+    //   remainingPlays: admin.firestore.FieldValue.delete(),
+    //   newestPlayDate: admin.firestore.FieldValue.delete(),
+    //   oldestPlayDate: admin.firestore.FieldValue.delete(),
+    //   maxDate: admin.firestore.FieldValue.delete(),
+    //   minDate: admin.firestore.FieldValue.delete(),
+    //   hasMinPlays: admin.firestore.FieldValue.delete(),
+    //   hasNoPlays: admin.firestore.FieldValue.delete(),
+    //   playsLastUpdated: admin.firestore.FieldValue.delete(),
     //   bggThumbnail: admin.firestore.FieldValue.delete(),
     //   bggImage: admin.firestore.FieldValue.delete(),
     //   description: admin.firestore.FieldValue.delete(),
@@ -86,11 +103,7 @@ exports.manualGamesUpdate = async (gameIds) => {
     //   playingtime: admin.firestore.FieldValue.delete(),
     //   suggestedplayers: admin.firestore.FieldValue.delete(),
     // });
-
-    // await batch.update(gameResultsRef, {
-    //   playerCounts: admin.firestore.FieldValue.delete(),
-    // });
   }
 
-  batch.commit();
+  await batch.commit();
 };

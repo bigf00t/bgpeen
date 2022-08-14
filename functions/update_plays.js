@@ -9,150 +9,176 @@ const _ = require('lodash');
 
 const util = require('./util');
 
-exports.updateGamePlays = (game, maxPages) => {
-  const gameRef = firestore.collection('games').doc(game.id);
+exports.updateGamePlays = async (game, maxPages) => {
+  const gamePlaysRef = firestore.collection('plays').doc(game.id);
+  const gamePlaysSnapshot = await gamePlaysRef.get();
+  const gamePlays = gamePlaysSnapshot.data();
+
   console.info('-'.repeat(100));
   console.info(`Getting plays for ${game.name} (${game.id})`);
 
-  const playsUrl = getPlaysUrl(game);
+  const playsUrl = getPlaysUrl(game, gamePlays);
   console.info(`Using BGG API Url: ${playsUrl}`);
 
-  return updatePlaysRecursively(game, gameRef, playsUrl, maxPages)
-    .then((pageResults) => updateGame(game, gameRef, pageResults))
-    .catch((err) => Promise.reject(err));
+  const pageResults = await updatePlaysRecursively(game, gamePlays, playsUrl, maxPages);
+
+  const newPlays = await updateGamePlaysWithPageResults(game, gamePlays, gamePlaysRef, pageResults);
+
+  return newPlays;
 };
 
-const updateGame = (game, gameRef, pageResults) => {
+const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, pageResults) => {
   const plays = _.flatMap(pageResults, 'plays');
   const newUnusablePlayCount = _.reduce(pageResults, (sum, pageResult) => sum + pageResult.unusablePlays, 0);
   const pageResultsWithPlays = pageResults.filter((pageResult) => pageResult.plays.length > 0);
-  let newestPlayDate = game.newestPlayDate;
+
+  let newestPlayDate = gamePlays.newestPlayDate;
   let currentOldestPlayDate = '';
-  let oldestPlayDate = game.oldestPlayDate;
+  let oldestPlayDate = gamePlays.oldestPlayDate;
 
   if (pageResultsWithPlays.length > 0) {
     const newNewestPlayDate = pageResultsWithPlays[0].plays[0].date;
     newestPlayDate =
-      !game.newestPlayDate || dayjs(newNewestPlayDate).isAfter(game.newestPlayDate)
+      !gamePlays.newestPlayDate || dayjs(newNewestPlayDate).isAfter(gamePlays.newestPlayDate)
         ? newNewestPlayDate
-        : game.newestPlayDate;
+        : gamePlays.newestPlayDate;
 
     currentOldestPlayDate = pageResultsWithPlays.slice(-1)[0].plays.slice(-1)[0].date;
     oldestPlayDate =
-      !game.oldestPlayDate || dayjs(currentOldestPlayDate).isBefore(game.oldestPlayDate)
+      !gamePlays.oldestPlayDate || dayjs(currentOldestPlayDate).isBefore(gamePlays.oldestPlayDate)
         ? currentOldestPlayDate
-        : game.oldestPlayDate;
+        : gamePlays.oldestPlayDate;
   }
 
   const remainingPlays = pageResults.slice(-1)[0].remainingPlays;
-  const totalPlays = _.defaultTo(game.totalPlays, 0) + plays.length;
+  const totalPlays = _.defaultTo(gamePlays.totalPlays, 0) + plays.length;
 
-  console.info(
-    `Added ${plays.length} total plays for ${game.name} - ${remainingPlays} unloaded plays remaining on BGG`
-  );
+  console.info(`Parsed ${plays.length} total plays for ${game.name} - ${remainingPlays} plays remaining on BGG`);
 
-  return gameRef
-    .update({
-      unusablePlays: _.defaultTo(game.unusablePlays, 0) + newUnusablePlayCount,
-      remainingPlays: remainingPlays,
-      newestPlayDate: newestPlayDate,
-      oldestPlayDate: oldestPlayDate,
-      maxDate: remainingPlays === 0 ? '' : currentOldestPlayDate,
-      minDate: remainingPlays === 0 ? newestPlayDate : _.defaultTo(game.minDate, ''),
-      totalPlays: totalPlays,
-      hasMinPlays: totalPlays >= 10000,
-      hasNoPlays: totalPlays === 0,
-      playsLastUpdated: new Date(),
-    })
-    .then(() => Promise.resolve(plays));
+  const unusablePlays = _.defaultTo(gamePlays.unusablePlays, 0) + newUnusablePlayCount;
+  const minDate = remainingPlays === 0 ? newestPlayDate : _.defaultTo(gamePlays.minDate, '');
+  const maxDate = remainingPlays === 0 ? '' : currentOldestPlayDate;
+
+  const minDatePlayIds = getDatePlayIds(plays, minDate, gamePlays.minDate, gamePlays.minDatePlayIds);
+  const maxDatePlayIds = getDatePlayIds(plays, maxDate, gamePlays.maxDate, gamePlays.maxDatePlayIds);
+
+  const updatedGamePlays = {
+    unusablePlays: unusablePlays,
+    remainingPlays: remainingPlays,
+    newestPlayDate: newestPlayDate,
+    oldestPlayDate: oldestPlayDate,
+    minDate: minDate,
+    maxDate: maxDate,
+    minDatePlayIds: minDatePlayIds,
+    maxDatePlayIds: maxDatePlayIds,
+    totalPlays: totalPlays,
+    hasMinPlays: totalPlays >= 10000,
+    hasNoPlays: totalPlays === 0,
+    playsLastUpdated: new Date(),
+  };
+
+  await gamePlaysRef.update(updatedGamePlays);
+
+  return plays;
 };
 
-const getPlaysUrl = (game) =>
+const getDatePlayIds = (plays, newDate, oldDate, playIds) => {
+  if (newDate === '') {
+    return '';
+  }
+
+  const newMinDatePlayIds = _(plays)
+    .filter((play) => play.date === newDate)
+    .map((play) => play.id)
+    .value();
+
+  return newDate != oldDate ? newMinDatePlayIds.join(',') : playIds.split(',').concat(newMinDatePlayIds).join(',');
+};
+
+const getPlaysUrl = (game, gamePlays) =>
   `https://api.geekdo.com/xmlapi2/plays?id=${game.id}` +
-  `&mindate=${_.defaultTo(game.minDate, '')}` +
-  `&maxdate=${_.defaultTo(game.maxDate, '')}` +
+  `&mindate=${_.defaultTo(gamePlays.minDate, '')}` +
+  `&maxdate=${_.defaultTo(gamePlays.maxDate, '')}` +
   `&page=`;
 
-const updatePlaysRecursively = (game, gameRef, playsUrl, maxPages, page = 1) =>
-  updatePlaysPage(game, gameRef, playsUrl, page, maxPages)
-    .then((pageResult) => {
-      if (pageResult && pageResult.finished) {
-        // Hit the bottom of the stack
-        return Promise.resolve([pageResult]);
-      }
-      return util.delay(page + 1).then((nextPage) =>
-        updatePlaysRecursively(game, gameRef, playsUrl, maxPages, nextPage)
-          .then((pageResults) => {
-            // Returning pageResults back up the stack
-            // Make sure the pages are ordered newest to oldest
-            if (pageResult) {
-              pageResults.splice(0, 0, pageResult);
-            }
-            return Promise.resolve(pageResults);
-          })
-          .catch((err) => Promise.reject(err))
-      );
-    })
-    .catch((err) => Promise.reject(err));
+const updatePlaysRecursively = async (game, gamePlays, playsUrl, maxPages, page = 1) => {
+  const pageResult = await updatePlaysPage(game, gamePlays, playsUrl, page, maxPages);
 
-const updatePlaysPage = (game, gameRef, playsUrl, page, maxPages) =>
-  axios
-    .get(playsUrl + page)
-    .then((result) => {
-      const json = convert.xml2js(result.data, {
-        compact: true,
-        attributesKey: '$',
-      });
+  if (pageResult && pageResult.finished) {
+    // We hit the bottom of the stack
+    return [pageResult];
+  }
 
-      if (json.plays.play === undefined) {
-        console.info(`${game.name} - Page ${page} did not have any plays`);
-        return Promise.resolve({
-          unusablePlays: 0,
-          remainingPlays: 0,
-          plays: [],
-          finished: true,
-        });
-      }
+  await util.delay();
 
-      const cleanPlays = getCleanPlaysFromJson(json.plays.play);
+  const pageResults = await updatePlaysRecursively(game, gamePlays, playsUrl, maxPages, page + 1);
 
-      return getNonExistingPlays(game, gameRef, cleanPlays).then((plays) => {
-        const totalPlays = json.plays.$.total;
-        const totalPages = _.ceil(totalPlays / 100);
-        const actualTotalPages = _.min([maxPages, totalPages]);
-        const totalRemainingPages = actualTotalPages - page;
-        const finished = (maxPages > 0 && page >= maxPages) || totalRemainingPages == 0;
+  // Make sure the pages are ordered newest to oldest
+  if (pageResult) {
+    pageResults.splice(0, 0, pageResult);
+  }
 
-        // Get plays that don't exist in the db yet
-        const duplicatePlaysCount = cleanPlays.length - plays.length;
+  return pageResults;
+};
 
-        // This may be double-counting some invalid plays, but there's not much to be done
-        const unusablePlaysCount = json.plays.play.length - cleanPlays.length;
-        const remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
+const updatePlaysPage = async (game, gamePlays, playsUrl, page, maxPages) => {
+  const result = await axios.get(playsUrl + page);
 
-        console.info(
-          `${game.name} - Page ${page} of ${actualTotalPages} - ${
-            plays.length
-          } valid plays - ${unusablePlaysCount} invalid plays${
-            duplicatePlaysCount > 0 ? ` - ${duplicatePlaysCount} duplicate plays` : ''
-          }`
-        );
+  const json = convert.xml2js(result.data, {
+    compact: true,
+    attributesKey: '$',
+  });
 
-        const batch = firestore.batch();
+  if (json.plays.play === undefined) {
+    console.info(`${game.name} - Page ${page} did not have any plays`);
+    return Promise.resolve({
+      unusablePlays: 0,
+      remainingPlays: 0,
+      plays: [],
+      finished: true,
+    });
+  }
 
-        _.forEach(plays, (play) => batch.set(gameRef.collection('plays').doc(play.id), play));
+  const cleanPlays = getCleanPlaysFromJson(json.plays.play);
 
-        return batch.commit().then(() =>
-          Promise.resolve({
-            unusablePlays: unusablePlaysCount,
-            remainingPlays: remainingPlaysCount,
-            plays: plays,
-            finished: finished,
-          })
-        );
-      });
-    })
-    .catch((err) => Promise.reject(err));
+  const plays = getNonExistingPlays(gamePlays, cleanPlays);
+
+  const totalPlays = json.plays.$.total;
+  const totalPages = _.ceil(totalPlays / 100);
+  const actualTotalPages = _.min([maxPages, totalPages]);
+  const totalRemainingPages = actualTotalPages - page;
+  const finished = (maxPages > 0 && page >= maxPages) || totalRemainingPages == 0;
+
+  // Get plays that don't exist in the db yet
+  const duplicatePlaysCount = cleanPlays.length - plays.length;
+
+  // This may be double-counting some invalid plays, but there's not much to be done
+  const unusablePlaysCount = json.plays.play.length - cleanPlays.length;
+  const remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
+
+  console.info(
+    `${game.name} - Page ${page} of ${actualTotalPages} - ${
+      plays.length
+    } valid plays - ${unusablePlaysCount} invalid plays${
+      duplicatePlaysCount > 0 ? ` - ${duplicatePlaysCount} duplicate plays` : ''
+    }`
+  );
+
+  const batch = firestore.batch();
+
+  // _.forEach(plays, (play) => batch.set(gameRef.collection('plays').doc(play.id), play));
+
+  await batch.commit();
+
+  const pageResult = {
+    unusablePlays: unusablePlaysCount,
+    remainingPlays: remainingPlaysCount,
+    plays: plays,
+    finished: finished,
+  };
+
+  return pageResult;
+};
 
 // Make sure each play has at least one player, and each player has a score
 // TODO: Exclude plays where winner isn't person with highest score
@@ -185,20 +211,16 @@ const getPlayerUserIds = (players) =>
     .map((player) => player.userid)
     .value();
 
-const getNonExistingPlays = (game, gameRef, plays) => {
+const getNonExistingPlays = (gamePlays, plays) => {
   // When we're on the edge of the daterange, some duplicate records could sneak in
-  const possibleExistingPlays = _(plays)
-    .filter(
-      (play) => play.date === game.minDate || play.date === game.maxDate || (game.minDate === '' && game.maxDate === '')
-    )
-    .map((play) =>
-      gameRef
-        .collection('plays')
-        .doc(play.id)
-        .get()
-        .then((doc) => (doc.exists ? play.id : null))
-    )
-    .value();
+  //  || (gamePlays.minDate === '' && gamePlays.maxDate === '')
+  const minDatePlayIds = gamePlays.minDatePlayIds.split(',');
+  const maxDatePlayIds = gamePlays.maxDatePlayIds.split(',');
 
-  return Promise.all(possibleExistingPlays).then((results) => plays.filter((play) => !results.includes(play.id)));
+  return plays.filter(
+    (play) =>
+      (play.date !== gamePlays.minDate && play.date !== gamePlays.maxDate) ||
+      (play.date === gamePlays.minDate && !minDatePlayIds.includes(play.id)) ||
+      (play.date === gamePlays.maxDate && !maxDatePlayIds.includes(play.id))
+  );
 };

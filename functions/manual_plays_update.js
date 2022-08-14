@@ -7,19 +7,13 @@ const util = require('./util');
 const update_plays = require('./update_plays');
 const update_results = require('./update_results');
 
-exports.manualPlaysUpdate = (games, maxPages) =>
-  firestore
-    .collection('games')
-    .where('id', 'in', games)
-    .get()
-    .then((gamesSnapshot) =>
-      Promise.all(
-        _.map(util.docsToArray(gamesSnapshot), (game) =>
-          update_plays
-            .updateGamePlays(game, maxPages)
-            .then((plays) => update_results.updateResults(game, plays, false))
-            .catch((err) => Promise.reject(err))
-        )
-      )
-    )
-    .catch((err) => Promise.reject(err));
+exports.manualPlaysUpdate = async (gameIds, maxPages) => {
+  const gamesSnapshot = await firestore.collection('games').where('id', 'in', gameIds).get();
+
+  const games = util.docsToArray(gamesSnapshot);
+
+  for (const game of games) {
+    const newPlays = await update_plays.updateGamePlays(game, maxPages);
+    await update_results.updateResults(game, newPlays, false);
+  }
+};
