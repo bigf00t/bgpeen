@@ -31,6 +31,7 @@ exports.runAutomaticGameUpdates = (maxGames = 1, maxPages = 80, includeHistorica
             .where('hasMinPlays', '==', false)
             .orderBy('playsLastUpdated', 'asc'),
           firestore.collection('games').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
+          // firestore.collection('games').where('hasNoPlays', '==', true),
         ];
 
         if (includeHistorical) {

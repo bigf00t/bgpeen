@@ -19,8 +19,8 @@ import Typography from '@mui/material/Typography';
 const styles = (theme) => ({
   root: {
     backgroundColor: '#282828',
-    padding: theme.spacing(2),
-    margin: theme.spacing(0, -2),
+    // 
+    // margin: theme.spacing(0, -2),
   },
   select: {},
   textField: {},
@@ -163,7 +163,6 @@ const Filters = (props) => {
     <Box
       className={classes.root}
       component="div"
-      m={2}
       display="flex"
       flexWrap="wrap"
       justifyContent="center"

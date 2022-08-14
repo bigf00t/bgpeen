@@ -12,10 +12,16 @@
     "node": "16"
   },
   "dependencies": {
+    "@firebase/app": "^0.7.30",
+    "@firebase/app-compat": "^0.1.31",
+    "@firebase/component": "^0.5.17",
+    "@firebase/logger": "^0.3.3",
+    "@firebase/util": "^1.6.3",
     "axios": "^0.26.0",
     "dayjs": "^1.10.7",
     "firebase-admin": "^10.0.2",
-    "firebase-functions": "^3.18.1",
+    "firebase-functions": "^3.22.0",
+    "idb": "^7.0.1",
     "lodash": "^4.17.21",
     "mathjs": "^10.1.1",
     "xml-js": "^1.6.11"

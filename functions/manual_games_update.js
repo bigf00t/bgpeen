@@ -1,3 +1,4 @@
+// const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
@@ -5,65 +6,47 @@ const _ = require('lodash');
 
 const util = require('./util');
 
-exports.manualGamesUpdate = (games) => {
+exports.manualGamesUpdate = async (gameIds) => {
   let query = firestore.collection('games');
-  console.log(games);
+  // console.log(gameIds);
 
-  if (games && games.length > 0) {
-    query = query.where('id', 'in', games);
+  if (gameIds && gameIds.length > 0) {
+    query = query.where('id', 'in', gameIds);
   }
 
-  return query.get().then(function (gamesSnapshot) {
-    const batch = firestore.batch();
+  const gamesSnapshot = await query.get();
+  const batch = firestore.batch();
 
-    return Promise.all(
-      _.map(util.docsToArray(gamesSnapshot), (game) => {
-        return firestore
-          .collection('results')
-          .doc(game.id)
-          .get()
-          .then((resultsSnapshot) => {
-            const gameRef = firestore.collection('games').doc(game.id);
-            const allScoresResult = _.find(resultsSnapshot.data().results, (result) => result.playerCount === '');
+  const games = util.docsToArray(gamesSnapshot);
 
-            return batch.update(gameRef, {
-              totalScores: allScoresResult ? allScoresResult.scoreCount : 0,
-              mean: allScoresResult ? allScoresResult.mean : 0,
-              // hasNoPlays: game.totalPlays === 0,
-              // dateAdded: admin.firestore.FieldValue.delete(),
-              // startDate: admin.firestore.FieldValue.delete(),
-              // isNew: admin.firestore.FieldValue.delete(),
-            });
-          });
+  for (const game of games) {
+    console.log(`Updating ${game.name} (${game.id})`);
+    const gameResultsRef = firestore.collection('results').doc(game.id);
+    const resultsSnapshot = await gameResultsRef.get();
+    const gameRef = firestore.collection('games').doc(game.id);
 
-        // Update play related fields
-        // return gameRef
-        //   .collection('plays')
-        //   .orderBy('date', 'desc')
-        //   .get()
-        //   .then((playsSnapshot) => {
-        //     console.info(`Started updating game: ${game.name}`);
+    if (resultsSnapshot.data() == undefined) {
+      console.log('No results found, skipping.');
+      continue;
+    }
 
-        //     const plays = util.docsToArray(playsSnapshot);
-        //     const now = new Date();
+    const bggThumbnail = game.bggThumbnail ?? game.thumbnail;
+    const bggImage = game.bggImage ?? game.image;
+    const thumbnail = await util.uploadGameImage('thumbnails', game.id, bggThumbnail);
+    const image = await util.uploadGameImage('images', game.id, bggImage);
 
-        //     console.info(`Found ${plays.length} plays`);
+    await batch.update(gameRef, {
+      // playerCounts: resultsSnapshot.data().playerCounts ?? game.playerCounts,
+      thumbnail: thumbnail,
+      // bggThumbnail: bggThumbnail,
+      image: image,
+      // bggImage: bggImage,
+    });
 
-        //     return batch.update(gameRef, {
-        //       totalPlays: plays.length,
-        //       unusablePlays: _.defaultTo(game.unusablePlays, 0),
-        //       remainingPlays: _.defaultTo(game.remainingPlays, 1),
-        //       newestPlayDate: plays.length > 0 ? plays[0].date : '',
-        //       oldestPlayDate: plays.length > 0 ? plays.slice(-1)[0].date : '',
-        //       maxDate: _.defaultTo(game.maxDate, plays.length > 0 ? plays.slice(-1)[0].date : ''),
-        //       minDate: _.defaultTo(game.minDate, ''),
-        //       addedDate: _.defaultTo(game.addedDate, now),
-        //       // dateAdded: admin.firestore.FieldValue.delete(),
-        //       playsLastUpdated: _.defaultTo(game.playsLastUpdated, now),
-        //       // startDate: admin.firestore.FieldValue.delete(),
-        //     });
-        //   });
-      })
-    ).then(() => batch.commit());
-  });
+    // await batch.update(gameResultsRef, {
+    //   playerCounts: admin.firestore.FieldValue.delete(),
+    // });
+  }
+
+  batch.commit();
 };

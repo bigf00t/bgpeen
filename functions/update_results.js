@@ -58,7 +58,6 @@ exports.updateResults = (game, newPlays) => {
       return resultsRef
         .set(
           {
-            playerCounts: playerCounts,
             results: results,
           },
           { merge: true }
@@ -67,6 +66,7 @@ exports.updateResults = (game, newPlays) => {
           firestore.collection('games').doc(game.id).update({
             totalScores: allScoresResult.scoreCount,
             mean: allScoresResult.mean,
+            playerCounts: playerCounts,
           })
         );
     })

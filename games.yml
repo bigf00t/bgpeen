@@ -5,8 +5,11 @@ games
 -mean
 -totalScores
 -popularity
+-addedDate: new Date()
+-playerScores
+-image
 
-playsinfo
+play-details
 -totalPlays: 0,
 -unusablePlays: 0,
 -remainingPlays: 0,
@@ -16,11 +19,11 @@ playsinfo
 -minDate: '',
 -hasMinPlays: false,
 -hasNoPlays: true,
-playsLastUpdated
+-playsLastUpdated
 
-details
--addedDate: new Date(),
--image: item.image._text,
+bgg-details
+-bggImage: item.image._text,
+-bggThumbnail
 -description: item.description._text,
 -yearpublished: parseInt(item.yearpublished.$.value),
 -minplayers: parseInt(item.minplayers.$.value),

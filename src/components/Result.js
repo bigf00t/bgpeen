@@ -8,12 +8,12 @@ import * as actions from '../actions';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMore from '@mui/icons-material/ExpandMore';
+// import Card from '@mui/material/Card';
+// import CardContent from '@mui/material/CardContent';
+// import Accordion from '@mui/material/Accordion';
+// import AccordionSummary from '@mui/material/AccordionSummary';
+// import AccordionDetails from '@mui/material/AccordionDetails';
+// import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import Filters from './Filters';
@@ -22,6 +22,8 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import Image from 'mui-image';
+
+import { TwitterShareButton, TwitterIcon } from 'react-share';
 
 const styles = (theme) => ({
   paper: {
@@ -45,6 +47,7 @@ const styles = (theme) => ({
     margin: theme.spacing(0, 2, 0, 2),
     maxWidth: 150,
     // maxHeight: 100,
+    height: 'auto !important',
   },
   image: {
     height: '150px !important',
@@ -55,6 +58,15 @@ const styles = (theme) => ({
     margin: theme.spacing(2, 2, 0, 2),
   },
   credit: {},
+  ordinal: {},
+  tweet: {
+    position: 'relative',
+    top: '8px',
+    padding: theme.spacing(0, 0, 0, 1),
+    '& div': {
+      display: 'inline-block',
+    },
+  },
   arrow: {
     top: 2,
     position: 'relative',
@@ -80,28 +92,34 @@ const getScoreTitle = (percentile) => {
   if (window.location.toString().includes('bgpeen')) {
     return `Your bgpeen is ${percentile < 50 ? 'small' : 'big'}.`;
   } else {
-    return `${getPercentileQuip(percentile)}`;
+    return `You're ${getPercentileQuip(percentile)}`;
   }
+};
+
+const getTwitterText = (game, score, percentile) => {
+  return `I just played ${game} and my score of ${score} was in the ${getOrdinalDesc(
+    percentile
+  )} of similar scores. I'm ${getPercentileQuip(percentile)}`;
 };
 
 // TODO: Case or switch
 const getPercentileQuip = (percentile) => {
   if (Math.ceil(percentile) === 69) {
-    return 'Nice.';
+    return 'nice.';
   } else if (percentile < 1) {
-    return "You're quite possibly one of the worst players in the world!";
+    return 'quite possibly one of the worst in the world!';
   } else if (percentile < 10) {
-    return "You're just terrible.";
+    return 'just terrible.';
   } else if (percentile < 40) {
-    return "You're not very good.";
+    return 'not very good.';
   } else if (percentile < 60) {
-    return "You're boringly average.";
+    return 'boringly average.';
   } else if (percentile < 90) {
-    return "You're actually pretty decent...";
+    return 'actually pretty decent...';
   } else if (percentile < 99) {
-    return "You're legit amazing!";
+    return 'legit amazing!';
   } else if (percentile >= 99) {
-    return "You're probably cheating :(";
+    return 'probably cheating :(';
   } else {
     return '';
   }
@@ -219,8 +237,8 @@ const Result = (props) => {
   ${filters.place ? ' - ' + filters.place + ' place' : ''}`;
 
   return (
-    <Box component="div" m={2}>
-      <Box component="div" m={4} display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+    <Box component="div" display="flex" flexDirection="column" height="100%" pt={'64px'}>
+      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
         <Image
           src={props.data.game.thumbnail}
           duration={1000}
@@ -239,33 +257,43 @@ const Result = (props) => {
           </Link>
         </Typography>
       </Box>
-      <Filters filters={filters} />
-      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" mt={2}>
+      <Box component="div" p={1} backgroundColor={'#282828'}>
+        <Filters filters={filters} />
+      </Box>
+      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" pt={2}>
         <Typography m={2} component="h4" variant="h4" align="center">
-          Scores - {result.scoreCount}
+          Total Scores: &nbsp; {result.scoreCount} &nbsp;
         </Typography>
         <Typography m={2} component="h4" variant="h4" align="center">
-          Average - {result.mean}
+          Average Score: &nbsp; {result.mean}
         </Typography>
       </Box>
       {filters && filters.score && (
-        <Box component="div" mt={2}>
-          <Box component="div" mb={2} justifyContent="center" alignItems="center">
-            <Typography component="div" align="center" className={classes.credit}>
-              {filters.score
-                ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`
-                : ''}
+        <Box component="div" pb={2} justifyContent="center" alignItems="center">
+          <Typography component="div" align="center" className={classes.ordinal}>
+            {filters.score
+              ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(
+                  percentile
+                )} of similar scores. Share score:`
+              : ''}
+            <Typography component="span" className={classes.tweet}>
+              <TwitterShareButton
+                title={getTwitterText(props.data.game.name, filters.score, percentile)}
+                url={window.location.href}
+              >
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
             </Typography>
-            <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-              {percentile !== null ? getScoreTitle(percentile) : ''}
-            </Typography>
-          </Box>
+          </Typography>
+          <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+            {percentile !== null ? getScoreTitle(percentile) : 'None'}
+          </Typography>
         </Box>
       )}
-      <Box>
+      <Box component="div" flex="1" p={2} pt={0}>
         <Graph result={result} score={filters.score} percentile={percentile}></Graph>
       </Box>
-      <Box mt={2}>
+      {/* <Box mt={2}>
         <Accordion>
           <AccordionSummary className={classes.details} expandIcon={<ExpandMore />}>
             <Typography align="center" variant="h5">
@@ -407,13 +435,15 @@ const Result = (props) => {
             </Box>
           </AccordionDetails>
         </Accordion>
+      </Box> */}
+      <Box component="div" p={2} backgroundColor={'#282828'}>
+        <Typography component="div" align="center" className={classes.credit}>
+          {'Scores provided by '}
+          <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
+            boardgamegeek.com
+          </Link>
+        </Typography>
       </Box>
-      <Typography component="div" align="center" className={classes.credit} mt={2}>
-        {'Scores provided by '}
-        <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
-          boardgamegeek.com
-        </Link>
-      </Typography>
     </Box>
   );
 };

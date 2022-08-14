@@ -19,15 +19,15 @@ const Measure = (props) => {
   document.title = 'Good at Games';
 
   return (
-    <Box component="div" className={classes.root}>
-      <Box component="div" m={4}>
+    <Box component="div" className={classes.root} pt={'64px'}>
+      <Box component="div" p={4}>
         <SelectGame />
       </Box>
       <ScoreCounter />
-      <Box component="div" m={4}>
+      <Box component="div" p={4} pb={0}>
         <PopularGames />
       </Box>
-      <Box component="div" m={4}>
+      <Box component="div" p={4}>
         <NewestGames />
       </Box>
     </Box>

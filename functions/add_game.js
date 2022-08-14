@@ -87,11 +87,16 @@ exports.addGame = async (searchTerm, exact) => {
     {}
   );
 
+  const thumbnail = await util.uploadGameImage('thumbnails', item.$.id, item.thumbnail._text);
+  const image = await util.uploadGameImage('images', item.$.id, item.image._text);
+
   const newGame = {
     id: item.$.id,
     name: name,
-    thumbnail: item.thumbnail._text,
-    image: item.image._text,
+    thumbnail: thumbnail,
+    image: image,
+    bggThumbnail: item.thumbnail._text,
+    bggImage: item.image._text,
     description: item.description._text,
     yearpublished: parseInt(item.yearpublished.$.value),
     minplayers: parseInt(item.minplayers.$.value),
@@ -111,6 +116,7 @@ exports.addGame = async (searchTerm, exact) => {
     minDate: '',
     hasMinPlays: false,
     hasNoPlays: true,
+    playerCounts: [],
   };
 
   console.info(`Adding ${newGame.name} (${newGame.id})`);

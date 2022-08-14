@@ -36,7 +36,7 @@ const Menu = (props) => {
   const classes = props.classes;
 
   return (
-    <AppBar className={classes.appbar} position="relative" enableColorOnDark={true} display="flex" elevation={3}>
+    <AppBar className={classes.appbar} position="absolute" enableColorOnDark={true} display="flex" elevation={3}>
       <Toolbar>
         <Box display="flex" flexGrow={1}>
           <RouterLink className={classes.logo} to="/">
