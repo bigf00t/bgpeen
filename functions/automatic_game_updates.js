@@ -63,6 +63,7 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 80, includeHis
 };
 
 const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
+  const batch = firestore.batch();
   const startTime = new Date();
   let gameNum = 0;
 
@@ -82,30 +83,33 @@ const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
       )}`
     );
 
-    const newPlays = await update_plays.updateGamePlays(game, maxPages);
+    const newPlays = await update_plays.updateGamePlays(game, batch, maxPages);
 
-    await update_results.updateResults(game, newPlays, false);
+    await update_results.updateResults(game, batch, newPlays, false);
 
     await util.delay();
   }
+
+  await batch.commit();
 };
 
 const addSearchedGames = async (searches, maxPages) => {
+  const batch = firestore.batch();
+
   for (const search of searches) {
     const newGame = await add_game.addGame(search.term, true);
 
     await util.delay();
 
     if (newGame) {
-      const newPlays = await update_plays.updateGamePlays(newGame, maxPages);
-      await update_results.updateResults(newGame, newPlays, false);
+      const newPlays = await update_plays.updateGamePlays(newGame, batch, maxPages);
+      await update_results.updateResults(newGame, batch, newPlays, false);
     }
 
-    await firestore
-      .collection('searches')
-      .doc(search.id)
-      .update({ completed: true, succeeded: Boolean(newGame) });
+    batch.update(firestore.collection('searches').doc(search.id), { completed: true, succeeded: Boolean(newGame) });
 
     await util.delay();
   }
+
+  await batch.commit();
 };

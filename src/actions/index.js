@@ -1,7 +1,7 @@
 import { collection, query, where, getDocs, orderBy, doc, getDoc, updateDoc, limit } from 'firebase/firestore';
 
 import { LOAD_GAME_NAMES, LOAD_POPULAR_GAMES, LOAD_NEW_GAMES, LOAD_GAME } from '../actions/types';
-import _ from 'lodash';
+import _, { result } from 'lodash';
 import { db } from '../fire';
 
 export const loadGameNames = () => async (dispatch) => {
@@ -66,11 +66,16 @@ export const loadSortedGames = async (sortBy) => {
 };
 
 export const loadGame = (gameId) => async (dispatch) => {
-  const resultsRef = doc(db, 'results', gameId);
-  const resultsSnapshot = await getDoc(resultsRef);
-
   const gameRef = doc(db, 'games', gameId);
   const gameSnapshot = await getDoc(gameRef);
+
+  const resultsRef = query(collection(db, 'games', gameId, 'results'));
+  const resultsSnapshot = await getDocs(resultsRef);
+
+  let results = [];
+  resultsSnapshot.forEach((doc) => {
+    results.push(doc.data());
+  });
 
   await updateDoc(gameRef, {
     popularity: (gameSnapshot.data().popularity || 0) + 1,
@@ -79,6 +84,6 @@ export const loadGame = (gameId) => async (dispatch) => {
 
   dispatch({
     type: LOAD_GAME,
-    payload: { game: gameSnapshot.data(), results: resultsSnapshot.data() },
+    payload: { game: gameSnapshot.data(), results: { results } },
   });
 };

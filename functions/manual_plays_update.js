@@ -12,8 +12,12 @@ exports.manualPlaysUpdate = async (gameIds, maxPages) => {
 
   const games = util.docsToArray(gamesSnapshot);
 
+  const batch = firestore.batch();
+
   for (const game of games) {
-    const newPlays = await update_plays.updateGamePlays(game, maxPages);
-    await update_results.updateResults(game, newPlays, false);
+    const newPlays = await update_plays.updateGamePlays(game, batch, maxPages);
+    await update_results.updateResults(game, batch, newPlays, false);
   }
+
+  await batch.commit();
 };

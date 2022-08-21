@@ -4,113 +4,200 @@ const firestore = getFirestore();
 const { mean, mode, median, std } = require('mathjs');
 
 const _ = require('lodash');
+const dayjs = require('dayjs');
 
-exports.updateResults = async (game, newPlays) => {
-  console.info('-'.repeat(100));
-  console.info(`Updating results for ${game.name}`);
+const util = require('./util');
 
-  const resultsRef = firestore.collection('results').doc(game.id);
-  const detailsRef = firestore.collection('details').doc(game.id);
-
-  const resultsSnapshot = await resultsRef.get();
-  const detailsSnapshot = await detailsRef.get();
-
-  const existingResults = resultsSnapshot.data();
-  const details = detailsSnapshot.data();
-
-  // const existingAllScoreCount = existingResults
-  //   ? _.find(existingResults.results, (result) => result.playerCount === '').scoreCount
-  //   : 0;
-  const resultsToAddTo = existingResults === undefined ? [] : existingResults.results;
-  const validPlays = getCleanPlays(newPlays);
-  // console.log(validPlays);
-  const rawResults = addPlaysToResults(validPlays, resultsToAddTo);
-  // console.log(rawResults);
-
-  // We only want results with scores and valid player counts
-  const results = _(rawResults)
-    .filter(
-      (result) =>
-        !_.isEmpty(result.scores) &&
-        result.playerCount >= details.minplayers &&
-        result.playerCount <= details.maxplayers &&
-        result.playerPlace
-    )
-    .map((result) => addStatsToResult(result))
-    .value();
-  // console.log(results);
-
-  if (results.length === 0) {
-    console.log('No valid results found!');
+exports.updateResults = async (game, batch, newPlays, clear = false) => {
+  if (newPlays.length === 0) {
     return;
   }
 
-  const playerCounts = getPlayersCounts(results);
-  const playerCountResults = [];
+  console.info(`${'-'.repeat(100)}\n` + `Updating results for ${game.name}`);
 
-  _.forEach(playerCounts, (playerCount) => {
-    const playerCountResult = getGroupedResultsForPlayerCount(results, playerCount);
-    playerCountResults.push(playerCountResult);
-    results.push(playerCountResult);
-  });
+  const resultsRef = firestore.collection('games').doc(game.id).collection('results');
 
-  // console.log(playerCountResults);
+  const resultsSnapshot = await resultsRef.get();
 
-  const allScoresResult = getGroupedResultsForPlayerCount(playerCountResults, '');
-  const newScoresCount = allScoresResult.scoreCount - game.totalScores;
-  // console.log(allScoresResult);
+  const existingResults = clear ? [] : util.docsToArray(resultsSnapshot);
+  // const existingResults = util.docsToArray(resultsSnapshot);
 
-  // TODO: Figure out how this can be negative
+  const detailsRef = firestore.collection('details').doc(game.id);
+  const detailsSnapshot = await detailsRef.get();
+  const details = detailsSnapshot.data();
+
+  // Filter out invalid plays if we're starting from scratch.
+  // Otherwise, trust that they've already been filtered.
+  const validPlays = clear ? getValidPlays(newPlays, details) : newPlays;
+
+  // Get results from plays by player
+  const playerResults = getPlayerResultsFromPlays(validPlays);
+
+  // Group into keyed results
+  const keyedResults = getKeyedResultsFromPlayerResults(playerResults);
+
+  // Combine with existing results
+  const combinedResults = getCombinedResults(keyedResults, existingResults);
+
+  // Calculate stats for each remaining result
+  const results = _.mapValues(combinedResults, (result) => addStatsToResult(result));
+
+  const newScoresCount = results.all.scoreCount - game.totalScores;
+
   console.info(`Adding ${newScoresCount} new scores to results`);
 
-  results.push(allScoresResult);
+  _.forOwn(results, (result, key) => {
+    batch.set(resultsRef.doc(key), result, { merge: false });
+  });
 
-  await resultsRef.set(
-    {
-      results: results,
-    },
-    { merge: true }
+  batch.update(firestore.collection('games').doc(game.id), {
+    totalScores: results.all.scoreCount,
+    mean: results.all.mean,
+    playerCounts: getPlayersCounts(results).join(','),
+  });
+};
+
+// Remove plays that we don't want to include in our score
+const getValidPlays = (plays, details) =>
+  _.filter(
+    plays,
+    (play) =>
+      // Only include plays where:
+      //   Every player has a score
+      _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
+      //   Highest score is winner
+      _.maxBy(play.players, (player) => parseInt(player.score)).win == 1 &&
+      //   There is exactly one winner
+      _.countBy(play.players, 'win')['1'] == 1 &&
+      //   Game was completed
+      parseInt(play.incomplete) === 0 &&
+      //   Play date was after game was published, and not in the future
+      dayjs(play.date).isAfter(dayjs(`${details.yearpublished}-01-01`).subtract(1, 'day'), 'day') &&
+      dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day') &&
+      //   There weren't too many or too few players
+      play.playerCount >= details.minplayers &&
+      play.playerCount <= details.maxplayers
   );
 
-  await firestore
-    .collection('games')
-    .doc(game.id)
-    .update({
-      totalScores: allScoresResult.scoreCount,
-      mean: allScoresResult.mean,
-      playerCounts: playerCounts.join(','),
+const getPlayerResultsFromPlays = (plays) => {
+  let playerResults = [];
+
+  _.forEach(plays, (play) => {
+    const sortedPlayers = _.orderBy(play.players, (player) => parseInt(player.score), 'desc');
+
+    if (sortedPlayers.length > 0) {
+      _.forEach(sortedPlayers, (player, i) => {
+        playerResults.push({
+          score: parseInt(player.score),
+          playerCount: parseInt(play.playerCount),
+          new: player.new,
+          startPosition: player.startposition ? parseInt(player.startposition) : '',
+          finishPosition: i + 1,
+          color: player.color.toLowerCase(),
+          year: play.date ? parseInt(play.date.split('-')[0]) : '',
+          month: play.date ? parseInt(play.date.split('-')[1]) : '',
+          win: player.win,
+          id: play.id,
+        });
+      });
+    }
+  });
+
+  return _.filter(playerResults, (result) => result.finishPosition && result.score);
+};
+
+const getKeyedResultsFromPlayerResults = (playerResults) => {
+  const keyedResults = {};
+
+  playerResults.forEach((result) => {
+    const keys = getKeysFromResult(result);
+    _.forOwn(keys, (props, key) => {
+      if (!keyedResults[key]) {
+        keyedResults[key] = {
+          scores: { [result.score]: 1 },
+          wins: parseInt(result.win) === 1 ? { [result.score]: 1 } : {},
+          playIds: [result.id],
+        };
+        props.forEach((prop) => (keyedResults[key][prop] = result[prop]));
+      } else {
+        keyedResults[key].scores[result.score] = _.defaultTo(keyedResults[key].scores[result.score], 0) + 1;
+        if (parseInt(result.win) === 1) {
+          keyedResults[key].wins[result.score] =
+            _.defaultTo(keyedResults[key].wins[result.score], 0) + parseInt(result.win);
+        }
+        keyedResults[key].playIds.push(result.id);
+      }
     });
+  });
+
+  return keyedResults;
 };
 
-const getPlayersCounts = (results) =>
-  _(results)
-    .filter((group) => !_.isEmpty(group.scores))
-    .map((group) => parseInt(group.playerCount))
-    .uniq()
-    .sortBy()
-    .value();
+const getKeysFromResult = (result) => {
+  let keys = { all: [] };
+  if (result.playerCount) {
+    keys[`count-${result.playerCount}`] = ['playerCount'];
+    if (result.startPosition && !isNaN(result.startPosition)) {
+      keys[`count-${result.playerCount}-start-${result.startPosition}`] = ['playerCount', 'startPosition'];
+    }
+    if (result.finishPosition) {
+      keys[`count-${result.playerCount}-finish-${result.finishPosition}`] = ['playerCount', 'finishPosition'];
+    }
+  }
+  if (result.year) {
+    keys[`year-${result.year}`] = ['year'];
+  }
+  if (result.month) {
+    keys[`year-${result.year}-month-${result.month}`] = ['year', 'month'];
+  }
+  if (result.color) {
+    keys[`color-${result.color.trim().replace(' ', '_')}`] = ['color'];
+  }
+  if (result.new > 0) {
+    keys['new'] = [];
+  }
 
-const getGroupedResultsForPlayerCount = (results, playerCount) => {
-  const playerCountResults = _.filter(results, (result) => playerCount === '' || result.playerCount === playerCount);
-
-  const allScores = _.reduce(
-    playerCountResults,
-    (scores, result) => _.mergeWith(scores, result.scores, (val1, val2) => (val1 || 0) + val2),
-    {}
-  );
-
-  const groupedResult = getStats(allScores);
-  groupedResult.trimmedScoreCount = _.reduce(
-    playerCountResults,
-    (count, result) => count + result.trimmedScoreCount,
-    0
-  );
-
-  groupedResult.playerCount = playerCount;
-  groupedResult.scores = allScores;
-
-  return groupedResult;
+  return keys;
 };
+
+const getCombinedResults = (keyedResults, existingResults) => {
+  let combinedResults = {};
+
+  _.forOwn(keyedResults, (result, key) => {
+    const existingResult = _.find(existingResults, (result) => result.id === key);
+
+    let scores = existingResult ? existingResult.scores : {};
+    _.forOwn(result.scores, (newCount, score) => {
+      scores[score] = _.defaultTo(scores[score], 0) + newCount;
+    });
+
+    let outlierScores = existingResult ? existingResult.outlierScores : {};
+    _.forOwn(result.outlierScores, (newCount, score) => {
+      outlierScores[score] = _.defaultTo(outlierScores[score], 0) + newCount;
+    });
+
+    let wins = existingResult ? existingResult.wins : {};
+    _.forOwn(result.wins, (newCount, score) => {
+      wins[score] = _.defaultTo(wins[score], 0) + newCount;
+    });
+
+    const playCount = (existingResult ? existingResult.playCount : 0) + _.uniq(result.playIds).length;
+
+    delete result.playIds;
+
+    combinedResults[key] = {
+      ...result,
+      scores: scores,
+      wins: wins,
+      outlierScores: outlierScores,
+      playCount: playCount,
+    };
+  });
+
+  return combinedResults;
+};
+
+// Remove outlier scores, based on std
 const getTrimmedScores = (explodedScores, scores) => {
   const meanVal = mean(explodedScores);
   const stdVal = std(explodedScores);
@@ -123,26 +210,42 @@ const getTrimmedScores = (explodedScores, scores) => {
   );
 };
 
+// Calculates stats like mean and std
 const getStats = (scores) => {
   const explodedScores = getExplodedScores(scores);
 
   return {
-    // TODO: Don't parse int, parse dec
-    mean: parseInt(mean(explodedScores)),
-    std: parseInt(std(explodedScores)),
-    median: parseInt(median(explodedScores)),
-    mode: parseInt(mode(explodedScores)),
+    mean: parseFloat(mean(explodedScores)).toFixed(2),
+    std: parseFloat(std(explodedScores)).toFixed(2),
+    median: parseFloat(median(explodedScores)),
+    mode: parseFloat(mode(explodedScores)),
     scoreCount: explodedScores.length,
   };
 };
 
+// Fills in the stat section of the result, such as mean and std
 const addStatsToResult = (result) => {
   const explodedScores = getExplodedScores(result.scores);
-  const trimmedScores = getTrimmedScores(explodedScores, result.scores);
-  result.scores = trimmedScores;
 
-  const stats = getStats(trimmedScores);
-  stats.trimmedScoreCount = explodedScores.length - stats.scoreCount;
+  // Remove outlier scores
+  const trimmedScores = getTrimmedScores(explodedScores, result.scores);
+  const newOutlierScores = _.pickBy(result.scores, (count, score) => !trimmedScores[score]);
+
+  let outlierScores = result.outlierScores;
+  _.forOwn(newOutlierScores, (newCount, score) => {
+    outlierScores[score] = _.defaultTo(result.outlierScores[score], 0) + newCount;
+  });
+
+  result.scores = trimmedScores;
+  result.outlierScores = outlierScores;
+
+  // Remove outlier wins
+  result.wins = _.pickBy(result.wins, (count, score) => result.scores[score]);
+
+  // Get stats based on trimmed scores. This will recalculate std.
+  const stats = getStats(result.scores);
+  // stats.trimmedScoreCount = explodedScores.length - stats.scoreCount;
+  stats.winPercentage = parseInt((_.sum(Object.values(result.wins)) / stats.scoreCount).toFixed(2) * 100);
 
   return {
     ...result,
@@ -150,6 +253,8 @@ const addStatsToResult = (result) => {
   };
 };
 
+// The expanded array of scores e.g. [23,23,23,4,4,7] instead of {23: 3, 4: 2, 7: 1}
+// Used for stat math like mean and std
 const getExplodedScores = (scores) =>
   _.reduce(
     scores,
@@ -159,45 +264,10 @@ const getExplodedScores = (scores) =>
     []
   );
 
-const addPlaysToResults = (plays, results) => {
-  _.forEach(plays, (play) => {
-    const cleanPlayerScores = getCleanPlayerScores(play.players);
-    if (cleanPlayerScores.length > 0) {
-      _.forEach(cleanPlayerScores, (score, i) => {
-        const playerPlace = i + 1;
-        // Find an existing result or create a new one
-        let resultIndex = _.findIndex(
-          results,
-          (result) => result.playerCount == play.playerCount && result.playerPlace == playerPlace
-        );
-
-        if (resultIndex == -1) {
-          resultIndex = results.length;
-          results.push({
-            scores: {},
-            playerCount: parseInt(play.playerCount),
-            playerPlace: playerPlace,
-          });
-        }
-
-        results[resultIndex].scores[score] = _.defaultTo(results[resultIndex].scores[score], 0) + 1;
-      });
-    }
-  });
-
-  return results;
-};
-
-const getCleanPlays = (plays) =>
-  _.filter(plays, (play) =>
-    // TODO: Exclude plays where winner isn't person with highest score
-    // Exclude plays where not every player has a score
-    _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
-  );
-
-// TODO: Verify that this works with a test
-const getCleanPlayerScores = (players) =>
-  _(players)
-    .orderBy([(player) => parseInt(player.score), (player) => player.win], ['desc', 'desc'])
-    .map((player) => parseInt(player.score))
+const getPlayersCounts = (results) =>
+  _(results)
+    .filter((result) => result.playerCount)
+    .map((result) => parseInt(result.playerCount))
+    .uniq()
+    .sortBy()
     .value();

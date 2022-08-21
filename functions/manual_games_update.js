@@ -21,8 +21,8 @@ exports.manualGamesUpdate = async (gameIds) => {
 
   for (const game of games) {
     console.log(`Updating ${game.name} (${game.id})`);
-    const gameResultsRef = firestore.collection('results').doc(game.id);
-    const resultsSnapshot = await gameResultsRef.get();
+    const resultsRef = firestore.collection('results').doc(game.id);
+    const resultsSnapshot = await resultsRef.get();
     const gameRef = firestore.collection('games').doc(game.id);
 
     if (resultsSnapshot.data() == undefined) {
@@ -36,25 +36,29 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     // TODO: Calc min/max play ids
 
-    const minDatePlaysRef = firestore
-      .collection('games')
-      .doc(game.id)
-      .collection('plays')
-      .where('date', '==', game.minDate);
+    // const minDatePlaysRef = firestore
+    //   .collection('games')
+    //   .doc(game.id)
+    //   .collection('plays')
+    //   .where('date', '==', game.minDate);
 
-    const minDatePlaysSnapshot = await minDatePlaysRef.get();
-    const minPlays = util.docsToArray(minDatePlaysSnapshot);
-    const minDatePlayIds = _.map(minPlays, (play) => play.id);
+    // const minDatePlaysSnapshot = await minDatePlaysRef.get();
+    // const minPlays = util.docsToArray(minDatePlaysSnapshot);
+    // const minDatePlayIds = _.map(minPlays, (play) => play.id);
 
-    const maxDatePlaysRef = firestore
-      .collection('games')
-      .doc(game.id)
-      .collection('plays')
-      .where('date', '==', game.maxDate);
+    // const maxDatePlaysRef = firestore
+    //   .collection('games')
+    //   .doc(game.id)
+    //   .collection('plays')
+    //   .where('date', '==', game.maxDate);
 
-    const maxDatePlaysSnapshot = await maxDatePlaysRef.get();
-    const maxPlays = util.docsToArray(maxDatePlaysSnapshot);
-    const maxDatePlayIds = _.map(maxPlays, (play) => play.id);
+    // const maxDatePlaysSnapshot = await maxDatePlaysRef.get();
+    // const maxPlays = util.docsToArray(maxDatePlaysSnapshot);
+    // const maxDatePlayIds = _.map(maxPlays, (play) => play.id);
+
+    // const resultRecords = util.docsToArray(resultsSnapshot);
+
+    // gameRef.collection('results').doc
 
     // batch.set(gamePlaysRef, {
     //   minDatePlayIds: minDatePlayIds.join(','),
@@ -107,3 +111,22 @@ exports.manualGamesUpdate = async (gameIds) => {
 
   await batch.commit();
 };
+
+// NOT THIS!
+// const gameResultsRef = gameRef.collection('results');
+
+// for (const result of resultsSnapshot.data().results) {
+//   let key = 'all';
+//   if (result.playerCount) {
+//     key = `count-${result.playerCount}`;
+//     if (result.playerPlace) {
+//       key += `-place-${result.playerPlace}`;
+//     }
+//   }
+
+//   batch.set(gameResultsRef.doc(key), {
+//     ...result,
+//   });
+
+//   console.log(key);
+// }
