@@ -20,18 +20,28 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const resultsSnapshot = await resultsRef.get();
 
   const existingResults = clear ? [] : util.docsToArray(resultsSnapshot);
-  // const existingResults = util.docsToArray(resultsSnapshot);
 
   const detailsRef = firestore.collection('details').doc(game.id);
   const detailsSnapshot = await detailsRef.get();
   const details = detailsSnapshot.data();
 
-  // Filter out invalid plays if we're starting from scratch.
-  // Otherwise, trust that they've already been filtered.
-  const validPlays = clear ? getValidPlays(newPlays, details) : newPlays;
+  const gameType = game.gameType ? game.gameType : getGameType(newPlays);
+
+  console.log(gameType);
+
+  // Filter out invalid plays
+  const validPlays = getValidPlays(newPlays, details, gameType);
+
+  // TODO: Add ignored plays to doc
+  console.log(`Ignoring ${newPlays.length - validPlays.length} invalid plays`);
+
+  if (validPlays.length === 0) {
+    console.error('ERROR - No valid plays!');
+    return;
+  }
 
   // Get results from plays by player
-  const playerResults = getPlayerResultsFromPlays(validPlays);
+  const playerResults = getPlayerResultsFromPlays(validPlays, gameType);
 
   // Group into keyed results
   const keyedResults = getKeyedResultsFromPlayerResults(playerResults);
@@ -54,36 +64,87 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     totalScores: results.all.scoreCount,
     mean: results.all.mean,
     playerCounts: getPlayersCounts(results).join(','),
+    gameType: gameType,
   });
 };
 
+const getGameType = (plays) => {
+  const coopPlays = _.filter(
+    plays,
+    (play) => _.every(play.players, (player) => player.win == 0) || _.every(play.players, (player) => player.win == 1)
+  );
+
+  // console.log(coopPlays.length);
+  // console.log(plays.length);
+  const coopLikelihood = parseInt((coopPlays.length / plays.length) * 100);
+  console.log(`Cooperative game likelihood: ${coopLikelihood}`);
+
+  if (coopLikelihood > 80) {
+    return 'co-op';
+  }
+
+  const playsWithAtLeastOneScore = _.filter(plays, (play) =>
+    play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
+  );
+
+  const lowWinnerPlays = _.filter(
+    playsWithAtLeastOneScore,
+    (play) => _.minBy(play.players, (player) => parseInt(player.score)).win == 1
+  );
+
+  // const highWinnerPlays = _.filter(
+  //   playsWithAtLeastOneScore,
+  //   (play) => _.maxBy(play.players, (player) => parseInt(player.score)).win == 1
+  // );
+  // console.log(highWinnerPlays.length);
+
+  // console.log(plays.length);
+  // console.log(lowWinnerPlays.length);
+  // console.log(playsWithAtLeastOneScore.length);
+  const lowestScoreWinsLikelihood = parseInt((lowWinnerPlays.length / playsWithAtLeastOneScore.length) * 100);
+  console.log(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
+
+  if (lowestScoreWinsLikelihood > 25) {
+    return 'lowest-wins';
+  }
+
+  return 'highest-wins';
+};
+
 // Remove plays that we don't want to include in our score
-const getValidPlays = (plays, details) =>
+const getValidPlays = (plays, details, gameType) =>
   _.filter(
     plays,
     (play) =>
       // Only include plays where:
-      //   Every player has a score
-      _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
-      //   Highest score is winner
-      _.maxBy(play.players, (player) => parseInt(player.score)).win == 1 &&
-      //   There is exactly one winner
-      _.countBy(play.players, 'win')['1'] == 1 &&
       //   Game was completed
       parseInt(play.incomplete) === 0 &&
+      //   There weren't too many or too few players
+      play.playerCount >= details.minplayers &&
+      play.playerCount <= details.maxplayers &&
       //   Play date was after game was published, and not in the future
       dayjs(play.date).isAfter(dayjs(`${details.yearpublished}-01-01`).subtract(1, 'day'), 'day') &&
       dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day') &&
-      //   There weren't too many or too few players
-      play.playerCount >= details.minplayers &&
-      play.playerCount <= details.maxplayers
+      (gameType === 'co-op' ||
+        ((gameType === 'lowest-wins' || gameType === 'highest-wins') &&
+          //   Every player has a parsable, non-zero score.
+          //   Unfortuntely this will exclude plays with legit scores of 0.
+          _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
+          //   There is exactly one winner
+          _.countBy(play.players, 'win')['1'] == 1 &&
+          //   Lowest score is winner
+          ((gameType === 'lowest-wins' && _.minBy(play.players, (player) => parseInt(player.score)).win == 1) ||
+            //   Highest score is winner
+            (gameType === 'highest-wins' && _.maxBy(play.players, (player) => parseInt(player.score)).win == 1))))
   );
 
-const getPlayerResultsFromPlays = (plays) => {
+const getPlayerResultsFromPlays = (plays, gameType) => {
   let playerResults = [];
+  const sortDirection = gameType === 'lowest-wins' ? 'asc' : 'desc';
 
   _.forEach(plays, (play) => {
-    const sortedPlayers = _.orderBy(play.players, (player) => parseInt(player.score), 'desc');
+    // Sort players into finish position, based on score
+    const sortedPlayers = _.orderBy(play.players, (player) => parseInt(player.score), sortDirection);
 
     if (sortedPlayers.length > 0) {
       _.forEach(sortedPlayers, (player, i) => {
