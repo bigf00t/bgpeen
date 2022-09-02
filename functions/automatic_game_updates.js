@@ -63,7 +63,6 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 80, includeHis
 };
 
 const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
-  const batch = firestore.batch();
   const startTime = new Date();
   let gameNum = 0;
 
@@ -74,23 +73,24 @@ const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
 
     gameNum++;
 
-    console.info('='.repeat(100));
-
     const elapsedTime = dayjs.duration(dayjs().diff(startTime));
     console.info(
-      `Updating game ${gameNum} of ${gamePlays.length} - ${game.name} (${game.id}) - Elapsed time ${elapsedTime.format(
-        'HH:mm:ss'
-      )}`
+      `${'='.repeat(100)}\nUpdating game ${gameNum} of ${gamePlays.length} - ${game.name} (${
+        game.id
+      }) - Elapsed time ${elapsedTime.format('HH:mm:ss')}`
     );
+
+    // Separate batch transaction for each game
+    const batch = firestore.batch();
 
     const newPlays = await update_plays.updateGamePlays(game, batch, maxPages);
 
     await update_results.updateResults(game, batch, newPlays, false);
 
+    await batch.commit();
+
     await util.delay();
   }
-
-  await batch.commit();
 };
 
 const addSearchedGames = async (searches, maxPages) => {

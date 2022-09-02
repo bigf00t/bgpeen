@@ -114,7 +114,6 @@ exports.addGame = async (searchTerm, exact) => {
 
   const newPlays = {
     totalPlays: 0,
-    unusablePlays: 0,
     remainingPlays: 0,
     newestPlayDate: '',
     oldestPlayDate: '',

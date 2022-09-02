@@ -38,7 +38,6 @@ exports.updateGamePlays = async (game, batch, maxPages) => {
 };
 
 const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, batch, pageResults, newPlays) => {
-  const newUnusablePlayCount = _.reduce(pageResults, (sum, pageResult) => sum + pageResult.unusablePlays, 0);
   const pageResultsWithPlays = pageResults.filter((pageResult) => pageResult.plays.length > 0);
 
   let newestPlayDate = gamePlays.newestPlayDate;
@@ -62,11 +61,8 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
   const remainingPlays = pageResults.slice(-1)[0].remainingPlays;
   const totalPlays = _.defaultTo(gamePlays.totalPlays, 0) + newPlays.length;
 
-  console.info(
-    `${game.name} - ${newPlays.length} plays used - ${newUnusablePlayCount} plays skipped - ${remainingPlays} plays remaining on BGG`
-  );
+  console.info(`${game.name} - ${newPlays.length} plays loaded - ${remainingPlays} plays remaining on BGG`);
 
-  const unusablePlays = _.defaultTo(gamePlays.unusablePlays, 0) + newUnusablePlayCount;
   const minDate = remainingPlays === 0 ? newestPlayDate : _.defaultTo(gamePlays.minDate, '');
   const maxDate = remainingPlays === 0 ? '' : currentOldestPlayDate;
 
@@ -74,7 +70,6 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
   const maxDatePlayIds = getDatePlayIds(newPlays, maxDate, gamePlays.maxDate, gamePlays.maxDatePlayIds);
 
   const updatedGamePlays = {
-    unusablePlays: unusablePlays,
     remainingPlays: remainingPlays,
     newestPlayDate: newestPlayDate,
     oldestPlayDate: oldestPlayDate,
@@ -140,8 +135,6 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
     console.info(`${game.name} - Page ${page} did not have any plays`);
     return {
       plays: [],
-      duplicatePlays: 0,
-      unusablePlays: 0,
       remainingPlays: 0,
       remainingPages: 0,
     };
@@ -149,25 +142,20 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
 
   const cleanPlays = getCleanPlaysFromJson(json.plays.play);
   const newPlays = getNewPlays(gamePlays, cleanPlays);
-  const plays = getValidPlays(details, newPlays);
 
   const totalPlays = json.plays.$.total;
   const actualTotalPages = _.min([maxPages, _.ceil(totalPlays / 100)]);
   const remainingPages = actualTotalPages - page;
 
   const duplicatePlaysCount = json.plays.play.length - newPlays.length;
-  // This may be double-counting some invalid plays, but there's not much to be done
-  const invalidPlaysCount = newPlays.length - plays.length;
   const remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
 
   console.info(
-    `${game.name} - Page ${page} of ${actualTotalPages} - ${plays.length} valid plays - ${invalidPlaysCount} invalid plays - ${duplicatePlaysCount} duplicate plays`
+    `${game.name} - Page ${page} of ${actualTotalPages} - ${newPlays.length} new plays - ${duplicatePlaysCount} duplicate plays`
   );
 
   return {
-    plays: plays,
-    duplicatePlays: duplicatePlaysCount,
-    unusablePlays: invalidPlaysCount,
+    plays: newPlays,
     remainingPlays: remainingPlaysCount,
     remainingPages: remainingPages,
   };
@@ -198,24 +186,3 @@ const getNewPlays = (gamePlays, plays) => {
       (play.date === gamePlays.maxDate && !maxDatePlayIds.includes(play.id))
   );
 };
-
-// Filter out invalid plays, based on various criteria
-const getValidPlays = (details, plays) =>
-  plays.filter(
-    (play) =>
-      // Only include plays where:
-      //   There weren't too many or too few players
-      play.playerCount >= details.minplayers &&
-      play.playerCount <= details.maxplayers &&
-      // //   Every player has a score
-      // _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
-      // //   Highest score is winner
-      // _.maxBy(play.players, (player) => parseInt(player.score)).win == 1 &&
-      // //   There is exactly one winner
-      // _.countBy(play.players, 'win')['1'] == 1 &&
-      //   Game was completed
-      parseInt(play.incomplete) === 0 &&
-      //   Play date was after game was published, and not in the future
-      dayjs(play.date).isAfter(dayjs(`${details.yearpublished}-01-01`).subtract(1, 'day'), 'day') &&
-      dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day')
-  );

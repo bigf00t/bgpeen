@@ -27,13 +27,12 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   const gameType = game.gameType ? game.gameType : getGameType(newPlays);
 
-  console.log(gameType);
-
   // Filter out invalid plays
   const validPlays = getValidPlays(newPlays, details, gameType);
 
   // TODO: Add ignored plays to doc
-  console.log(`Ignoring ${newPlays.length - validPlays.length} invalid plays`);
+  const invalidPlaysCount = newPlays.length - validPlays.length;
+  console.log(`Ignoring ${invalidPlaysCount} invalid plays`);
 
   if (validPlays.length === 0) {
     console.error('ERROR - No valid plays!');
@@ -56,12 +55,18 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   console.info(`Adding ${newScoresCount} new scores to results`);
 
+  // console.log(results);
+
   _.forOwn(results, (result, key) => {
     batch.set(resultsRef.doc(key), result, { merge: false });
   });
 
+  // console.log(firestore.collection('games').doc(game.id));
+
   batch.update(firestore.collection('games').doc(game.id), {
     totalScores: results.all.scoreCount,
+    totalValidPlays: _.defaultTo(game.totalValidPlays, 0) + validPlays.length,
+    totalInvalidPlays: _.defaultTo(game.totalInvalidPlays, 0) + invalidPlaysCount,
     mean: results.all.mean,
     playerCounts: getPlayersCounts(results).join(','),
     gameType: gameType,
@@ -83,8 +88,11 @@ const getGameType = (plays) => {
     return 'co-op';
   }
 
-  const playsWithAtLeastOneScore = _.filter(plays, (play) =>
-    play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
+  const playsWithAtLeastOneScore = _.filter(
+    plays,
+    (play) =>
+      play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
+      play.players.some((player) => parseInt(player.win) == 1)
   );
 
   const lowWinnerPlays = _.filter(
@@ -130,8 +138,9 @@ const getValidPlays = (plays, details, gameType) =>
           //   Every player has a parsable, non-zero score.
           //   Unfortuntely this will exclude plays with legit scores of 0.
           _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
+          //   TODO: Can we remove this? At least one winner?
           //   There is exactly one winner
-          _.countBy(play.players, 'win')['1'] == 1 &&
+          // _.groupBy(play.players, (player) => parseInt(player.score)) == 1)['1'] == 1 &&
           //   Lowest score is winner
           ((gameType === 'lowest-wins' && _.minBy(play.players, (player) => parseInt(player.score)).win == 1) ||
             //   Highest score is winner
@@ -143,8 +152,12 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
   const sortDirection = gameType === 'lowest-wins' ? 'asc' : 'desc';
 
   _.forEach(plays, (play) => {
-    // Sort players into finish position, based on score
-    const sortedPlayers = _.orderBy(play.players, (player) => parseInt(player.score), sortDirection);
+    // Sort players into finish position, based on score and win (for tie breaking)
+    const sortedPlayers = _.orderBy(
+      play.players,
+      [(player) => parseInt(player.score), (player) => parseInt(player.win)],
+      [sortDirection, 'desc']
+    );
 
     if (sortedPlayers.length > 0) {
       _.forEach(sortedPlayers, (player, i) => {
@@ -152,13 +165,18 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
           score: parseInt(player.score),
           playerCount: parseInt(play.playerCount),
           new: player.new,
-          startPosition: player.startposition ? parseInt(player.startposition) : '',
-          finishPosition: i + 1,
+          startPosition: isNaN(parseInt(player.startposition)) ? '' : parseInt(player.startposition),
+          // Handles ties
+          finishPosition:
+            i > 0 && playerResults[i - 1].score == parseInt(player.score) && parseInt(player.win) == 1
+              ? playerResults[i - 1].finishPosition
+              : i + 1,
           color: player.color.toLowerCase(),
           year: play.date ? parseInt(play.date.split('-')[0]) : '',
           month: play.date ? parseInt(play.date.split('-')[1]) : '',
-          win: player.win,
+          isWin: Boolean(parseInt(player.win) === 1),
           id: play.id,
+          isTie: Boolean(_.filter(sortedPlayers, (p) => parseInt(p.score) == parseInt(player.score)).length > 1),
         });
       });
     }
@@ -176,17 +194,20 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
       if (!keyedResults[key]) {
         keyedResults[key] = {
           scores: { [result.score]: 1 },
-          wins: parseInt(result.win) === 1 ? { [result.score]: 1 } : {},
+          wins: result.isWin ? { [result.score]: 1 } : {},
           playIds: [result.id],
+          ties: result.isTie ? { [result.score]: 1 } : {},
         };
         props.forEach((prop) => (keyedResults[key][prop] = result[prop]));
       } else {
         keyedResults[key].scores[result.score] = _.defaultTo(keyedResults[key].scores[result.score], 0) + 1;
-        if (parseInt(result.win) === 1) {
-          keyedResults[key].wins[result.score] =
-            _.defaultTo(keyedResults[key].wins[result.score], 0) + parseInt(result.win);
+        if (result.isWin) {
+          keyedResults[key].wins[result.score] = _.defaultTo(keyedResults[key].wins[result.score], 0) + 1;
         }
         keyedResults[key].playIds.push(result.id);
+        if (result.isTie) {
+          keyedResults[key].ties[result.score] = _.defaultTo(keyedResults[key].ties[result.score], 0) + 1;
+        }
       }
     });
   });
@@ -250,6 +271,7 @@ const getCombinedResults = (keyedResults, existingResults) => {
       ...result,
       scores: scores,
       wins: wins,
+      existingTiesCount: existingResult ? existingResult.tiesCount : 0,
       outlierScores: outlierScores,
       playCount: playCount,
     };
@@ -302,6 +324,12 @@ const addStatsToResult = (result) => {
 
   // Remove outlier wins
   result.wins = _.pickBy(result.wins, (count, score) => result.scores[score]);
+
+  // Remove outlier ties
+  filteredTies = _.pickBy(result.ties, (count, score) => result.scores[score]);
+  result.tiesCount = result.existingTiesCount + _.sum(Object.values(filteredTies));
+  delete result['ties'];
+  delete result['existingTiesCount'];
 
   // Get stats based on trimmed scores. This will recalculate std.
   const stats = getStats(result.scores);

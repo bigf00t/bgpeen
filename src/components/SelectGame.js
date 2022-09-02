@@ -90,6 +90,11 @@ const SelectGame = (props) => {
 
   const handleAddClick = async () => {
     // TODO: Should be action?
+    const blacklist = ['munchkin', 'fluxx', 'cards against humanity'];
+    if (blacklist.some((b) => gameText.toLowerCase().includes(b))) {
+      alert('Never in a million years.');
+      return;
+    }
     await addDoc(collection(db, 'searches'), {
       term: gameText,
       completed: false,
