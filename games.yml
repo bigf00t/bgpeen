@@ -33,3 +33,39 @@ bgg-details
 -suggestedplayers: suggestedplayers,
 -yearpublished
 
+
+
+All
+
+  scores
+  wins
+  outlierScores
+  playCount
+  mean
+  std
+  median
+  mode
+  scoreCount
+  sharedWinCount
+
+  tieBreakerWinCount
+
+Player Count
+
+  scoreSpread
+  tiebreakerCount
+
+Player Count - Player Finish Position
+
+
+
+Player Count - Player Start Position
+
+  winPercentage
+
+Color
+
+  winPercentage
+
+Year
+

@@ -30,7 +30,6 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   // Filter out invalid plays
   const validPlays = getValidPlays(newPlays, details, gameType);
 
-  // TODO: Add ignored plays to doc
   const invalidPlaysCount = newPlays.length - validPlays.length;
   console.log(`Ignoring ${invalidPlaysCount} invalid plays`);
 
@@ -55,13 +54,9 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   console.info(`Adding ${newScoresCount} new scores to results`);
 
-  // console.log(results);
-
   _.forOwn(results, (result, key) => {
     batch.set(resultsRef.doc(key), result, { merge: false });
   });
-
-  // console.log(firestore.collection('games').doc(game.id));
 
   batch.update(firestore.collection('games').doc(game.id), {
     totalScores: results.all.scoreCount,
@@ -74,42 +69,29 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 };
 
 const getGameType = (plays) => {
-  const coopPlays = _.filter(
-    plays,
-    (play) => _.every(play.players, (player) => player.win == 0) || _.every(play.players, (player) => player.win == 1)
+  const playsWithAtLeastOneWin = _.filter(plays, (play) => play.players.some((player) => parseInt(player.win) == 1));
+
+  const playsWithAllWinners = _.filter(playsWithAtLeastOneWin, (play) =>
+    _.every(play.players, (player) => player.win == 1)
   );
 
-  // console.log(coopPlays.length);
-  // console.log(plays.length);
-  const coopLikelihood = parseInt((coopPlays.length / plays.length) * 100);
+  const coopLikelihood = parseInt((playsWithAllWinners.length / playsWithAtLeastOneWin.length) * 100);
   console.log(`Cooperative game likelihood: ${coopLikelihood}`);
 
   if (coopLikelihood > 80) {
     return 'co-op';
   }
 
-  const playsWithAtLeastOneScore = _.filter(
-    plays,
-    (play) =>
-      play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
-      play.players.some((player) => parseInt(player.win) == 1)
+  const playsWithAtLeastOneScoreAndWin = _.filter(playsWithAtLeastOneWin, (play) =>
+    play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
   );
 
-  const lowWinnerPlays = _.filter(
-    playsWithAtLeastOneScore,
+  const playsWithLowestWinner = _.filter(
+    playsWithAtLeastOneScoreAndWin,
     (play) => _.minBy(play.players, (player) => parseInt(player.score)).win == 1
   );
 
-  // const highWinnerPlays = _.filter(
-  //   playsWithAtLeastOneScore,
-  //   (play) => _.maxBy(play.players, (player) => parseInt(player.score)).win == 1
-  // );
-  // console.log(highWinnerPlays.length);
-
-  // console.log(plays.length);
-  // console.log(lowWinnerPlays.length);
-  // console.log(playsWithAtLeastOneScore.length);
-  const lowestScoreWinsLikelihood = parseInt((lowWinnerPlays.length / playsWithAtLeastOneScore.length) * 100);
+  const lowestScoreWinsLikelihood = parseInt((playsWithLowestWinner.length / playsWithAtLeastOneScoreAndWin.length) * 100);
   console.log(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
 
   if (lowestScoreWinsLikelihood > 25) {
@@ -133,14 +115,13 @@ const getValidPlays = (plays, details, gameType) =>
       //   Play date was after game was published, and not in the future
       dayjs(play.date).isAfter(dayjs(`${details.yearpublished}-01-01`).subtract(1, 'day'), 'day') &&
       dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day') &&
+      // For co-op games, we're more lenient about winners and scores
       (gameType === 'co-op' ||
         ((gameType === 'lowest-wins' || gameType === 'highest-wins') &&
-          //   Every player has a parsable, non-zero score.
-          //   Unfortuntely this will exclude plays with legit scores of 0.
-          _.every(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0)) &&
-          //   TODO: Can we remove this? At least one winner?
-          //   There is exactly one winner
-          // _.groupBy(play.players, (player) => parseInt(player.score)) == 1)['1'] == 1 &&
+          //   At least one player has a parsable, non-zero score. This may inlcude some plays with erroneous 0s.
+          _.some(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) === 0)) &&
+          //   ? Every player has a parsable, non-zero score. Unfortuntely this will exclude plays with legit scores of 0.
+          //   ? There is at least one winner
           //   Lowest score is winner
           ((gameType === 'lowest-wins' && _.minBy(play.players, (player) => parseInt(player.score)).win == 1) ||
             //   Highest score is winner
@@ -176,7 +157,15 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
           month: play.date ? parseInt(play.date.split('-')[1]) : '',
           isWin: Boolean(parseInt(player.win) === 1),
           id: play.id,
-          isTie: Boolean(_.filter(sortedPlayers, (p) => parseInt(p.score) == parseInt(player.score)).length > 1),
+          isTieBreakerWin: Boolean(
+            parseInt(player.win) === 1 &&
+              _.filter(sortedPlayers, (p) => parseInt(p.win) === 1).length === 1 &&
+              _.filter(sortedPlayers, (p) => parseInt(p.score) == parseInt(player.score)).length > 1
+          ),
+          isSharedWin: Boolean(
+            _.filter(sortedPlayers, (p) => parseInt(p.win) === 1 && parseInt(p.score) == parseInt(player.score))
+              .length > 1
+          ),
         });
       });
     }
@@ -196,7 +185,8 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
           scores: { [result.score]: 1 },
           wins: result.isWin ? { [result.score]: 1 } : {},
           playIds: [result.id],
-          ties: result.isTie ? { [result.score]: 1 } : {},
+          tieBreakerWins: result.isTieBreakerWin ? { [result.score]: 1 } : {},
+          sharedWins: result.isSharedWin ? { [result.score]: 1 } : {},
         };
         props.forEach((prop) => (keyedResults[key][prop] = result[prop]));
       } else {
@@ -205,8 +195,12 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
           keyedResults[key].wins[result.score] = _.defaultTo(keyedResults[key].wins[result.score], 0) + 1;
         }
         keyedResults[key].playIds.push(result.id);
-        if (result.isTie) {
-          keyedResults[key].ties[result.score] = _.defaultTo(keyedResults[key].ties[result.score], 0) + 1;
+        if (result.isTieBreakerWin) {
+          keyedResults[key].tieBreakerWins[result.score] =
+            _.defaultTo(keyedResults[key].tieBreakerWins[result.score], 0) + 1;
+        }
+        if (result.isSharedWin) {
+          keyedResults[key].sharedWins[result.score] = _.defaultTo(keyedResults[key].sharedWins[result.score], 0) + 1;
         }
       }
     });
@@ -242,26 +236,26 @@ const getKeysFromResult = (result) => {
   return keys;
 };
 
+const combineScores = (existingScores, newScores) => {
+  let scores = existingScores || {};
+  _.forOwn(newScores, (newCount, score) => {
+    scores[score] = _.defaultTo(scores[score], 0) + newCount;
+  });
+
+  return scores;
+};
+
 const getCombinedResults = (keyedResults, existingResults) => {
   let combinedResults = {};
 
   _.forOwn(keyedResults, (result, key) => {
     const existingResult = _.find(existingResults, (result) => result.id === key);
 
-    let scores = existingResult ? existingResult.scores : {};
-    _.forOwn(result.scores, (newCount, score) => {
-      scores[score] = _.defaultTo(scores[score], 0) + newCount;
-    });
-
-    let outlierScores = existingResult ? existingResult.outlierScores : {};
-    _.forOwn(result.outlierScores, (newCount, score) => {
-      outlierScores[score] = _.defaultTo(outlierScores[score], 0) + newCount;
-    });
-
-    let wins = existingResult ? existingResult.wins : {};
-    _.forOwn(result.wins, (newCount, score) => {
-      wins[score] = _.defaultTo(wins[score], 0) + newCount;
-    });
+    let scores = combineScores(existingResult?.scores, result.scores);
+    let outlierScores = combineScores(existingResult?.outlierScores, result.outlierScores);
+    let wins = combineScores(existingResult?.wins, result.wins);
+    let tieBreakerWins = combineScores(existingResult?.tieBreakerWins, result.tieBreakerWins);
+    let sharedWins = combineScores(existingResult?.sharedWins, result.sharedWins);
 
     const playCount = (existingResult ? existingResult.playCount : 0) + _.uniq(result.playIds).length;
 
@@ -271,7 +265,8 @@ const getCombinedResults = (keyedResults, existingResults) => {
       ...result,
       scores: scores,
       wins: wins,
-      existingTiesCount: existingResult ? existingResult.tiesCount : 0,
+      tieBreakerWins: tieBreakerWins,
+      sharedWins: sharedWins,
       outlierScores: outlierScores,
       playCount: playCount,
     };
@@ -308,33 +303,31 @@ const getStats = (scores) => {
 
 // Fills in the stat section of the result, such as mean and std
 const addStatsToResult = (result) => {
-  const explodedScores = getExplodedScores(result.scores);
+  // Put old outliers back in so we don't mess with the STD too much
+  let allScores = combineScores(result.scores, result.outlierScores);
+  const allExplodedScores = getExplodedScores(allScores);
 
   // Remove outlier scores
-  const trimmedScores = getTrimmedScores(explodedScores, result.scores);
-  const newOutlierScores = _.pickBy(result.scores, (count, score) => !trimmedScores[score]);
-
-  let outlierScores = result.outlierScores;
-  _.forOwn(newOutlierScores, (newCount, score) => {
-    outlierScores[score] = _.defaultTo(result.outlierScores[score], 0) + newCount;
-  });
+  const trimmedScores = getTrimmedScores(allExplodedScores, allScores);
+  const outlierScores = _.pickBy(allScores, (count, score) => !trimmedScores[score]);
 
   result.scores = trimmedScores;
   result.outlierScores = outlierScores;
 
-  // Remove outlier wins
-  result.wins = _.pickBy(result.wins, (count, score) => result.scores[score]);
-
-  // Remove outlier ties
-  filteredTies = _.pickBy(result.ties, (count, score) => result.scores[score]);
-  result.tiesCount = result.existingTiesCount + _.sum(Object.values(filteredTies));
-  delete result['ties'];
-  delete result['existingTiesCount'];
-
   // Get stats based on trimmed scores. This will recalculate std.
   const stats = getStats(result.scores);
-  // stats.trimmedScoreCount = explodedScores.length - stats.scoreCount;
-  stats.winPercentage = parseInt((_.sum(Object.values(result.wins)) / stats.scoreCount).toFixed(2) * 100);
+
+  // Get win percentage based on filtered wins
+  const filteredWins = _.pickBy(result.wins, (count, score) => !result.outlierScores[score]);
+  stats.winPercentage = parseInt((_.sum(Object.values(filteredWins)) / stats.scoreCount).toFixed(2) * 100);
+
+  // Get tieBreakerWinCount based on filtered tieBreakerWins
+  const filteredTieBreakerWins = _.pickBy(result.tieBreakerWins, (count, score) => !result.outlierScores[score]);
+  stats.tieBreakerWinCount = _.sum(Object.values(filteredTieBreakerWins));
+
+  // Get sharedWinCount based on filtered sharedWins
+  const filteredSharedWins = _.pickBy(result.sharedWins, (count, score) => !result.outlierScores[score]);
+  stats.sharedWinCount = _.sum(Object.values(filteredSharedWins));
 
   return {
     ...result,

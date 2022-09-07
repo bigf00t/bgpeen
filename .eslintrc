@@ -21,7 +21,8 @@
     },
     "plugins": [
         "react",
-        "prettier"
+        "prettier",
+        "jest"
     ],
     "rules": {
         "no-unused-vars": "warn",
