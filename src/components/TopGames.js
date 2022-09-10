@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardMedia from '@mui/material/CardMedia';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { getGameSlug } from '../utils';
 import _ from 'lodash';
@@ -37,11 +38,11 @@ const TopGames = (props) => {
 
   return (
     <Box component="div" width={1}>
-      {topGames.length > 0 && (
-        <Box component="div">
-          <Typography variant="h4" component="h4" align="center">
-            {props.title}
-          </Typography>
+      <Box component="div">
+        <Typography variant="h4" component="h4" align="center">
+          {props.title}
+        </Typography>
+        {topGames.length > 0 && (
           <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
             {topGames.map((game) => (
               <Card key={game.id} className={classes.card}>
@@ -98,8 +99,15 @@ const TopGames = (props) => {
               </Card>
             ))}
           </Box>
-        </Box>
-      )}
+        )}
+        {topGames.length == 0 && (
+          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px">
+              <CircularProgress size={40} className={classes.progress} color="inherit" m={1} />
+            </Box>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

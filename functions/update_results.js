@@ -32,6 +32,7 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   const invalidPlaysCount = newPlays.length - validPlays.length;
   console.log(`Ignoring ${invalidPlaysCount} invalid plays`);
+  console.log(`Parsing ${validPlays.length} valid plays`);
 
   if (validPlays.length === 0) {
     console.error('ERROR - No valid plays!');

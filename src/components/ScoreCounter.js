@@ -11,6 +11,7 @@ import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 import Typography from '@mui/material/Typography';
 import FlipNumbers from 'react-flip-numbers';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = (theme) => ({
   container: {
@@ -48,83 +49,67 @@ const nonNumberStyle = {
 };
 
 const ScoreCounter = (props) => {
-  const [totalScores, setTotalScores] = useState(null);
-  const [totalGames, setTotalGames] = useState(null);
-  const [scoreValue, setScoreValue] = useState('0'.repeat(12));
-  const [gameValue, setGameValue] = useState('0'.repeat(4));
+  const [scoreValue, setScoreValue] = useState('0,000,000');
+  const [gameValue, setGameValue] = useState('000');
 
   const classes = props.classes;
 
   useEffect(() => {
-    if (props.data.games.length > 0 && !(totalScores && totalGames)) {
+    if (props.data.games.length > 0) {
       const newTotalScores = _.reduce(
         props.data.games,
         (sum, game) => sum + (game.totalScores || 0),
         0
       ).toLocaleString();
       const newTotalGames = props.data.games.length.toLocaleString();
-      setTotalScores(newTotalScores);
-      setTotalGames(newTotalGames);
-      setScoreValue('0'.repeat(newTotalScores.length));
-      setGameValue('0'.repeat(newTotalGames.length));
+      setScoreValue(newTotalScores);
+      setGameValue(newTotalGames);
     }
   }, [props.data.games]);
 
-  useEffect(() => {
-    if (totalScores && totalGames) {
-      setScoreValue(totalScores);
-      setGameValue(totalGames);
-    }
-  }, [totalScores, totalGames]);
-
-  if (scoreValue == '0'.repeat(12)) {
-    return null;
-  }
-
   return (
     <Box component="div" className={classes.container} width={1} elevation={2} p={1}>
-      {totalScores && totalGames && (
-        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-          <Typography variant="h4" component="h4" align="center">
-            Now serving
-          </Typography>
-          <Box component="div" className={classes.counter}>
-            <FlipNumbers
-              height={50}
-              width={36}
-              color="white"
-              background=""
-              play
-              numbers={scoreValue}
-              duration="2"
-              numberStyle={numberStyle}
-              nonNumberStyle={nonNumberStyle}
-            />
-          </Box>
-          <Typography variant="h4" component="h4" align="center">
-            scores for
-          </Typography>
-          <Box component="div" className={classes.counter}>
-            <FlipNumbers
-              height={50}
-              width={36}
-              color="white"
-              background=""
-              play
-              numbers={gameValue}
-              duration="2"
-              numberStyle={numberStyle}
-              nonNumberStyle={nonNumberStyle}
-            />
-          </Box>
-          <Typography variant="h4" component="h4" align="center">
-            games
-          </Typography>
-          <Typography variant="h4" component="h4" align="center">
-            &nbsp;...and counting!
-          </Typography>
+      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+        <Typography variant="h4" component="h4" align="center">
+          Now serving
+        </Typography>
+        <Box component="div" className={classes.counter}>
+          <FlipNumbers
+            height={50}
+            width={36}
+            color="white"
+            background=""
+            // play={totalScores != null}
+            play
+            numbers={scoreValue}
+            duration="2"
+            numberStyle={numberStyle}
+            nonNumberStyle={nonNumberStyle}
+          />
         </Box>
-      )}
+        <Typography variant="h4" component="h4" align="center">
+          scores for
+        </Typography>
+        <Box component="div" className={classes.counter}>
+          <FlipNumbers
+            height={50}
+            width={36}
+            color="white"
+            background=""
+            play
+            numbers={gameValue}
+            duration="2"
+            numberStyle={numberStyle}
+            nonNumberStyle={nonNumberStyle}
+          />
+        </Box>
+        <Typography variant="h4" component="h4" align="center">
+          games
+        </Typography>
+        <Typography variant="h4" component="h4" align="center">
+          &nbsp;...and counting!
+        </Typography>
+      </Box>
     </Box>
   );
 };

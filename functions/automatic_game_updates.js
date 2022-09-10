@@ -20,16 +20,15 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 100, includeHi
   }
 
   const oneMonthAgo = dayjs().subtract(1, 'month').toDate();
-  const oneWeekAgo = dayjs().subtract(1, 'week').toDate();
 
   let queries = [
     firestore
       .collection('plays')
-      .where('playsLastUpdated', '<', oneWeekAgo)
       .where('hasMinPlays', '==', false)
-      .orderBy('playsLastUpdated', 'asc'),
+      .where('remainingPlays', '>', 0)
+      .orderBy('remainingPlays', 'asc'),
     firestore.collection('plays').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
-    // firestore.collection('plays').where('hasNoPlays', '==', true),
+    // firestore.collection('plays').where('totalPlays', '<', 10),
   ];
 
   if (includeHistorical) {

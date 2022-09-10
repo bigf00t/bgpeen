@@ -225,7 +225,7 @@ const Result = (props) => {
   // No data loaded
   if (!result) {
     return (
-      <Box component="div" height="100vh" justifyContent="center" w={1} display="flex" alignItems="center">
+      <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
         <CircularProgress size={60} className={classes.progress} color="inherit" />
       </Box>
     );

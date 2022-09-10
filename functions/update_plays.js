@@ -140,10 +140,12 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
     };
   }
 
-  const cleanPlays = getCleanPlaysFromJson(json.plays.play);
+  const totalPlays = json.plays.$.total;
+
+  const plays = totalPlays > 1 ? json.plays.play : [json.plays.play];
+  const cleanPlays = getCleanPlaysFromJson(plays);
   const newPlays = getNewPlays(gamePlays, cleanPlays);
 
-  const totalPlays = json.plays.$.total;
   const actualTotalPages = _.min([maxPages, _.ceil(totalPlays / 100)]);
   const remainingPages = actualTotalPages - page;
 
