@@ -1,8 +1,7 @@
 import React from 'react';
 import ScoreCounter from './ScoreCounter';
 import SelectGame from './SelectGame';
-import PopularGames from './PopularGames';
-import NewestGames from './RecentlyAddedGames';
+import TopGames from './TopGames';
 import * as actions from '../actions';
 import { connect } from 'react-redux';
 import withStyles from '@mui/styles/withStyles';
@@ -25,10 +24,10 @@ const Measure = (props) => {
       </Box>
       <ScoreCounter />
       <Box component="div" p={4} pb={0}>
-        <PopularGames />
+        <TopGames title="Most Popular Games" field="popularity" />
       </Box>
       <Box component="div" p={4}>
-        <NewestGames />
+        <TopGames title="Recently Added Games" field="addedDate" />
       </Box>
     </Box>
   );

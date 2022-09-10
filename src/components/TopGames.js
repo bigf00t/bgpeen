@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import * as actions from '../actions';
 
@@ -15,6 +15,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 import CardMedia from '@mui/material/CardMedia';
 
 import { getGameSlug } from '../utils';
+import _ from 'lodash';
 
 const styles = (theme) => ({
   card: {
@@ -22,23 +23,32 @@ const styles = (theme) => ({
   },
 });
 
-const RecentlyAddedGames = (props) => {
+const TopGames = (props) => {
+  const [topGames, setTopGames] = useState([]);
+
   const classes = props.classes;
+
+  // componentDidMount
+  useEffect(() => {
+    if (props.data.games.length > 0) {
+      setTopGames(_.orderBy(props.data.games, props.field, 'desc').slice(0, 10));
+    }
+  }, [props.data.games]);
 
   return (
     <Box component="div" width={1}>
-      {props.data.newGames.length > 0 && (
+      {topGames.length > 0 && (
         <Box component="div">
           <Typography variant="h4" component="h4" align="center">
-            Recently Added Games
+            {props.title}
           </Typography>
           <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-            {props.data.newGames.map((game) => (
+            {topGames.map((game) => (
               <Card key={game.id} className={classes.card}>
                 <CardActionArea
                   component={Link}
                   to={`/${game.id}/${getGameSlug(game)}`}
-                  title={`${game.name} - ${game.addedDate}`}
+                  title={`${game.name} - ${game[props.field]}`}
                 >
                   <CardMedia component="img" image={game.thumbnail} alt={game.name} />
                   <Box
@@ -94,14 +104,15 @@ const RecentlyAddedGames = (props) => {
   );
 };
 
-RecentlyAddedGames.propTypes = {
+TopGames.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  // loadNewGames: PropTypes.func,
+  title: PropTypes.string,
+  field: PropTypes.string,
 };
 
 const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(RecentlyAddedGames)));
+export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(TopGames)));
