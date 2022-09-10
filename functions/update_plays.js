@@ -151,7 +151,9 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
   const remainingPlaysCount = totalPlays - (100 * (page - 1) + json.plays.play.length);
 
   console.info(
-    `${game.name} - Page ${page} of ${actualTotalPages} - ${newPlays.length} new plays - ${duplicatePlaysCount} duplicate plays`
+    `${game.name} - Page ${page} of ${actualTotalPages}${
+      duplicatePlaysCount > 0 ? ` - ${duplicatePlaysCount} duplicate plays` : ''
+    }`
   );
 
   return {

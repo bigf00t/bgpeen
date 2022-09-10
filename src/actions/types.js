@@ -1,4 +1,2 @@
 export const LOAD_GAME = 'LOAD_GAME';
-export const LOAD_GAME_NAMES = 'LOAD_GAME_NAMES';
-export const LOAD_POPULAR_GAMES = 'LOAD_POPULAR_GAMES';
-export const LOAD_NEW_GAMES = 'LOAD_NEW_GAMES';
+export const LOAD_GAMES = 'LOAD_GAMES';

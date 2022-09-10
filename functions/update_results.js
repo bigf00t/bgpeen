@@ -44,8 +44,11 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   // Group into keyed results
   const keyedResults = getKeyedResultsFromPlayerResults(playerResults);
 
+  // Filter out keys that we don't want
+  const filteredResults = filterResults(keyedResults);
+
   // Combine with existing results
-  const combinedResults = getCombinedResults(keyedResults, existingResults);
+  const combinedResults = getCombinedResults(filteredResults, existingResults);
 
   // Calculate stats for each remaining result
   const results = _.mapValues(combinedResults, (result) => addStatsToResult(result));
@@ -91,7 +94,9 @@ const getGameType = (plays) => {
     (play) => _.minBy(play.players, (player) => parseInt(player.score)).win == 1
   );
 
-  const lowestScoreWinsLikelihood = parseInt((playsWithLowestWinner.length / playsWithAtLeastOneScoreAndWin.length) * 100);
+  const lowestScoreWinsLikelihood = parseInt(
+    (playsWithLowestWinner.length / playsWithAtLeastOneScoreAndWin.length) * 100
+  );
   console.log(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
 
   if (lowestScoreWinsLikelihood > 25) {
@@ -101,6 +106,7 @@ const getGameType = (plays) => {
   return 'highest-wins';
 };
 
+// TODO: More logging on exactly what we remove
 // Remove plays that we don't want to include in our score
 const getValidPlays = (plays, details, gameType) =>
   _.filter(
@@ -118,10 +124,10 @@ const getValidPlays = (plays, details, gameType) =>
       // For co-op games, we're more lenient about winners and scores
       (gameType === 'co-op' ||
         ((gameType === 'lowest-wins' || gameType === 'highest-wins') &&
-          //   At least one player has a parsable, non-zero score. This may inlcude some plays with erroneous 0s.
-          _.some(play.players, (player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) === 0)) &&
-          //   ? Every player has a parsable, non-zero score. Unfortuntely this will exclude plays with legit scores of 0.
-          //   ? There is at least one winner
+          //   Every player has a numeric score.
+          _.every(play.players, (player) => !isNaN(parseInt(player.score))) &&
+          //   At least one player has a non-zero score. This may include some plays with erroneous 0s.
+          _.some(play.players, (player) => parseInt(player.score) > 0) &&
           //   Lowest score is winner
           ((gameType === 'lowest-wins' && _.minBy(play.players, (player) => parseInt(player.score)).win == 1) ||
             //   Highest score is winner
@@ -152,7 +158,7 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
             i > 0 && playerResults[i - 1].score == parseInt(player.score) && parseInt(player.win) == 1
               ? playerResults[i - 1].finishPosition
               : i + 1,
-          color: player.color.toLowerCase(),
+          color: player.color === undefined ? '' : player.color.toLowerCase(),
           year: play.date ? parseInt(play.date.split('-')[0]) : '',
           month: play.date ? parseInt(play.date.split('-')[1]) : '',
           isWin: Boolean(parseInt(player.win) === 1),
@@ -185,6 +191,7 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
           scores: { [result.score]: 1 },
           wins: result.isWin ? { [result.score]: 1 } : {},
           playIds: [result.id],
+          playCount: 1,
           tieBreakerWins: result.isTieBreakerWin ? { [result.score]: 1 } : {},
           sharedWins: result.isSharedWin ? { [result.score]: 1 } : {},
         };
@@ -194,7 +201,10 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
         if (result.isWin) {
           keyedResults[key].wins[result.score] = _.defaultTo(keyedResults[key].wins[result.score], 0) + 1;
         }
-        keyedResults[key].playIds.push(result.id);
+        if (!keyedResults[key].playIds.includes(result.id)) {
+          keyedResults[key].playIds.push(result.id);
+          keyedResults[key].playCount = keyedResults[key].playIds.length;
+        }
         if (result.isTieBreakerWin) {
           keyedResults[key].tieBreakerWins[result.score] =
             _.defaultTo(keyedResults[key].tieBreakerWins[result.score], 0) + 1;
@@ -213,11 +223,14 @@ const getKeysFromResult = (result) => {
   let keys = { all: [] };
   if (result.playerCount) {
     keys[`count-${result.playerCount}`] = ['playerCount'];
-    if (result.startPosition && !isNaN(result.startPosition)) {
+    if (result.startPosition && !isNaN(result.startPosition) && result.startPosition < result.playerCount) {
       keys[`count-${result.playerCount}-start-${result.startPosition}`] = ['playerCount', 'startPosition'];
     }
     if (result.finishPosition) {
       keys[`count-${result.playerCount}-finish-${result.finishPosition}`] = ['playerCount', 'finishPosition'];
+    }
+    if (result.new > 0) {
+      keys[`count-${result.playerCount}-new`] = [];
     }
   }
   if (result.year) {
@@ -227,10 +240,7 @@ const getKeysFromResult = (result) => {
     keys[`year-${result.year}-month-${result.month}`] = ['year', 'month'];
   }
   if (result.color) {
-    keys[`color-${result.color.trim().replace(' ', '_')}`] = ['color'];
-  }
-  if (result.new > 0) {
-    keys['new'] = [];
+    keys[`color-${result.color.trim().toLowerCase().replace(' ', '-')}`] = ['color'];
   }
 
   return keys;
@@ -257,8 +267,6 @@ const getCombinedResults = (keyedResults, existingResults) => {
     let tieBreakerWins = combineScores(existingResult?.tieBreakerWins, result.tieBreakerWins);
     let sharedWins = combineScores(existingResult?.sharedWins, result.sharedWins);
 
-    const playCount = (existingResult ? existingResult.playCount : 0) + _.uniq(result.playIds).length;
-
     delete result.playIds;
 
     combinedResults[key] = {
@@ -268,11 +276,44 @@ const getCombinedResults = (keyedResults, existingResults) => {
       tieBreakerWins: tieBreakerWins,
       sharedWins: sharedWins,
       outlierScores: outlierScores,
-      playCount: playCount,
     };
   });
 
   return combinedResults;
+};
+
+const filterResults = (newResults) => {
+  const colorResults = _.filter(Object.values(newResults), (result) => result.color !== undefined);
+  const colorPlayCounts = _.map(colorResults, 'playCount');
+  const colorPlayCountTotal = _.sum(colorPlayCounts);
+
+  console.log(`Total color results: ${colorPlayCountTotal}`);
+
+  const filteredResults = _.pickBy(
+    newResults,
+    (result, key) =>
+      !key.startsWith('color') ||
+      (/^[a-zA-Z0-9'\-. ]+$/.test(result.color) && result.playCount / colorPlayCountTotal >= 0.001)
+  );
+
+  const sortedColorResults = _.orderBy(colorResults, 'playCount', 'desc');
+
+  // Log results
+  for (const result of sortedColorResults) {
+    if (filteredResults[`color-${result.color.trim().toLowerCase().replace(' ', '-')}`] === undefined) {
+      console.log(
+        `Skipping color: ${result.color} - ${result.playCount} - ${(result.playCount / colorPlayCountTotal).toFixed(4)}`
+      );
+    } else {
+      console.log(
+        `Including color: ${result.color} - ${result.playCount} - ${(result.playCount / colorPlayCountTotal).toFixed(
+          4
+        )}`
+      );
+    }
+  }
+
+  return filteredResults;
 };
 
 // Remove outlier scores, based on std
@@ -319,7 +360,8 @@ const addStatsToResult = (result) => {
 
   // Get win percentage based on filtered wins
   const filteredWins = _.pickBy(result.wins, (count, score) => !result.outlierScores[score]);
-  stats.winPercentage = parseInt((_.sum(Object.values(filteredWins)) / stats.scoreCount).toFixed(2) * 100);
+  stats.winCount = _.sum(Object.values(filteredWins));
+  stats.winPercentage = parseInt((stats.winCount / stats.scoreCount).toFixed(2) * 100);
 
   // Get tieBreakerWinCount based on filtered tieBreakerWins
   const filteredTieBreakerWins = _.pickBy(result.tieBreakerWins, (count, score) => !result.outlierScores[score]);

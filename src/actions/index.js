@@ -1,48 +1,11 @@
-import { collection, query, where, getDocs, orderBy, doc, getDoc, updateDoc, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
-import { LOAD_GAME_NAMES, LOAD_POPULAR_GAMES, LOAD_NEW_GAMES, LOAD_GAME } from '../actions/types';
-import _, { result } from 'lodash';
+import { LOAD_GAMES, LOAD_GAME } from '../actions/types';
+import _ from 'lodash';
 import { db } from '../fire';
 
-export const loadGameNames = () => async (dispatch) => {
+export const loadGames = () => async (dispatch) => {
   const q = query(collection(db, 'games'), where('totalScores', '>', 0));
-  const querySnapshot = await getDocs(q);
-
-  const gameNames = [];
-  querySnapshot.forEach((doc) => {
-    if (!_.isEmpty(doc.data())) {
-      gameNames.push({
-        id: doc.data().id,
-        name: doc.data().name,
-        totalScores: doc.data().totalScores,
-      });
-    }
-  });
-
-  const sortedGameNames = _.sortBy(gameNames, 'name');
-
-  dispatch({
-    type: LOAD_GAME_NAMES,
-    payload: sortedGameNames,
-  });
-};
-
-export const loadPopularGames = () => async (dispatch) => {
-  dispatch({
-    type: LOAD_POPULAR_GAMES,
-    payload: await loadSortedGames('popularity'),
-  });
-};
-
-export const loadNewGames = () => async (dispatch) => {
-  dispatch({
-    type: LOAD_NEW_GAMES,
-    payload: await loadSortedGames('addedDate'),
-  });
-};
-
-export const loadSortedGames = async (sortBy) => {
-  const q = query(collection(db, 'games'), where('totalScores', '>', 0), limit(10));
   const querySnapshot = await getDocs(q);
 
   const games = [];
@@ -60,19 +23,25 @@ export const loadSortedGames = async (sortBy) => {
     }
   });
 
-  const sortedGames = _.sortBy(games, sortBy).reverse();
+  const sortedGameNames = _.sortBy(games, 'name');
 
-  return sortedGames;
+  dispatch({
+    type: LOAD_GAMES,
+    payload: sortedGameNames,
+  });
 };
 
 export const loadGame = (gameId) => async (dispatch) => {
   const gameRef = doc(db, 'games', gameId);
   const gameSnapshot = await getDoc(gameRef);
 
-  const resultsRef = query(collection(db, 'games', gameId, 'results'));
+  const allDocSnapshot = await getDoc(doc(db, 'games', gameId, 'results', 'all'));
+  let results = [allDocSnapshot.data()];
+
+  // where is temporary
+  const resultsRef = query(collection(db, 'games', gameId, 'results'), where('playerCount', '>', 0));
   const resultsSnapshot = await getDocs(resultsRef);
 
-  let results = [];
   resultsSnapshot.forEach((doc) => {
     results.push(doc.data());
   });

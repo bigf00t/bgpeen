@@ -108,8 +108,8 @@ const SelectGame = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    if (props.data.gameNames.length == 0) {
-      props.loadGameNames();
+    if (props.data.games.length == 0) {
+      props.loadGames();
     }
   }, []);
 
@@ -136,7 +136,7 @@ const SelectGame = (props) => {
             onInputChange={handleGameInputChange}
             onHighlightChange={handleGameHighlightChange}
             onBlur={handleGameBlur}
-            options={props.data.gameNames}
+            options={props.data.games}
             fullWidth
             getOptionLabel={(option) => option.name || option}
             renderInput={(params) => {
@@ -190,7 +190,7 @@ SelectGame.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
   location: PropTypes.object,
-  loadGameNames: PropTypes.func,
+  loadGames: PropTypes.func,
   handleChange: PropTypes.func,
 };
 

@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
-import { getPerformance } from 'firebase/performance';
+// import { getPerformance } from 'firebase/performance';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAYdGDedLLPfXINfadAJiALOrmZLRaToH8',
@@ -15,8 +15,8 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-const analytics = getAnalytics(firebaseApp);
-const perf = getPerformance(firebaseApp);
+getAnalytics(firebaseApp);
+// const perf = getPerformance(firebaseApp);
 export const db = getFirestore(firebaseApp);
 
 if (window.location.hostname === 'localhost') {

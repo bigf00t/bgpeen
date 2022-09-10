@@ -1,7 +1,6 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
-const _ = require('lodash');
 const util = require('./util');
 const add_game = require('./add_game');
 const update_plays = require('./update_plays');
@@ -11,7 +10,7 @@ const dayjs = require('dayjs');
 const duration = require('dayjs/plugin/duration');
 dayjs.extend(duration);
 
-exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 80, includeHistorical = false) => {
+exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 100, includeHistorical = false) => {
   const searchesSnapshot = await firestore.collection('searches').where('completed', '!=', true).limit(maxGames).get();
 
   if (searchesSnapshot.size > 0) {

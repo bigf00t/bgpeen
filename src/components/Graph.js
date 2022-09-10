@@ -108,11 +108,6 @@ const Graph = (props) => {
 
   const labels = getDataFromResult().map((item) => item.x, []);
 
-  const getLabelText = () =>
-    `${!props.result.playerCount ? 'All' : 'Filtered'} Scores - Total ${props.result.scoreCount} - Avg ${
-      props.result.mean
-    }`;
-
   const data = {
     labels,
     datasets: [

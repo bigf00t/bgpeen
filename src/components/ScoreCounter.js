@@ -50,25 +50,25 @@ const nonNumberStyle = {
 const ScoreCounter = (props) => {
   const [totalScores, setTotalScores] = useState(null);
   const [totalGames, setTotalGames] = useState(null);
-  const [scoreValue, setScoreValue] = useState(null);
-  const [gameValue, setGameValue] = useState(null);
+  const [scoreValue, setScoreValue] = useState('0'.repeat(12));
+  const [gameValue, setGameValue] = useState('0'.repeat(4));
 
   const classes = props.classes;
 
   useEffect(() => {
-    if (props.data.gameNames.length > 0 && !(totalScores && totalGames)) {
+    if (props.data.games.length > 0 && !(totalScores && totalGames)) {
       const newTotalScores = _.reduce(
-        props.data.gameNames,
+        props.data.games,
         (sum, game) => sum + (game.totalScores || 0),
         0
       ).toLocaleString();
-      const newTotalGames = props.data.gameNames.length.toLocaleString();
+      const newTotalGames = props.data.games.length.toLocaleString();
       setTotalScores(newTotalScores);
       setTotalGames(newTotalGames);
       setScoreValue('0'.repeat(newTotalScores.length));
       setGameValue('0'.repeat(newTotalGames.length));
     }
-  }, [props.data.gameNames]);
+  }, [props.data.games]);
 
   useEffect(() => {
     if (totalScores && totalGames) {
@@ -76,6 +76,10 @@ const ScoreCounter = (props) => {
       setGameValue(totalGames);
     }
   }, [totalScores, totalGames]);
+
+  if (scoreValue == '0'.repeat(12)) {
+    return null;
+  }
 
   return (
     <Box component="div" className={classes.container} width={1} elevation={2} p={1}>

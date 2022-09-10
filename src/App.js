@@ -5,11 +5,11 @@ import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@mui/material/styles';
 import { StyledEngineProvider } from '@mui/styled-engine';
 import CssBaseline from '@mui/material/CssBaseline';
-// import './App.css';
 
 import Menu from './components/Menu';
 import Measure from './components/Measure';
 import Result from './components/Result';
+// import Maintenance from './components/Maintenance';
 
 function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -53,7 +53,9 @@ function App() {
               <Route path="/:id/:name" element={<Result />}>
                 <Route path=":score/:players/:place" element={<Result />} />
               </Route>
+              {/* <Route path="/" element={<Maintenance />} /> */}
               <Route path="/" element={<Measure />} />
+              <Route path="/dev" element={<Measure />} />
             </Routes>
           </div>
         </ThemeProvider>

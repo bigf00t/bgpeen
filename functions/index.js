@@ -14,7 +14,6 @@ exports.runAutomaticGameUpdates = functions
   .runWith(runtimeOpts)
   .pubsub.schedule('every 5 minutes')
   .onRun(async () => {
-    await automatic.runAutomaticGameUpdates().catch((e) => {
-      console.error(e);
-    });
+    // console.log('Updates turned off');
+    await automatic.runAutomaticGameUpdates();
   });

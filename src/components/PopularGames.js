@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import * as actions from '../actions';
 
@@ -24,13 +24,6 @@ const styles = (theme) => ({
 
 const PopularGames = (props) => {
   const classes = props.classes;
-
-  // componentDidMount
-  useEffect(() => {
-    if (props.data.popularGames.length == 0) {
-      props.loadPopularGames();
-    }
-  }, []);
 
   return (
     <Box component="div" width={1}>
@@ -104,7 +97,7 @@ const PopularGames = (props) => {
 PopularGames.propTypes = {
   data: PropTypes.object,
   classes: PropTypes.object,
-  loadPopularGames: PropTypes.func,
+  // loadPopularGames: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {

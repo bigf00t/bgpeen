@@ -1,81 +1,91 @@
-const admin = require('firebase-admin');
+// const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
-
-const _ = require('lodash');
 
 const util = require('./util');
 
 exports.manualGamesUpdate = async (gameIds) => {
   let query = firestore.collection('games');
-  // console.log(gameIds);
 
   if (gameIds && gameIds.length > 0) {
     query = query.where('id', 'in', gameIds);
   }
 
   const gamesSnapshot = await query.get();
-  const batch = firestore.batch();
 
   const games = util.docsToArray(gamesSnapshot);
 
+  let gameNum = 0;
   for (const game of games) {
-    console.log(`Updating ${game.name} (${game.id})`);
-    const resultsRef = firestore.collection('results').doc(game.id);
-    const resultsSnapshot = await resultsRef.get();
-    const gameRef = firestore.collection('games').doc(game.id);
+    gameNum++;
+    console.log(`${'-'.repeat(50)}\nUpdating game ${gameNum} of ${games.length}: ${game.name} (${game.id})`);
 
-    if (resultsSnapshot.data() == undefined) {
-      console.log('No results found, skipping.');
-      continue;
-    }
-
-    const gameDetailsRef = firestore.collection('details').doc(game.id);
-    const gamePlaysRef = firestore.collection('plays').doc(game.id);
+    // const gameRef = firestore.collection('games').doc(game.id);
+    // const gamePlaysRef = gameRef.collection('plays');
     // const gamePlaysSnapshot = await gamePlaysRef.get();
+    // const gamePlays = util.docsToArray(gamePlaysSnapshot);
 
-    // TODO: Calc min/max play ids
+    // console.log(`Deleting ${gamePlays.length} old plays`);
 
-    // const minDatePlaysRef = firestore
-    //   .collection('games')
-    //   .doc(game.id)
-    //   .collection('plays')
-    //   .where('date', '==', game.minDate);
+    // for (const play of gamePlays) {
+    //   gamePlaysRef.doc(play.id).delete();
+    // }
 
-    // const minDatePlaysSnapshot = await minDatePlaysRef.get();
-    // const minPlays = util.docsToArray(minDatePlaysSnapshot);
-    // const minDatePlayIds = _.map(minPlays, (play) => play.id);
+    // console.log('Old plays deleted');
 
-    // const maxDatePlaysRef = firestore
-    //   .collection('games')
-    //   .doc(game.id)
-    //   .collection('plays')
-    //   .where('date', '==', game.maxDate);
+    // const gameResultsRef = gameRef.collection('results');
+    // const gameResultsSnapshot = await gameResultsRef.get();
+    // const gameResults = util.docsToArray(gameResultsSnapshot);
 
-    // const maxDatePlaysSnapshot = await maxDatePlaysRef.get();
-    // const maxPlays = util.docsToArray(maxDatePlaysSnapshot);
-    // const maxDatePlayIds = _.map(maxPlays, (play) => play.id);
+    // console.log(`Deleting ${gameResults.length} results`);
 
-    // const resultRecords = util.docsToArray(resultsSnapshot);
+    // for (const result of gameResults) {
+    //   gameResultsRef.doc(result.id).delete();
+    // }
 
-    // gameRef.collection('results').doc
+    // console.log('Results deleted');
 
-    // batch.set(gamePlaysRef, {
-    //   minDatePlayIds: minDatePlayIds.join(','),
-    //   maxDatePlayIds: maxDatePlayIds.join(','),
-    //   totalPlays: game.totalPlays,
-    //   unusablePlays: game.unusablePlays,
-    //   remainingPlays: game.remainingPlays,
-    //   newestPlayDate: game.newestPlayDate,
-    //   oldestPlayDate: game.oldestPlayDate,
-    //   maxDate: game.maxDate,
-    //   minDate: game.minDate,
-    //   hasMinPlays: game.hasMinPlays,
-    //   hasNoPlays: game.hasNoPlays,
-    //   playsLastUpdated: game.playsLastUpdated,
+    // const playsRef = firestore.collection('plays').doc(game.id);
+
+    // const batch = firestore.batch();
+
+    // // Reset all plays
+    // batch.set(playsRef, {
+    //   minDatePlayIds: '',
+    //   maxDatePlayIds: '',
+    //   totalPlays: 0,
+    //   unusablePlays: 0,
+    //   remainingPlays: 0,
+    //   newestPlayDate: '',
+    //   oldestPlayDate: '',
+    //   maxDate: '',
+    //   minDate: '',
+    //   hasMinPlays: false,
+    //   hasNoPlays: true,
+    //   playsLastUpdated: null,
     // });
 
-    // batch.set(gameDetailsRef, {
+    // console.log('Play data reset');
+
+    // batch.update(gameRef, {
+    //   totalValidPlays: 0,
+    //   totalInvalidPlays: 0,
+    //   totalScores: 0,
+    //   mean: 0,
+    //   gameType: '',
+    // });
+
+    // console.log('Game fields reset');
+
+    // if (game.bggThumbnail == undefined) {
+    //   console.log('Game schema already updated, skipping');
+    //   await batch.commit();
+    //   continue;
+    // }
+
+    // const detailsRef = firestore.collection('details').doc(game.id);
+
+    // batch.set(detailsRef, {
     //   bggThumbnail: game.bggThumbnail,
     //   bggImage: game.bggImage,
     //   description: game.description,
@@ -107,26 +117,9 @@ exports.manualGamesUpdate = async (gameIds) => {
     //   playingtime: admin.firestore.FieldValue.delete(),
     //   suggestedplayers: admin.firestore.FieldValue.delete(),
     // });
+
+    // console.log('Game schema updated.');
+
+    // await batch.commit();
   }
-
-  await batch.commit();
 };
-
-// NOT THIS!
-// const gameResultsRef = gameRef.collection('results');
-
-// for (const result of resultsSnapshot.data().results) {
-//   let key = 'all';
-//   if (result.playerCount) {
-//     key = `count-${result.playerCount}`;
-//     if (result.playerPlace) {
-//       key += `-place-${result.playerPlace}`;
-//     }
-//   }
-
-//   batch.set(gameResultsRef.doc(key), {
-//     ...result,
-//   });
-
-//   console.log(key);
-// }
