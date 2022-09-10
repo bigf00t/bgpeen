@@ -11,7 +11,6 @@ import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 import Typography from '@mui/material/Typography';
 import FlipNumbers from 'react-flip-numbers';
-import CircularProgress from '@mui/material/CircularProgress';
 
 const styles = (theme) => ({
   container: {

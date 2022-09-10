@@ -22,11 +22,11 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 100, includeHi
   const oneMonthAgo = dayjs().subtract(1, 'month').toDate();
 
   let queries = [
-    firestore
-      .collection('plays')
-      .where('hasMinPlays', '==', false)
-      .where('remainingPlays', '>', 0)
-      .orderBy('remainingPlays', 'asc'),
+    // firestore
+    //   .collection('plays')
+    //   .where('hasMinPlays', '==', false)
+    //   .where('remainingPlays', '>', 0)
+    //   .orderBy('remainingPlays', 'asc'),
     firestore.collection('plays').where('playsLastUpdated', '<', oneMonthAgo).orderBy('playsLastUpdated', 'asc'),
     // firestore.collection('plays').where('totalPlays', '<', 10),
   ];

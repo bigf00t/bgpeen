@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 // import AccordionDetails from '@mui/material/AccordionDetails';
 // import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircularProgress from '@mui/material/CircularProgress';
+import Fade from '@mui/material/Fade';
 
 import Filters from './Filters';
 import Graph from './Graph';
@@ -61,9 +62,13 @@ const styles = (theme) => ({
   ordinal: {},
   tweet: {
     position: 'relative',
-    top: '8px',
-    padding: theme.spacing(0, 0, 0, 1),
-    '& div': {
+    // height: '24px',
+    // top: '8px',
+    padding: theme.spacing(1, 5, 1, 1),
+    '& button': {
+      position: 'absolute',
+      top: '2px',
+      right: '0',
       display: 'inline-block',
     },
   },
@@ -237,46 +242,45 @@ const Result = (props) => {
   ${filters.place ? ' - ' + filters.place + ' place' : ''}`;
 
   return (
-    <Box component="div" display="flex" flexDirection="column" height="100%" pt={'64px'}>
-      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
-        <Image
-          src={props.data.game.thumbnail}
-          duration={1000}
-          wrapperClassName={classes.imageWrapper}
-          className={classes.image}
-        />
-        <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-          <Link
-            className={classes.link}
-            href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
-            target="_blank"
-            title="View on boardgamegeek.com"
-            underline="hover"
-          >
-            {props.data.game.name}
-          </Link>
-        </Typography>
-      </Box>
-      <Box component="div" p={1} backgroundColor={'#282828'}>
-        <Filters filters={filters} />
-      </Box>
-      <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" pt={2}>
-        <Typography m={2} component="h4" variant="h4" align="center">
-          Total Scores: &nbsp; {result.scoreCount} &nbsp;
-        </Typography>
-        <Typography m={2} component="h4" variant="h4" align="center">
-          Average Score: &nbsp; {result.mean}
-        </Typography>
-      </Box>
-      {filters && filters.score && (
-        <Box component="div" pb={2} justifyContent="center" alignItems="center">
-          <Typography component="div" align="center" className={classes.ordinal}>
-            {filters.score
-              ? ` Your score of ${filters.score} places you in the ${getOrdinalDesc(
-                  percentile
-                )} of similar scores. Share score:`
-              : ''}
+    <Fade in={result} timeout={500}>
+      <Box component="div" display="flex" flexDirection="column" height="100%" pt={'64px'}>
+        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
+          <Image
+            src={props.data.game.thumbnail}
+            duration={0}
+            wrapperClassName={classes.imageWrapper}
+            className={classes.image}
+          />
+          <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+            <Link
+              className={classes.link}
+              href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
+              target="_blank"
+              title="View on boardgamegeek.com"
+              underline="hover"
+            >
+              {props.data.game.name}
+            </Link>
+          </Typography>
+        </Box>
+        <Box component="div" p={1} backgroundColor={'#282828'}>
+          <Filters filters={filters} />
+        </Box>
+        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" pt={2}>
+          <Typography m={2} component="h4" variant="h4" align="center">
+            Total Scores: &nbsp; {result.scoreCount} &nbsp;
+          </Typography>
+          <Typography m={2} component="h4" variant="h4" align="center">
+            Average Score: &nbsp; {result.mean}
+          </Typography>
+        </Box>
+        {filters && filters.score && (
+          <Box component="div" p={2} justifyContent="center" alignItems="center" display="flex" flexWrap="wrap">
+            <Typography component="div" align="center">
+              {` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
+            </Typography>
             <Typography component="span" className={classes.tweet}>
+              Share score:
               <TwitterShareButton
                 title={getTwitterText(props.data.game.name, filters.score, percentile)}
                 url={window.location.href}
@@ -284,24 +288,24 @@ const Result = (props) => {
                 <TwitterIcon size={32} round />
               </TwitterShareButton>
             </Typography>
-          </Typography>
-          <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
-            {percentile !== null ? getScoreTitle(percentile) : 'None'}
+            <Typography variant="h2" component="h2" width={1} className={classes.title} gutterBottom align="center">
+              {percentile !== null ? getScoreTitle(percentile) : 'None'}
+            </Typography>
+          </Box>
+        )}
+        <Box component="div" flex="1" p={2} pt={0}>
+          <Graph result={result} score={filters.score} percentile={percentile}></Graph>
+        </Box>
+        <Box component="div" p={2} backgroundColor={'#282828'}>
+          <Typography component="div" align="center" className={classes.credit}>
+            {'Scores provided by '}
+            <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
+              boardgamegeek.com
+            </Link>
           </Typography>
         </Box>
-      )}
-      <Box component="div" flex="1" p={2} pt={0}>
-        <Graph result={result} score={filters.score} percentile={percentile}></Graph>
       </Box>
-      <Box component="div" p={2} backgroundColor={'#282828'}>
-        <Typography component="div" align="center" className={classes.credit}>
-          {'Scores provided by '}
-          <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
-            boardgamegeek.com
-          </Link>
-        </Typography>
-      </Box>
-    </Box>
+    </Fade>
   );
 };
 

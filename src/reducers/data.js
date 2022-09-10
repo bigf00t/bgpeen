@@ -1,5 +1,4 @@
 import { LOAD_GAMES, LOAD_GAME } from '../actions/types';
-import _ from 'lodash';
 
 const dataState = {
   game: null,

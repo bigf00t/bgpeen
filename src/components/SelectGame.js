@@ -109,6 +109,7 @@ const SelectGame = (props) => {
   // componentDidMount
   useEffect(() => {
     if (props.data.games.length == 0) {
+      // setTimeout(() => { props.loadGames(); }, 2000);
       props.loadGames();
     }
   }, []);
