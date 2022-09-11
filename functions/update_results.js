@@ -220,6 +220,10 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
   return keyedResults;
 };
 
+const getColorKey = (color) => {
+  return `color-${color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, '')}`;
+};
+
 const getKeysFromResult = (result) => {
   let keys = { all: [] };
   if (result.playerCount) {
@@ -241,7 +245,7 @@ const getKeysFromResult = (result) => {
     keys[`year-${result.year}-month-${result.month}`] = ['year', 'month'];
   }
   if (result.color) {
-    keys[`color-${result.color.trim().toLowerCase().replace(' ', '-')}`] = ['color'];
+    keys[getColorKey(result.color)] = ['color'];
   }
 
   return keys;
@@ -301,7 +305,7 @@ const filterResults = (newResults) => {
 
   // Log results
   for (const result of sortedColorResults) {
-    if (filteredResults[`color-${result.color.trim().toLowerCase().replace(' ', '-')}`] === undefined) {
+    if (filteredResults[getColorKey(result.color)] === undefined) {
       console.log(
         `Skipping color: ${result.color} - ${result.playCount} - ${(result.playCount / colorPlayCountTotal).toFixed(4)}`
       );

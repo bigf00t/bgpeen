@@ -25,3 +25,21 @@ yarn-error.log*
 
 /.firebase
 bgpeen-*.json
+data/*
+data/firebase-export-metadata.json
+data/firestore_export/firestore_export.overall_export_metadata
+data/firestore_export/all_namespaces/all_kinds/all_namespaces_all_kinds.export_metadata
+data/firestore_export/all_namespaces/all_kinds/output-0
+data/storage_export/buckets.json
+data/storage_export/blobs/5e6a1777-9f8d-4648-9b0a-8445aa8d6ec1
+data/storage_export/blobs/6a02dba8-0f7a-4815-84b9-607ee80b87c2
+data/storage_export/blobs/25ff18b2-4048-481d-aeee-8e69b2a8c0f2
+data/storage_export/blobs/126adc1b-a89b-4222-8cc2-9b65eecfe6cf
+data/storage_export/blobs/554b85e0-d787-4ebf-8e6d-30d6c09e2c06
+data/storage_export/blobs/cf5bb179-29b2-4931-abbc-44658c4ae49a
+data/storage_export/metadata/5e6a1777-9f8d-4648-9b0a-8445aa8d6ec1.json
+data/storage_export/metadata/6a02dba8-0f7a-4815-84b9-607ee80b87c2.json
+data/storage_export/metadata/25ff18b2-4048-481d-aeee-8e69b2a8c0f2.json
+data/storage_export/metadata/126adc1b-a89b-4222-8cc2-9b65eecfe6cf.json
+data/storage_export/metadata/554b85e0-d787-4ebf-8e6d-30d6c09e2c06.json
+data/storage_export/metadata/cf5bb179-29b2-4931-abbc-44658c4ae49a.json
