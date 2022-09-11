@@ -8,12 +8,6 @@ import * as actions from '../actions';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
-// import Card from '@mui/material/Card';
-// import CardContent from '@mui/material/CardContent';
-// import Accordion from '@mui/material/Accordion';
-// import AccordionSummary from '@mui/material/AccordionSummary';
-// import AccordionDetails from '@mui/material/AccordionDetails';
-// import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fade from '@mui/material/Fade';
 
@@ -59,15 +53,17 @@ const styles = (theme) => ({
     margin: theme.spacing(2, 2, 0, 2),
   },
   credit: {},
-  ordinal: {},
+  ordinal: {
+    padding: theme.spacing(0, 1, 1, 1),
+  },
   tweet: {
     position: 'relative',
     // height: '24px',
     // top: '8px',
-    padding: theme.spacing(1, 5, 1, 1),
+    padding: theme.spacing(0, 5, 1, 1),
     '& button': {
       position: 'absolute',
-      top: '2px',
+      top: '-6px',
       right: '0',
       display: 'inline-block',
     },
@@ -276,7 +272,7 @@ const Result = (props) => {
         </Box>
         {filters && filters.score && (
           <Box component="div" p={2} justifyContent="center" alignItems="center" display="flex" flexWrap="wrap">
-            <Typography component="div" align="center">
+            <Typography component="div" align="center" className={classes.ordinal}>
               {` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
             </Typography>
             <Typography component="span" className={classes.tweet}>
@@ -293,7 +289,7 @@ const Result = (props) => {
             </Typography>
           </Box>
         )}
-        <Box component="div" flex="1" p={2} pt={0}>
+        <Box component="div" flex="1" p={2} pt={1}>
           <Graph result={result} score={filters.score} percentile={percentile}></Graph>
         </Box>
         <Box component="div" p={2} backgroundColor={'#282828'}>

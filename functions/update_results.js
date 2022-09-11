@@ -224,7 +224,7 @@ const getKeysFromResult = (result) => {
   let keys = { all: [] };
   if (result.playerCount) {
     keys[`count-${result.playerCount}`] = ['playerCount'];
-    if (result.startPosition && !isNaN(result.startPosition) && result.startPosition < result.playerCount) {
+    if (result.startPosition && !isNaN(result.startPosition) && result.startPosition <= result.playerCount) {
       keys[`count-${result.playerCount}-start-${result.startPosition}`] = ['playerCount', 'startPosition'];
     }
     if (result.finishPosition) {
