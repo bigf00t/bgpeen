@@ -47,7 +47,7 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     // const playsRef = firestore.collection('plays').doc(game.id);
 
-    // const batch = firestore.batch();
+    const batch = firestore.batch();
 
     // // Reset all plays
     // batch.set(playsRef, {
@@ -63,6 +63,12 @@ exports.manualGamesUpdate = async (gameIds) => {
     //   hasMinPlays: false,
     //   hasNoPlays: true,
     //   playsLastUpdated: null,
+    // });
+
+    // batch.update(playsRef, {
+    //   hasMinPlays: admin.firestore.FieldValue.delete(),
+    //   hasNoPlays: admin.firestore.FieldValue.delete(),
+    //   unusablePlays: admin.firestore.FieldValue.delete(),
     // });
 
     // console.log('Play data reset');
@@ -120,6 +126,6 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     // console.log('Game schema updated.');
 
-    // await batch.commit();
+    await batch.commit();
   }
 };

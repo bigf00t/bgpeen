@@ -78,8 +78,6 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
     minDatePlayIds: minDatePlayIds,
     maxDatePlayIds: maxDatePlayIds,
     totalPlays: totalPlays,
-    hasMinPlays: totalPlays >= 10000,
-    hasNoPlays: totalPlays === 0,
     playsLastUpdated: new Date(),
   };
 

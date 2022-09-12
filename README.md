@@ -12,7 +12,7 @@ To run function locally against prod database:
 WARNING: .env can mess with function deployment
 
 To run emulators:
-- firebase emulators:start --only "firestore,storage" --import=functions/data
+- firebase emulators:start --only "firestore,storage" --import=data
 
 To save local data state:
 - firebase emulators:export ./data --only firestore

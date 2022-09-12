@@ -224,7 +224,7 @@ const Result = (props) => {
   }, [props.data.game, params]);
 
   // No data loaded
-  if (!result) {
+  if (_.isEmpty(result)) {
     return (
       <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
         <CircularProgress size={60} className={classes.progress} color="inherit" />
@@ -238,7 +238,7 @@ const Result = (props) => {
   ${filters.place ? ' - ' + filters.place + ' place' : ''}`;
 
   return (
-    <Fade in={result} timeout={500}>
+    <Fade in={!_.isEmpty(result)} timeout={500}>
       <Box component="div" display="flex" flexDirection="column" height="100%" pt={'64px'}>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
           <Image

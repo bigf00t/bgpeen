@@ -46,14 +46,17 @@ All
   median
   mode
   scoreCount
-  sharedWinCount
 
+  wins
   tieBreakerWinCount
+  sharedWinCount
 
 Player Count
 
   scoreSpread
-  tiebreakerCount
+  wins
+  tieBreakerWinCount
+  sharedWinCount
 
 Player Count - Player Finish Position
 
@@ -61,11 +64,18 @@ Player Count - Player Finish Position
 
 Player Count - Player Start Position
 
-  winPercentage
+  trimmedWinCount
+  trimmedWinPercentage
+
+Player Count - New
+
+  trimmedWinCount
+  trimmedWinPercentage
 
 Color
 
-  winPercentage
+  trimmedWinCount
+  trimmedWinPercentage
 
 Year
 

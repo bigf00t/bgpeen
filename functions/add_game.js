@@ -119,8 +119,6 @@ exports.addGame = async (searchTerm, exact) => {
     oldestPlayDate: '',
     maxDate: '',
     minDate: '',
-    hasMinPlays: false,
-    hasNoPlays: true,
     playsLastUpdated: null,
     minDatePlayIds: '',
     maxDatePlayIds: '',
