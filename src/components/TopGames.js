@@ -27,8 +27,13 @@ const styles = (theme) => ({
 
 const TopGames = (props) => {
   const [topGames, setTopGames] = useState([]);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
 
   const classes = props.classes;
+
+  const handleLoad = () => {
+    setImagesLoaded(imagesLoaded + 1);
+  };
 
   // componentDidMount
   useEffect(() => {
@@ -44,8 +49,14 @@ const TopGames = (props) => {
           {props.title}
         </Typography>
         {topGames.length > 0 && (
-          <Fade in={topGames.length > 0} timeout={500}>
-            <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+          <Fade in={imagesLoaded > 0 && imagesLoaded == topGames.length} timeout={500}>
+            <Box
+              component="div"
+              display={imagesLoaded > 0 && imagesLoaded == topGames.length ? 'flex' : 'none'}
+              flexWrap="wrap"
+              justifyContent="center"
+              alignItems="center"
+            >
               {topGames.map((game) => (
                 <Card key={game.id} className={classes.card}>
                   <CardActionArea
@@ -53,7 +64,7 @@ const TopGames = (props) => {
                     to={`/${game.id}/${getGameSlug(game)}`}
                     title={`${game.name} - ${game[props.field]}`}
                   >
-                    <CardMedia component="img" image={game.thumbnail} alt={game.name} />
+                    <CardMedia component="img" image={game.thumbnail} alt={game.name} onLoad={handleLoad} />
                     <Box
                       sx={{
                         position: 'absolute',
@@ -103,9 +114,9 @@ const TopGames = (props) => {
             </Box>
           </Fade>
         )}
-        {topGames.length == 0 && (
+        {(imagesLoaded == 0 || imagesLoaded < topGames.length) && (
           <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px">
+            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px" m={1}>
               <CircularProgress size={40} className={classes.progress} color="inherit" m={1} />
             </Box>
           </Box>

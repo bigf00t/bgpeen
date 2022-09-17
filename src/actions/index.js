@@ -46,8 +46,8 @@ export const loadGame = (gameId) => async (dispatch) => {
     results.push(doc.data());
   });
 
-  console.log(JSON.stringify(results[0].scores));
-  console.log(JSON.stringify(results[0].outlierScores));
+  // console.log(JSON.stringify(results[0].scores));
+  // console.log(JSON.stringify(results[0].outlierScores));
 
   await updateDoc(gameRef, {
     popularity: (gameSnapshot.data().popularity || 0) + 1,

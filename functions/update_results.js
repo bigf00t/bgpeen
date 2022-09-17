@@ -42,13 +42,13 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     return;
   }
 
-  _.forEach(validPlays, (play) => {
-    const scores = _.map(play.players, (player) => parseInt(player.score));
-    if (scores.includes(0)) {
-      console.log(scores.join(','));
-    }
-  });
-  console.info('-'.repeat(100));
+  // _.forEach(validPlays, (play) => {
+  //   const scores = _.map(play.players, (player) => parseInt(player.score));
+  //   if (scores.includes(0)) {
+  //     console.log(scores.join(','));
+  //   }
+  // });
+  // console.info('-'.repeat(100));
 
   // Get results from plays by player
   const playerResults = getPlayerResultsFromPlays(validPlays, gameType);
@@ -459,7 +459,7 @@ const calculateNewOutliers = (result) => {
   const rightMad = mad(rightHalf);
 
   console.log(`Left mad: ${leftMad} - Median: ${medianVal} - Right mad: ${rightMad} - Cutoff: ${madCutoff}`);
-  console.log(`Removing outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
+  console.log(`Finding outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
 
   const leftOutliers = _(leftHalf)
     .filter((score) => abs(score - medianVal) / leftMad > madCutoff)
@@ -471,7 +471,7 @@ const calculateNewOutliers = (result) => {
     .value();
 
   const outliers = leftOutliers.concat(rightOutliers);
-  console.log(`Removed ${outliers.length} outlier scores: `);
+  console.log(`Found ${outliers.length} outlier score values: `);
   console.log(outliers);
   console.info('-'.repeat(100));
 
@@ -518,13 +518,17 @@ const addStatsToResult = (result, outliers) => {
   // console.log(combinedOutlierScores);
   // console.log(result.scores);
 
+  // Get stats based on trimmed scores. This will recalculate mean, std etc.
+  const explodedScores = getExplodedScores(trimmedScores);
+  const stats = getStats(explodedScores);
+  const scoreCount = _.sum(Object.values(result.scores));
+  const trimmedScoreCount = explodedScores.length;
+
   result.scores = trimmedScores;
   result.outlierScores = combinedOutlierScores;
+  result.scoreCount = trimmedScoreCount;
 
-  // Get stats based on trimmed scores. This will recalculate mean, std etc.
-  const explodedScores = getExplodedScores(result.scores);
-  const stats = getStats(explodedScores);
-  result.scoreCount = explodedScores.length;
+  console.log(`Removed ${scoreCount - trimmedScoreCount} outlier scores`);
 
   if (result.wins != undefined) {
     // Get win percentage based on filtered wins
