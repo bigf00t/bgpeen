@@ -1,8 +1,6 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
-const _ = require('lodash');
-
 const util = require('./util');
 const update_plays = require('./update_plays');
 const update_results = require('./update_results');

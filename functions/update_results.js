@@ -42,14 +42,6 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     return;
   }
 
-  // _.forEach(validPlays, (play) => {
-  //   const scores = _.map(play.players, (player) => parseInt(player.score));
-  //   if (scores.includes(0)) {
-  //     console.log(scores.join(','));
-  //   }
-  // });
-  // console.info('-'.repeat(100));
-
   // Get results from plays by player
   const playerResults = getPlayerResultsFromPlays(validPlays, gameType);
 
@@ -68,8 +60,6 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const newScoresCount = results.all.scoreCount - game.totalScores;
 
   console.info(`Adding ${newScoresCount} new scores to results`);
-  console.info('Done!');
-  console.info('-'.repeat(100));
 
   _.forOwn(results, (result, key) => {
     batch.set(resultsRef.doc(key), result, { merge: false });
@@ -151,6 +141,14 @@ const getValidPlays = (plays, details, gameType) => {
   console.log(`Removed ${removedPlays} plays for having a date before game was published or in the future`);
   totalRemovedPlays = plays.length - validPlays.length;
 
+  // Every non-empty score is numeric.
+  validPlays = _.filter(validPlays, (play) =>
+    _.every(play.players, (player) => player.score == undefined || !isNaN(parseInt(player.score)))
+  );
+  removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
+  console.log(`Removed ${removedPlays} because not every score is empty or numeric`);
+  totalRemovedPlays = plays.length - validPlays.length;
+
   // For co-op games, we're more lenient about winners and scores
   if (gameType === 'co-op') {
     return validPlays;
@@ -161,15 +159,6 @@ const getValidPlays = (plays, details, gameType) => {
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
   console.log(`Removed ${removedPlays} because not every player had a valid numeric score`);
   totalRemovedPlays = plays.length - validPlays.length;
-
-  // // At most one player has a score of zero.
-  // validPlays = _.filter(
-  //   validPlays,
-  //   (play) => _.filter(play.players, (player) => parseInt(player.score) === 0).length <= 1
-  // );
-  // removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  // console.log(`Removed ${removedPlays} because more than one player had a score of 0`);
-  // totalRemovedPlays = plays.length - validPlays.length;
 
   // At least one player has a non-zero score. This may include some plays with erroneous 0s.
   validPlays = _.filter(validPlays, (play) => _.some(play.players, (player) => parseInt(player.score) > 0));
@@ -193,33 +182,6 @@ const getValidPlays = (plays, details, gameType) => {
   }
 
   return validPlays;
-
-  // return _.filter(
-  //   plays,
-  //   (play) =>
-  //     // Only include plays where:
-  //     //   Game was completed
-  //     parseInt(play.incomplete) === 0 &&
-  //     //   There weren't too many or too few players
-  //     play.playerCount >= details.minplayers &&
-  //     play.playerCount <= details.maxplayers &&
-  //     //   Play date was after game was published, and not in the future
-  //     dayjs(play.date).isAfter(dayjs(`${details.yearpublished}-01-01`).subtract(1, 'day'), 'day') &&
-  //     dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day') &&
-  //     // For co-op games, we're more lenient about winners and scores
-  //     (gameType === 'co-op' ||
-  //       ((gameType === 'lowest-wins' || gameType === 'highest-wins') &&
-  //         //   Every player has a numeric score.
-  //         _.every(play.players, (player) => !isNaN(parseInt(player.score))) &&
-  //         // //   At least one player has a non-zero score. This may include some plays with erroneous 0s.
-  //         // _.some(play.players, (player) => parseInt(player.score) > 0) &&
-  //         //   At most one player has a score of zero.
-  //         _.filter(play.players, (player) => parseInt(player.score) === 0).length <= 1 &&
-  //         //   Lowest score is winner
-  //         ((gameType === 'lowest-wins' && _.minBy(play.players, (player) => parseInt(player.score)).win == 1) ||
-  //           //   Highest score is winner
-  //           (gameType === 'highest-wins' && _.maxBy(play.players, (player) => parseInt(player.score)).win == 1))))
-  // );
 };
 
 const getPlayerResultsFromPlays = (plays, gameType) => {
@@ -237,7 +199,8 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
     if (sortedPlayers.length > 0) {
       _.forEach(sortedPlayers, (player, i) => {
         playerResults.push({
-          score: parseInt(player.score),
+          // Undefined scores are valid for co-op games
+          score: player.score == undefined ? 0 : parseInt(player.score),
           playerCount: parseInt(play.playerCount),
           new: player.new,
           startPosition: isNaN(parseInt(player.startposition)) ? '' : parseInt(player.startposition),
@@ -281,9 +244,6 @@ const getKeyedResultsFromPlayerResults = (playerResults) => {
           scores: { [result.score]: 1 },
           playIds: [result.id],
           playCount: 1,
-          // wins: result.isWin ? { [result.score]: 1 } : {},
-          // tieBreakerWins: result.isTieBreakerWin ? { [result.score]: 1 } : {},
-          // sharedWins: result.isSharedWin ? { [result.score]: 1 } : {},
         };
 
         if (props.includes('wins')) {
@@ -360,7 +320,12 @@ const getKeysFromResult = (result) => {
 };
 
 const combineScores = (existingScores, newScores) => {
-  let scores = existingScores || {};
+  if (newScores == undefined) {
+    return existingScores;
+  }
+
+  let scores = existingScores == undefined ? {} : existingScores;
+
   _.forOwn(newScores, (newCount, score) => {
     scores[score] = _.defaultTo(scores[score], 0) + newCount;
   });
@@ -375,9 +340,6 @@ const getCombinedResults = (keyedResults, existingResults) => {
     const existingResult = _.find(existingResults, (result) => result.id === key);
 
     let scores = combineScores(existingResult?.scores, result.scores);
-    // let wins = combineScores(existingResult?.wins, result.wins);
-    // let tieBreakerWins = combineScores(existingResult?.tieBreakerWins, result.tieBreakerWins);
-    // let sharedWins = combineScores(existingResult?.sharedWins, result.sharedWins);
 
     delete result.playIds;
 
@@ -385,9 +347,6 @@ const getCombinedResults = (keyedResults, existingResults) => {
       ...result,
       scores: scores,
       outlierScores: existingResult?.outlierScores,
-      // wins: wins,
-      // tieBreakerWins: tieBreakerWins,
-      // sharedWins: sharedWins,
     };
 
     if (result.wins != undefined) {
@@ -445,7 +404,6 @@ const filterResults = (newResults) => {
 const calculateNewOutliers = (result) => {
   // Put old outliers back in so we don't mess with the STD too much
   const scoresAndOutliers = combineScores(result.scores, result.outlierScores);
-  // console.log(scoresAndOutliers);
 
   const explodedScores = getExplodedScores(scoresAndOutliers);
 
@@ -481,7 +439,6 @@ const calculateNewOutliers = (result) => {
 // Add stats to each result
 const getResultsWithStats = (results) => {
   // We only calc outliers on the "all" result, since it has all datapoints
-  // console.log(results.all);
   const newOutliers = calculateNewOutliers(results.all);
 
   return _.mapValues(results, (result) => addStatsToResult(result, newOutliers));
@@ -489,6 +446,10 @@ const getResultsWithStats = (results) => {
 
 // Calculates stats like mean and std
 const getStats = (explodedScores) => {
+  if (explodedScores.length == 0) {
+    return {};
+  }
+
   return {
     mean: parseFloat(mean(explodedScores)).toFixed(2),
     std: parseFloat(std(explodedScores)).toFixed(2),
@@ -512,15 +473,9 @@ const addStatsToResult = (result, outliers) => {
   const trimmedScores = removeOutlierScores(result.scores, outliers);
   const outlierScores = getOutlierScores(result.scores, outliers);
   const combinedOutlierScores = combineScores(result.outlierScores, outlierScores);
-  // console.log(outliers);
-  // console.log(result.outlierScores);
-  // console.log(outlierScores);
-  // console.log(combinedOutlierScores);
-  // console.log(result.scores);
 
   // Get stats based on trimmed scores. This will recalculate mean, std etc.
   const explodedScores = getExplodedScores(trimmedScores);
-  const stats = getStats(explodedScores);
   const scoreCount = _.sum(Object.values(result.scores));
   const trimmedScoreCount = explodedScores.length;
 
@@ -548,6 +503,8 @@ const addStatsToResult = (result, outliers) => {
     const trimmedSharedWins = removeOutlierScores(result.sharedWins, outliers);
     result.trimmedSharedWinCount = _.sum(Object.values(trimmedSharedWins));
   }
+
+  const stats = getStats(explodedScores);
 
   return {
     ...result,

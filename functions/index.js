@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+require('firebase-functions/lib/logger/compat');
 
 const { initializeApp } = require('firebase-admin/app');
 initializeApp();

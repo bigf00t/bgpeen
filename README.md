@@ -3,11 +3,9 @@ To run site locally:
 - browse to http://localhost:3000/
 
 To run function locally against prod database:
-- $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json" ; $env:NODE_OPTIONS="--max-old-space-size=8192" ; node .\functions\local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
-- In functions with .env file
-  - ./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function manualPlaysUpdate --id 295947 --maxPages 10
-  - ./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function runAutomaticGameUpdates --maxPages 10 --prod
-  - ./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function manualGamesUpdate --id 13
+- ./local_update.ps1 -function manualPlaysUpdate -maxpages 10 -id 13 -historic
+- ./local_update.ps1 -function runAutomaticGameUpdates -maxgames 1 -maxpages -prod
+- ./local_update.ps1 -function manualGamesUpdate -id 13
 
 WARNING: .env can mess with function deployment
 
