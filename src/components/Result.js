@@ -15,8 +15,18 @@ import Filters from './Filters';
 import Graph from './Graph';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Image from 'mui-image';
+
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+import FormGroup from '@mui/material/FormGroup';
+import FormControl from '@mui/material/FormControl';
+import TextField from '@mui/material/TextField';
+import { DebounceInput } from 'react-debounce-input';
 
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 
@@ -75,6 +85,29 @@ const styles = (theme) => ({
   progress: {
     // color: theme.palette.action.active,
   },
+  accordion: {
+    '&.MuiAccordion-root': {
+      backgroundImage: 'none',
+      '&.Mui-expanded': {
+        margin: 0,
+        '&::before': {
+          opacity: 1,
+        },
+      },
+    },
+    '& .MuiAccordionSummary-root': {
+      backgroundColor: theme.palette.background.default,
+      '&.Mui-focusVisible': {
+        backgroundColor: theme.palette.background.default,
+      },
+    },
+    '& .MuiAccordionSummary-content': {
+      margin: 0,
+    },
+    '& .MuiAccordionDetails-root': {
+      padding: 0,
+    },
+  },
 });
 
 const getOrdinalDesc = (percentile) => {
@@ -130,17 +163,50 @@ const Result = (props) => {
   const [filters, setFilters] = useState({});
   const [result, setResult] = useState();
   const [percentile, setPercentile] = useState(null);
+  const [score, setScore] = useState();
+  const [scoreAccordionExpanded, setScoreAccordionExpanded] = useState(false);
 
   let params = useParams();
+  let navigate = useNavigate();
 
   const classes = props.classes;
+
+  const handleScoreChange = (event) => {
+    setScore(getIntFromParam(event.target.value));
+  };
+
+  // Score changed
+  useEffect(() => {
+    if (score !== undefined && score.toString() !== params.score) {
+      updateHistory();
+    }
+    setScoreAccordionExpanded(score !== undefined && score !== '');
+  }, [score]);
+
+  const updateHistory = () => {
+    var flatParams = Object.entries(params).flat();
+
+    // Remove id and name keys
+    flatParams.splice(2, 1);
+    flatParams.splice(0, 1);
+
+    const paramsToRemove = params.score ? 2 : 0;
+    const paramsToAdd = score ? ['score', score] : [];
+    const fieldIndex = flatParams.indexOf('score');
+    const startIndex = fieldIndex > -1 ? fieldIndex : flatParams.length;
+
+    flatParams.splice(startIndex, paramsToRemove, ...paramsToAdd);
+
+    navigate(`/${flatParams.join('/')}`);
+  };
 
   const updateResult = () => {
     const newResult = props.data.game
       ? _.find(props.data.game.results, (result) => {
           return (
             (filters.players || null) === (result.playerCount || null) &&
-            (filters.place || null) === (result.finishPosition || null)
+            (filters.start || null) === (result.startPosition || null) &&
+            (filters.finish || null) === (result.finishPosition || null)
           );
         })
       : null;
@@ -149,7 +215,7 @@ const Result = (props) => {
   };
 
   const updatePercentile = () => {
-    if (!filters.score) {
+    if (!score) {
       setPercentile(null);
     }
 
@@ -157,8 +223,7 @@ const Result = (props) => {
     const newPercentile =
       (_.reduce(
         result.scores,
-        (result, c, s) =>
-          result + (parseInt(s) < filters.score ? c : 0) + (parseInt(s) === filters.score ? c / 0.5 : 0),
+        (result, c, s) => result + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c / 0.5 : 0),
         0
       ) *
         100) /
@@ -186,7 +251,8 @@ const Result = (props) => {
     setFilters({
       score: getIntFromParam(params.score),
       players: getIntFromParam(params.players),
-      place: getIntFromParam(params.place),
+      start: getIntFromParam(params.start),
+      finish: getIntFromParam(params.finish),
     });
   };
 
@@ -194,19 +260,23 @@ const Result = (props) => {
     return param && !isNaN(param) ? parseInt(param) : '';
   };
 
+  const handleScoreAccordionChange = () => () => {
+    setScoreAccordionExpanded(score !== undefined && score !== '' && !scoreAccordionExpanded);
+  };
+
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
       updateResult();
     }
-  }, [filters.players, filters.place]);
+  }, [filters.players, filters.start, filters.finish]);
 
   // Result changed
   useEffect(() => {
-    if (filters.score && !_.isEmpty(result)) {
+    if (score && !_.isEmpty(result)) {
       updatePercentile();
     }
-  }, [filters.score, result]);
+  }, [score, result]);
 
   // componentDidMount
   useEffect(() => {
@@ -214,6 +284,7 @@ const Result = (props) => {
       props.data.game = null;
       getGameFromUrl();
     }
+    setScore(params.score);
   }, []);
 
   // Game loaded
@@ -233,13 +304,14 @@ const Result = (props) => {
   }
 
   document.title = `Good at ${props.data.game.name}
-  ${filters.score ? ' - Score ' + filters.score : ''}
+  ${score ? ' - Score ' + score : ''}
   ${filters.players ? ' - ' + filters.players + ' players' : ''}
-  ${filters.place ? ' - ' + filters.place + ' place' : ''}`;
+  ${filters.start ? ' - ' + filters.start + ' start' : ''}
+  ${filters.finish ? ' - ' + filters.finish + ' finish' : ''}`;
 
   return (
     <Fade in={!_.isEmpty(result)} timeout={500}>
-      <Box component="div" display="flex" flexDirection="column" height="100%" pt={'64px'}>
+      <Box component="div" display="flex" flexDirection="column" pt={'64px'} height={'100vh'}>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
           <Image
             src={props.data.game.thumbnail}
@@ -259,40 +331,127 @@ const Result = (props) => {
             </Link>
           </Typography>
         </Box>
-        <Box component="div" p={1} backgroundColor={'#282828'}>
-          <Filters filters={filters} />
-        </Box>
-        <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" pt={2}>
-          <Typography m={2} component="h4" variant="h4" align="center">
-            Total Scores: &nbsp; {result.scoreCount} &nbsp;
-          </Typography>
-          <Typography m={2} component="h4" variant="h4" align="center">
-            Average Score: &nbsp; {result.mean}
-          </Typography>
-        </Box>
-        {filters && filters.score && (
-          <Box component="div" p={2} justifyContent="center" alignItems="center" display="flex" flexWrap="wrap">
-            <Typography component="div" align="center" className={classes.ordinal}>
-              {` Your score of ${filters.score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
-            </Typography>
-            <Typography component="span" className={classes.tweet}>
-              Share score:
-              <TwitterShareButton
-                title={getTwitterText(props.data.game.name, filters.score, percentile)}
-                url={window.location.href}
+        <Filters filters={filters} />
+        <Accordion className={classes.accordion} sx={{ backgroundColor: '#282828' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box
+              component="div"
+              display="flex"
+              flexWrap="wrap"
+              justifyContent="center"
+              alignItems="center"
+              pl={3}
+              width={1}
+            >
+              <Typography m={2} component="h4" variant="h4" align="center">
+                Scores: &nbsp; {result.scoreCount} &nbsp;
+              </Typography>
+              <Typography m={2} component="h4" variant="h4" align="center">
+                Average: &nbsp; {result.mean}
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box
+              component="div"
+              display="flex"
+              flexWrap="wrap"
+              justifyContent="center"
+              alignItems="center"
+              pb={1}
+              width={1}
+            >
+              {result.winCount !== undefined && (
+                <Typography m={2} component="h5" variant="h5" align="center">
+                  Win Percentage: &nbsp; {parseInt((result.winCount / result.scoreCount) * 10000) / 100}% &nbsp;
+                </Typography>
+              )}
+              {result.tieBreakerWinCount !== undefined && (
+                <Typography m={2} component="h5" variant="h5" align="center">
+                  Tiebreaker Wins: &nbsp; {result.tieBreakerWinCount} &nbsp;
+                </Typography>
+              )}
+              {result.sharedWinCount !== undefined && (
+                <Typography m={2} component="h5" variant="h5" align="center">
+                  Shared Wins: &nbsp; {result.sharedWinCount} &nbsp;
+                </Typography>
+              )}
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion
+          className={classes.accordion}
+          sx={{ backgroundColor: '#282828', boxShadow: 4 }}
+          expanded={scoreAccordionExpanded}
+          onChange={handleScoreAccordionChange()}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box
+              component="div"
+              display="flex"
+              flexWrap="wrap"
+              justifyContent="center"
+              alignItems="center"
+              sx={{ p: 2, width: 1 }}
+            >
+              <Typography component="h5" variant="h5" align="center" m={1} mr={2}>
+                How good are you?
+              </Typography>
+              <FormGroup row className={classes.formGroup}>
+                <FormControl className={classes.formControl}>
+                  <DebounceInput
+                    element={TextField}
+                    debounceTimeout={300}
+                    className={classes.textField}
+                    id="score"
+                    name="score"
+                    label="Your Score"
+                    value={score}
+                    style={{ maxWidth: 180 }}
+                    onChange={handleScoreChange}
+                    // To prevent accordion toggling
+                    onClick={(event) => event.stopPropagation()}
+                    InputLabelProps={{
+                      className: classes.floatingLabelFocusStyle,
+                    }}
+                  />
+                </FormControl>
+              </FormGroup>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {filters && score && (
+              <Box
+                component="div"
+                justifyContent="center"
+                alignItems="center"
+                display="flex"
+                flexWrap="wrap"
+                sx={{ p: 2, pt: 4, boxShadow: 1, width: 1 }}
               >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-            </Typography>
-            <Typography variant="h2" component="h2" width={1} className={classes.title} gutterBottom align="center">
-              {percentile !== null ? getScoreTitle(percentile) : 'None'}
-            </Typography>
-          </Box>
-        )}
-        <Box component="div" flex="1" p={2} pt={1}>
-          <Graph result={result} score={filters.score} percentile={percentile}></Graph>
+                <Typography component="div" align="center" className={classes.ordinal}>
+                  {` Your score of ${score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
+                </Typography>
+                <Typography component="span" className={classes.tweet}>
+                  Share score:
+                  <TwitterShareButton
+                    title={getTwitterText(props.data.game.name, score, percentile)}
+                    url={window.location.href}
+                  >
+                    <TwitterIcon size={32} round />
+                  </TwitterShareButton>
+                </Typography>
+                <Typography variant="h2" component="h2" width={1} className={classes.title} gutterBottom align="center">
+                  {percentile !== null ? getScoreTitle(percentile) : 'None'}
+                </Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+        <Box component="div" flex="1" p={2} pt={1} backgroundColor={'#282828'} boxShadow={4}>
+          <Graph result={result} score={score} percentile={percentile}></Graph>
         </Box>
-        <Box component="div" p={2} backgroundColor={'#282828'}>
+        <Box component="div" p={2}>
           <Typography component="div" align="center" className={classes.credit}>
             {'Scores provided by '}
             <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">

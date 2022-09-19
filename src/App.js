@@ -51,7 +51,25 @@ function App() {
             <Menu />
             <Routes>
               <Route path="/:id/:name" element={<Result />}>
-                <Route path=":score/:players/:place" element={<Result />} />
+                <Route path="score/:score" element={<Result />} />
+                <Route path="players/:players" element={<Result />}>
+                  <Route path="score/:score" element={<Result />} />
+                  <Route path="start/:start" element={<Result />}>
+                    <Route path="score/:score" element={<Result />} />
+                  </Route>
+                  <Route path="finish/:finish" element={<Result />}>
+                    <Route path="score/:score" element={<Result />} />
+                  </Route>
+                </Route>
+                <Route path="color/:color" element={<Result />}>
+                  <Route path="score/:score" element={<Result />} />
+                </Route>
+                <Route path="year/:year" element={<Result />}>
+                  <Route path="score/:score" element={<Result />} />
+                  <Route path="month/:month" element={<Result />}>
+                    <Route path="score/:score" element={<Result />} />
+                  </Route>
+                </Route>
               </Route>
               {/* <Route path="/" element={<Maintenance />} /> */}
               <Route path="/" element={<Measure />} />

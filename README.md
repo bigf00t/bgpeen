@@ -15,9 +15,6 @@ To run emulators:
 To save local data state:
 - firebase emulators:export ./data --only firestore
 
-To test emulated functions in postman:
-- POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames
-
 To deploy. If getting "Error: There was an error deploying functions"
 - $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
 - firebase login --reauth
@@ -30,13 +27,18 @@ To deploy site:
 To deploy functions:
 - firebase deploy --only functions
 
-To test production functions in postman:
-- POST to https://us-central1-bgpeen-1fc16.cloudfunctions.net/getGames
-
 Troubleshooting:
 - If emulator won't close
   - netstat -ano | findstr :5002
   - taskkill /F /PID <PID>
+
+DEPRECATED
+
+To test emulated functions in postman:
+- POST to http://localhost:5001/bgpeen-1fc16/us-central1/getGames
+
+To test production functions in postman:
+- POST to https://us-central1-bgpeen-1fc16.cloudfunctions.net/getGames
 
 ----------------------------------------------------------------------------------------------------
 
