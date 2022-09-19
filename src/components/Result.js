@@ -200,18 +200,34 @@ const Result = (props) => {
     navigate(`/${flatParams.join('/')}`);
   };
 
-  const updateResult = () => {
-    const newResult = props.data.game
-      ? _.find(props.data.game.results, (result) => {
-          return (
-            (filters.players || null) === (result.playerCount || null) &&
-            (filters.start || null) === (result.startPosition || null) &&
-            (filters.finish || null) === (result.finishPosition || null)
-          );
-        })
-      : null;
+  const getResultId = () => {
+    let resultId = `all`;
 
-    setResult(newResult);
+    if (filters.players) {
+      resultId = `count-${filters.players}`;
+
+      if (filters.start) {
+        resultId += `-start-${filters.start}`;
+      }
+
+      if (filters.finish) {
+        resultId += `-finish-${filters.finish}`;
+      }
+    }
+
+    return resultId;
+  };
+
+  const findOrLoadResult = () => {
+    const resultId = getResultId();
+
+    let newResult = props.data.game.results[resultId];
+
+    if (newResult) {
+      setResult(newResult);
+    } else {
+      props.loadResult(params.id, resultId);
+    }
   };
 
   const updatePercentile = () => {
@@ -239,7 +255,7 @@ const Result = (props) => {
   };
 
   const findOrLoadGame = () => {
-    var foundGame = props.data.loadedGames.find((game) => game.id == params.id, null);
+    var foundGame = props.data.loadedGames[params.id];
     if (foundGame) {
       props.data.game = foundGame;
     } else {
@@ -249,7 +265,6 @@ const Result = (props) => {
 
   const setFiltersFromUrl = () => {
     setFilters({
-      score: getIntFromParam(params.score),
       players: getIntFromParam(params.players),
       start: getIntFromParam(params.start),
       finish: getIntFromParam(params.finish),
@@ -267,7 +282,8 @@ const Result = (props) => {
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
-      updateResult();
+      // console.log('Result loaded');
+      findOrLoadResult();
     }
   }, [filters.players, filters.start, filters.finish]);
 
@@ -289,10 +305,21 @@ const Result = (props) => {
 
   // Game loaded
   useEffect(() => {
+    // console.log(params);
     if (props.data.game) {
+      // console.log('Game loaded');
       setFiltersFromUrl();
     }
-  }, [props.data.game, params]);
+  }, [params]);
+
+  // Results loaded
+  useEffect(() => {
+    if (props.data?.game?.results) {
+      // console.log('Results loaded');
+      const resultId = getResultId();
+      setResult(props.data.game.results[resultId]);
+    }
+  }, [props.data.game?.results]);
 
   // No data loaded
   if (_.isEmpty(result)) {
@@ -427,7 +454,7 @@ const Result = (props) => {
                 alignItems="center"
                 display="flex"
                 flexWrap="wrap"
-                sx={{ p: 2, pt: 4, boxShadow: 1, width: 1 }}
+                sx={{ p: 2, pt: 4, pb: 4, boxShadow: 1, width: 1 }}
               >
                 <Typography component="div" align="center" className={classes.ordinal}>
                   {` Your score of ${score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
@@ -448,7 +475,7 @@ const Result = (props) => {
             )}
           </AccordionDetails>
         </Accordion>
-        <Box component="div" flex="1" p={2} pt={1} backgroundColor={'#282828'} boxShadow={4}>
+        <Box component="div" flex="1" p={2} backgroundColor={'#282828'} boxShadow={4}>
           <Graph result={result} score={score} percentile={percentile}></Graph>
         </Box>
         <Box component="div" p={2}>
@@ -469,6 +496,7 @@ Result.propTypes = {
   classes: PropTypes.object,
   loadGames: PropTypes.func,
   loadGame: PropTypes.func,
+  loadResult: PropTypes.func,
 };
 
 const mapStateToProps = ({ data }) => {

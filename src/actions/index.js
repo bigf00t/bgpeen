@@ -1,6 +1,6 @@
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
-import { LOAD_GAMES, LOAD_GAME } from '../actions/types';
+import { LOAD_GAMES, LOAD_GAME, LOAD_RESULT } from '../actions/types';
 import _ from 'lodash';
 import { db } from '../fire';
 
@@ -35,19 +35,7 @@ export const loadGame = (gameId) => async (dispatch) => {
   const gameRef = doc(db, 'games', gameId);
   const gameSnapshot = await getDoc(gameRef);
 
-  const allDocSnapshot = await getDoc(doc(db, 'games', gameId, 'results', 'all'));
-  let results = [allDocSnapshot.data()];
-
-  // where is temporary
-  const resultsRef = query(collection(db, 'games', gameId, 'results'), where('playerCount', '>', 0));
-  const resultsSnapshot = await getDocs(resultsRef);
-
-  resultsSnapshot.forEach((doc) => {
-    results.push(doc.data());
-  });
-
-  // console.log(JSON.stringify(results[0].scores));
-  // console.log(JSON.stringify(results[0].outlierScores));
+  const result = await _loadResult(gameId, 'all');
 
   await updateDoc(gameRef, {
     popularity: (gameSnapshot.data().popularity || 0) + 1,
@@ -56,6 +44,22 @@ export const loadGame = (gameId) => async (dispatch) => {
 
   dispatch({
     type: LOAD_GAME,
-    payload: { game: gameSnapshot.data(), results: { results } },
+    payload: { ...gameSnapshot.data(), results: result },
   });
+};
+
+export const loadResult = (gameId, resultId) => async (dispatch) => {
+  const result = await _loadResult(gameId, resultId);
+
+  dispatch({
+    type: LOAD_RESULT,
+    payload: result,
+  });
+};
+
+const _loadResult = async (gameId, resultId) => {
+  const resultDocSnapshot = await getDoc(doc(db, 'games', gameId, 'results', resultId));
+  let result = resultDocSnapshot.data();
+
+  return { [resultId]: result };
 };
