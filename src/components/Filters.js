@@ -23,14 +23,18 @@ const styles = () => ({
   accordion: {
     '&.MuiAccordion-root': {
       backgroundImage: 'none',
+      '&::before': {
+        opacity: 0,
+      },
       '&.Mui-expanded': {
         margin: 0,
         '&::before': {
-          opacity: 1,
+          opacity: 0,
         },
       },
     },
     '& .MuiAccordionSummary-root': {
+      // backgroundColor: theme.palette.background.default,
       '&.Mui-focusVisible': {
         backgroundColor: 'inherit',
       },
@@ -40,6 +44,7 @@ const styles = () => ({
     },
     '& .MuiAccordionDetails-root': {
       padding: 0,
+      // backgroundColor: theme.palette.background.default,
     },
   },
 });
@@ -74,7 +79,14 @@ const Filters = (props) => {
           <Typography component="h5" variant="h5" align="center" m={1} mr={2}>
             Filter scores by
           </Typography>
-          <FormGroup row className={classes.formGroup}>
+          <FormGroup
+            row
+            className={classes.formGroup}
+            display="block"
+            flexWrap="wrap"
+            justifyContent="center"
+            alignItems="center"
+          >
             <FilterDropdown
               field="players"
               dependentFilters={['start', 'finish']}
@@ -84,21 +96,21 @@ const Filters = (props) => {
               paramIndex={2}
             />
             <FilterDropdown
-              field="start"
-              enabledByFilter="players"
-              clearsFilters={['finish']}
-              label="Start Place"
-              options={validPlayerPlaces}
-              optionLabelFormat={(count) => (count ? ordinal(parseInt(count)) : '')}
-              paramIndex={4}
-            />
-            <FilterDropdown
               field="finish"
               enabledByFilter="players"
               clearsFilters={['start']}
               label="Finish Place"
               options={validPlayerPlaces}
-              optionLabelFormat={(count) => (count ? ordinal(parseInt(count)) : '')}
+              optionLabelFormat={(option) => (option ? ordinal(parseInt(option)) : '')}
+              paramIndex={4}
+            />
+            <FilterDropdown
+              field="start"
+              enabledByFilter="players"
+              clearsFilters={['finish']}
+              label="Start Place"
+              options={validPlayerPlaces}
+              optionLabelFormat={(option) => (option ? ordinal(parseInt(option)) : '')}
               paramIndex={4}
             />
           </FormGroup>
@@ -137,7 +149,8 @@ const Filters = (props) => {
               field="month"
               enabledByFilter="year"
               label="Play Month"
-              options={['June', 'July', 'August']}
+              options={['june', 'july', 'august']}
+              optionLabelFormat={(option) => _.capitalize(option)}
               paramIndex={4}
             />
           </FormGroup>

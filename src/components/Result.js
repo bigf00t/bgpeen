@@ -85,13 +85,17 @@ const styles = (theme) => ({
   progress: {
     // color: theme.palette.action.active,
   },
-  accordion: {
+  accordionLight: {
     '&.MuiAccordion-root': {
       backgroundImage: 'none',
+      boxShadow: 'none',
+      '&::before': {
+        opacity: 0,
+      },
       '&.Mui-expanded': {
         margin: 0,
         '&::before': {
-          opacity: 1,
+          opacity: 0,
         },
       },
     },
@@ -99,6 +103,37 @@ const styles = (theme) => ({
       backgroundColor: theme.palette.background.default,
       '&.Mui-focusVisible': {
         backgroundColor: theme.palette.background.default,
+      },
+    },
+    '& .MuiAccordionSummary-content': {
+      margin: 0,
+    },
+    '& .MuiAccordionDetails-root': {
+      padding: 0,
+      backgroundColor: theme.palette.background.default,
+    },
+  },
+  accordionDark: {
+    '&.MuiAccordion-root': {
+      borderTop: 'solid 1px #424242',
+      backgroundImage: 'none',
+      backgroundColor: '#282828',
+      boxShadow: 'none',
+      '&::before': {
+        opacity: 0,
+        height: '2px',
+      },
+      '&.Mui-expanded': {
+        margin: 0,
+        '&::before': {
+          opacity: 0,
+        },
+      },
+    },
+    '& .MuiAccordionSummary-root': {
+      backgroundColor: '#282828',
+      '&.Mui-focusVisible': {
+        backgroundColor: '#282828',
       },
     },
     '& .MuiAccordionSummary-content': {
@@ -359,7 +394,7 @@ const Result = (props) => {
           </Typography>
         </Box>
         <Filters filters={filters} />
-        <Accordion className={classes.accordion} sx={{ backgroundColor: '#282828' }}>
+        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box
               component="div"
@@ -367,11 +402,11 @@ const Result = (props) => {
               flexWrap="wrap"
               justifyContent="center"
               alignItems="center"
-              pl={3}
+              p={1}
               width={1}
             >
               <Typography m={2} component="h4" variant="h4" align="center">
-                Scores: &nbsp; {result.scoreCount} &nbsp;
+                Scores: &nbsp; {result.scoreCount}
               </Typography>
               <Typography m={2} component="h4" variant="h4" align="center">
                 Average: &nbsp; {result.mean}
@@ -407,21 +442,20 @@ const Result = (props) => {
           </AccordionDetails>
         </Accordion>
         <Accordion
-          className={classes.accordion}
-          sx={{ backgroundColor: '#282828', boxShadow: 4 }}
+          className={classes.accordionLight}
           expanded={scoreAccordionExpanded}
           onChange={handleScoreAccordionChange()}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary expandIcon={score ? <ExpandMoreIcon /> : null}>
             <Box
               component="div"
               display="flex"
               flexWrap="wrap"
               justifyContent="center"
               alignItems="center"
-              sx={{ p: 2, width: 1 }}
+              sx={{ p: 2, pt: 3, pb: 0, width: 1 }}
             >
-              <Typography component="h5" variant="h5" align="center" m={1} mr={2}>
+              <Typography component="h5" variant="h5" align="center" m={1} ml={2} mr={2}>
                 How good are you?
               </Typography>
               <FormGroup row className={classes.formGroup}>
@@ -454,7 +488,7 @@ const Result = (props) => {
                 alignItems="center"
                 display="flex"
                 flexWrap="wrap"
-                sx={{ p: 2, pt: 4, pb: 4, boxShadow: 1, width: 1 }}
+                sx={{ p: 2, pt: 4, pb: 0, width: 1 }}
               >
                 <Typography component="div" align="center" className={classes.ordinal}>
                   {` Your score of ${score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
@@ -475,10 +509,10 @@ const Result = (props) => {
             )}
           </AccordionDetails>
         </Accordion>
-        <Box component="div" flex="1" p={2} backgroundColor={'#282828'} boxShadow={4}>
+        <Box component="div" flex="1" p={2} backgroundColor={'#303030'}>
           <Graph result={result} score={score} percentile={percentile}></Graph>
         </Box>
-        <Box component="div" p={2}>
+        <Box component="div" p={2} backgroundColor="#282828">
           <Typography component="div" align="center" className={classes.credit}>
             {'Scores provided by '}
             <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">

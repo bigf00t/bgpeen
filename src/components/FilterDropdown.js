@@ -16,6 +16,7 @@ const styles = (theme) => ({
     margin: theme.spacing(1),
     minWidth: 180,
     height: 60,
+    flex: 3,
   },
   selectEmpty: {},
   formGroup: {

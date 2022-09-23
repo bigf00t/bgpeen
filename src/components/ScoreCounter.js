@@ -37,14 +37,14 @@ const numberStyle = {
 };
 
 const nonNumberStyle = {
-  width: 26,
+  width: 8,
   height: 48,
   fontSize: '1.5rem',
   borderRadius: '4px',
   marginRight: '0.2rem',
   paddingTop: '0.6rem',
-  paddingLeft: '0.6rem',
-  background: 'rgba(0, 0, 0, 0.75)',
+  paddingLeft: '0.15rem',
+  background: 'none',
 };
 
 const ScoreCounter = (props) => {
