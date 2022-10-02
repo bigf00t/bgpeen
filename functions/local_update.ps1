@@ -21,4 +21,4 @@ $paramString = $paramArray -join ", "
 
 "Running local_update.js with params: $paramString" | Out-File $logfile
 
-./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function $function --maxGames $maxgames --maxPages $maxpages --id $id --historic $historic --prod $prod 2>&1 | Tee-Object -a $logfile
+./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function $function --maxGames $maxgames --maxPages $maxpages --id $id $(If ($historic) {'--historic'} Else {''}) $(If ($prod) {'--prod'} Else {''}) 2>&1 | Tee-Object -a $logfile

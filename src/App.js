@@ -54,6 +54,7 @@ function App() {
                 <Route path="score/:score" element={<Result />} />
                 <Route path="players/:players" element={<Result />}>
                   <Route path="score/:score" element={<Result />} />
+                  <Route path="new/:new" element={<Result />} />
                   <Route path="start/:start" element={<Result />}>
                     <Route path="score/:score" element={<Result />} />
                   </Route>

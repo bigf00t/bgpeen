@@ -99,6 +99,8 @@ exports.addGame = async (searchTerm, exact) => {
     mean: 0,
     addedDate: new Date(),
     playerCounts: '',
+    colors: [],
+    months: [],
   };
 
   const newDetails = {

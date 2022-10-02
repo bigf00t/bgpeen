@@ -41,6 +41,7 @@ const styles = () => ({
     },
     '& .MuiAccordionSummary-content': {
       margin: 0,
+      paddingLeft: '24px',
     },
     '& .MuiAccordionDetails-root': {
       padding: 0,
@@ -51,6 +52,8 @@ const styles = () => ({
 
 const Filters = (props) => {
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
+  const [years, setYears] = useState([]);
+  const [months, setMonths] = useState([]);
 
   let params = useParams();
 
@@ -58,35 +61,55 @@ const Filters = (props) => {
 
   // Players changed
   useEffect(() => {
-    const newValidPlayerPlaces = getValidPlayerPlaces();
-
-    setValidPlayerPlaces(newValidPlayerPlaces);
+    setValidPlayerPlaces(getValidPlayerPlaces());
   }, [params.players]);
+
+  // Year changed
+  useEffect(() => {
+    setMonths(getMonths());
+  }, [params.year]);
 
   const getValidPlayerPlaces = () => {
     return params.players ? _.range(1, parseInt(params.players) + 1).map((finish) => finish.toString()) : [];
   };
 
+  const getYears = () => {
+    return _.uniq(props.data.game.months.map((month) => month.split('-')[0]));
+  };
+
+  const getMonths = () => {
+    let months = props.data.game.months
+      .filter((month) => month.split('-')[0] == params.year)
+      .map((month) => month.split('-')[1]);
+
+    months.sort((a, b) => parseInt(a) - parseInt(b));
+
+    return months;
+  };
+
+  const toMonthName = (monthNumber) => {
+    const date = new Date();
+    date.setMonth(monthNumber - 1);
+
+    return date.toLocaleString('en-US', {
+      month: 'long',
+    });
+  };
+
   // componentDidMount
   useEffect(() => {
     setValidPlayerPlaces(getValidPlayerPlaces());
+    setYears(getYears());
   }, []);
 
   return (
     <Accordion className={classes.accordion}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={1} width={1}>
-          <Typography component="h5" variant="h5" align="center" m={1} mr={2}>
+          <Typography component="h5" variant="h5" align="right" m={1} pr={2} width="180px">
             Filter scores by
           </Typography>
-          <FormGroup
-            row
-            className={classes.formGroup}
-            display="block"
-            flexWrap="wrap"
-            justifyContent="center"
-            alignItems="center"
-          >
+          <FormGroup row className={classes.formGroup} display="block">
             <FilterDropdown
               field="players"
               dependentFilters={['start', 'finish']}
@@ -98,17 +121,8 @@ const Filters = (props) => {
             <FilterDropdown
               field="finish"
               enabledByFilter="players"
-              clearsFilters={['start']}
+              clearsFilters={['start', 'new']}
               label="Finish Place"
-              options={validPlayerPlaces}
-              optionLabelFormat={(option) => (option ? ordinal(parseInt(option)) : '')}
-              paramIndex={4}
-            />
-            <FilterDropdown
-              field="start"
-              enabledByFilter="players"
-              clearsFilters={['finish']}
-              label="Start Place"
               options={validPlayerPlaces}
               optionLabelFormat={(option) => (option ? ordinal(parseInt(option)) : '')}
               paramIndex={4}
@@ -128,13 +142,30 @@ const Filters = (props) => {
           width={1}
         >
           <FormGroup row className={classes.formGroup}>
-            {/* TODO: Implement real options */}
-            {/* TODO: Implement isNew filter */}
+            <FilterDropdown
+              field="start"
+              enabledByFilter="players"
+              clearsFilters={['finish', 'new']}
+              label="Start Place"
+              options={validPlayerPlaces}
+              optionLabelFormat={(option) => (option ? ordinal(parseInt(option)) : '')}
+              paramIndex={4}
+            />
+            <FilterDropdown
+              field="new"
+              enabledByFilter="players"
+              clearsFilters={['start', 'finish']}
+              label="New Player"
+              options={['1']}
+              optionLabelFormat={(option) => (option == '1' ? 'Yes' : 'No')}
+              paramIndex={4}
+            />
             <FilterDropdown
               field="color"
               clearsFilters={['players', 'start', 'finish', 'year', 'month']}
               label="Player Color"
-              options={['red', 'blue', 'green']}
+              options={props.data.game.colors}
+              optionLabelFormat={(option) => _.capitalize(option)}
               paramIndex={2}
             />
             <FilterDropdown
@@ -142,15 +173,15 @@ const Filters = (props) => {
               dependentFilters={['month']}
               clearsFilters={['players', 'start', 'finish', 'color']}
               label="Play Year"
-              options={['2022', '2021', '2020']}
+              options={years}
               paramIndex={2}
             />
             <FilterDropdown
               field="month"
               enabledByFilter="year"
               label="Play Month"
-              options={['june', 'july', 'august']}
-              optionLabelFormat={(option) => _.capitalize(option)}
+              options={months}
+              optionLabelFormat={(option) => toMonthName(option)}
               paramIndex={4}
             />
           </FormGroup>

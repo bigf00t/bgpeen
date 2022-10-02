@@ -59,6 +59,10 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   const newScoresCount = results.all.scoreCount - game.totalScores;
 
+  const updatedColors = getUpdatedColors(existingResults, results);
+
+  const updatedMonths = getUpdatedMonths(existingResults, results);
+
   console.info(`Adding ${newScoresCount} new scores to results`);
 
   _.forOwn(results, (result, key) => {
@@ -72,7 +76,38 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     mean: results.all.mean,
     playerCounts: getPlayersCounts(results).join(','),
     gameType: gameType,
+    colors: updatedColors,
+    months: updatedMonths,
   });
+};
+
+const getUpdatedColors = (existingResults, results) => {
+  const existingResultsWithKeys = existingResults.reduce((result, item) => ({ ...result, [item.id]: item }), {});
+  console.log(Object.keys(existingResultsWithKeys).length);
+  const allResults = { ...existingResultsWithKeys, ...results };
+  const updatedColors = _.sortBy(
+    Object.values(allResults).filter((result) => result.color),
+    'scoreCount'
+  )
+    .reverse()
+    .map((result) => result.color)
+    .slice(0, 20);
+
+  return updatedColors;
+};
+
+const getUpdatedMonths = (existingResults, results) => {
+  // TODO: Remove dupe code
+  const existingResultsWithKeys = existingResults.reduce((result, item) => ({ ...result, [item.id]: item }), {});
+  console.log(Object.keys(existingResultsWithKeys).length);
+  const allResults = { ...existingResultsWithKeys, ...results };
+  const updatedMonths = Object.values(allResults)
+    .filter((result) => result.month)
+    .map((result) => `${result.year}-${result.month}`);
+
+  updatedMonths.sort().reverse();
+
+  return updatedMonths;
 };
 
 const getGameType = (plays) => {
@@ -303,7 +338,7 @@ const getKeysFromResult = (result) => {
       keys[`count-${result.playerCount}-finish-${result.finishPosition}`] = ['playerCount', 'finishPosition'];
     }
     if (result.new > 0) {
-      keys[`count-${result.playerCount}-new`] = ['wins'];
+      keys[`count-${result.playerCount}-new`] = ['playerCount', 'new', 'wins'];
     }
   }
   if (result.year) {

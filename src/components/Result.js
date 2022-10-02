@@ -107,6 +107,7 @@ const styles = (theme) => ({
     },
     '& .MuiAccordionSummary-content': {
       margin: 0,
+      paddingLeft: '24px',
     },
     '& .MuiAccordionDetails-root': {
       padding: 0,
@@ -118,7 +119,7 @@ const styles = (theme) => ({
       borderTop: 'solid 1px #424242',
       backgroundImage: 'none',
       backgroundColor: '#282828',
-      boxShadow: 'none',
+      // boxShadow: 'none',
       '&::before': {
         opacity: 0,
         height: '2px',
@@ -240,15 +241,24 @@ const Result = (props) => {
 
     if (filters.players) {
       resultId = `count-${filters.players}`;
-
       if (filters.start) {
         resultId += `-start-${filters.start}`;
-      }
-
-      if (filters.finish) {
+      } else if (filters.finish) {
         resultId += `-finish-${filters.finish}`;
+      } else if (filters.new) {
+        resultId += `-new`;
+      }
+    } else if (filters.color) {
+      resultId = `color-${filters.color}`;
+    } else if (filters.year) {
+      resultId = `year-${filters.year}`;
+      if (filters.month) {
+        resultId += `-month-${filters.month}`;
       }
     }
+
+    // console.log(filters);
+    // console.log(resultId);
 
     return resultId;
   };
@@ -301,8 +311,12 @@ const Result = (props) => {
   const setFiltersFromUrl = () => {
     setFilters({
       players: getIntFromParam(params.players),
-      start: getIntFromParam(params.start),
       finish: getIntFromParam(params.finish),
+      start: getIntFromParam(params.start),
+      new: getIntFromParam(params.new),
+      color: params.color || '',
+      year: getIntFromParam(params.year),
+      month: getIntFromParam(params.month),
     });
   };
 
@@ -317,10 +331,10 @@ const Result = (props) => {
   // Filters changed
   useEffect(() => {
     if (!_.isEmpty(filters)) {
-      // console.log('Result loaded');
+      // console.log('Filters loaded');
       findOrLoadResult();
     }
-  }, [filters.players, filters.start, filters.finish]);
+  }, [filters]);
 
   // Result changed
   useEffect(() => {
@@ -333,6 +347,7 @@ const Result = (props) => {
   useEffect(() => {
     if (props.data.game === null || props.data.game.id !== params.id) {
       props.data.game = null;
+      // console.log('Getting game');
       getGameFromUrl();
     }
     setScore(params.score);
@@ -341,15 +356,28 @@ const Result = (props) => {
   // Game loaded
   useEffect(() => {
     // console.log(params);
+    // console.log(props.data.game);
     if (props.data.game) {
       // console.log('Game loaded');
       setFiltersFromUrl();
     }
-  }, [params]);
+  }, [
+    props.data.game?.id,
+    params.id,
+    params.score,
+    params.players,
+    params.finish,
+    params.start,
+    params.new,
+    params.color,
+    params.year,
+    params.month,
+  ]);
 
   // Results loaded
   useEffect(() => {
-    if (props.data?.game?.results) {
+    if (props.data?.game?.results && Object.keys(props.data.game.results).length > 1) {
+      // console.log(props.data?.game?.results);
       // console.log('Results loaded');
       const resultId = getResultId();
       setResult(props.data.game.results[resultId]);
@@ -365,11 +393,7 @@ const Result = (props) => {
     );
   }
 
-  document.title = `Good at ${props.data.game.name}
-  ${score ? ' - Score ' + score : ''}
-  ${filters.players ? ' - ' + filters.players + ' players' : ''}
-  ${filters.start ? ' - ' + filters.start + ' start' : ''}
-  ${filters.finish ? ' - ' + filters.finish + ' finish' : ''}`;
+  document.title = `Good at ${props.data.game.name}${result && result.id !== 'all' ? ' | ' + result.id : ''}`;
 
   return (
     <Fade in={!_.isEmpty(result)} timeout={500}>
@@ -394,7 +418,7 @@ const Result = (props) => {
           </Typography>
         </Box>
         <Filters filters={filters} />
-        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828' }}>
+        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828', boxShadow: 3, zIndex: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box
               component="div"

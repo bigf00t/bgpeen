@@ -61,5 +61,5 @@ const _loadResult = async (gameId, resultId) => {
   const resultDocSnapshot = await getDoc(doc(db, 'games', gameId, 'results', resultId));
   let result = resultDocSnapshot.data();
 
-  return { [resultId]: result };
+  return { [resultId]: { ...result, id: resultId } };
 };
