@@ -24,7 +24,7 @@ switch (argv.function) {
     manual_plays.manualPlaysUpdate([`${argv.id}`], argv.maxPages).catch((err) => console.error(err));
     break;
   case 'automaticGamesUpdate':
-    automatic.runAutomaticGameUpdates(argv.maxGames, argv.maxPages, argv.historic).catch((err) => console.error(err));
+    automatic.runAutomaticGameUpdates(argv.maxGames, argv.maxPages, true).catch((err) => console.error(err));
     break;
   case 'manualGamesUpdate':
     manual_games.manualGamesUpdate(argv.id ? [`${argv.id}`] : null).catch((err) => console.error(err));

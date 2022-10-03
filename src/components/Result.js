@@ -29,6 +29,8 @@ import TextField from '@mui/material/TextField';
 import { DebounceInput } from 'react-debounce-input';
 
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { IconButton } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
 
 const styles = (theme) => ({
   paper: {
@@ -142,6 +144,18 @@ const styles = (theme) => ({
     },
     '& .MuiAccordionDetails-root': {
       padding: 0,
+    },
+  },
+  textField: {
+    '& .MuiIconButton-root': {
+      padding: '4px',
+      visibility: 'hidden',
+    },
+    '&:hover .MuiIconButton-root': {
+      visibility: 'visible',
+    },
+    '& .Mui-focused .MuiIconButton-root': {
+      visibility: 'visible',
     },
   },
 });
@@ -418,7 +432,7 @@ const Result = (props) => {
           </Typography>
         </Box>
         <Filters filters={filters} />
-        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828', boxShadow: 3, zIndex: 2 }}>
+        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box
               component="div"
@@ -447,19 +461,29 @@ const Result = (props) => {
               pb={1}
               width={1}
             >
-              {result.winCount !== undefined && (
+              {result.expectedMean !== undefined && (
                 <Typography m={2} component="h5" variant="h5" align="center">
-                  Win Percentage: &nbsp; {parseInt((result.winCount / result.scoreCount) * 10000) / 100}% &nbsp;
+                  Expected Average: &nbsp; {result.expectedMean} &nbsp;
                 </Typography>
               )}
-              {result.tieBreakerWinCount !== undefined && (
+              {result.id !== 'all' && result.trimmedWinPercentage !== undefined && (
                 <Typography m={2} component="h5" variant="h5" align="center">
-                  Tiebreaker Wins: &nbsp; {result.tieBreakerWinCount} &nbsp;
+                  Win Percentage: &nbsp; {result.trimmedWinPercentage}% &nbsp;
                 </Typography>
               )}
-              {result.sharedWinCount !== undefined && (
+              {result.expectedWinPercentage !== undefined && (
                 <Typography m={2} component="h5" variant="h5" align="center">
-                  Shared Wins: &nbsp; {result.sharedWinCount} &nbsp;
+                  Expected Win Percentage: &nbsp; {result.expectedWinPercentage}% &nbsp;
+                </Typography>
+              )}
+              {result.trimmedTieBreakerWinCount !== undefined && (
+                <Typography m={2} component="h5" variant="h5" align="center">
+                  Tiebreaker Wins: &nbsp; {result.trimmedTieBreakerWinCount} &nbsp;
+                </Typography>
+              )}
+              {result.trimmedSharedWinCount !== undefined && (
+                <Typography m={2} component="h5" variant="h5" align="center">
+                  Shared Wins: &nbsp; {result.trimmedSharedWinCount} &nbsp;
                 </Typography>
               )}
             </Box>
@@ -498,6 +522,14 @@ const Result = (props) => {
                     onClick={(event) => event.stopPropagation()}
                     InputLabelProps={{
                       className: classes.floatingLabelFocusStyle,
+                    }}
+                    type="search"
+                    InputProps={{
+                      endAdornment: score && (
+                        <IconButton onClick={() => setScore('')}>
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      ),
                     }}
                   />
                 </FormControl>

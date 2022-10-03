@@ -54,6 +54,7 @@ const Filters = (props) => {
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
   const [years, setYears] = useState([]);
   const [months, setMonths] = useState([]);
+  const [colors, setColors] = useState([]);
 
   let params = useParams();
 
@@ -87,6 +88,10 @@ const Filters = (props) => {
     return months;
   };
 
+  const getColors = () => {
+    return props.data.game.colors.map((color) => color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
+  };
+
   const toMonthName = (monthNumber) => {
     const date = new Date();
     date.setMonth(monthNumber - 1);
@@ -100,6 +105,7 @@ const Filters = (props) => {
   useEffect(() => {
     setValidPlayerPlaces(getValidPlayerPlaces());
     setYears(getYears());
+    setColors(getColors());
   }, []);
 
   return (
@@ -112,8 +118,8 @@ const Filters = (props) => {
           <FormGroup row className={classes.formGroup} display="block">
             <FilterDropdown
               field="players"
-              dependentFilters={['start', 'finish']}
-              clearsFilters={['color', 'year', 'month']}
+              dependentFilters={['start', 'finish', 'new']}
+              clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
               label="Player Count"
               options={props.data.game.playerCounts.split(',')}
               paramIndex={2}
@@ -164,14 +170,14 @@ const Filters = (props) => {
               field="color"
               clearsFilters={['players', 'start', 'finish', 'year', 'month']}
               label="Player Color"
-              options={props.data.game.colors}
-              optionLabelFormat={(option) => _.capitalize(option)}
+              options={colors}
+              optionLabelFormat={(option) => _.startCase(option)}
               paramIndex={2}
             />
             <FilterDropdown
               field="year"
               dependentFilters={['month']}
-              clearsFilters={['players', 'start', 'finish', 'color']}
+              clearsFilters={['month', 'players', 'start', 'finish', 'color']}
               label="Play Year"
               options={years}
               paramIndex={2}
