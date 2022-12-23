@@ -20,7 +20,7 @@
     "@firebase/util": "^1.6.3",
     "axios": "^0.26.0",
     "dayjs": "^1.10.7",
-    "firebase-admin": "^10.0.2",
+    "firebase-admin": "^11.4.1",
     "firebase-functions": "^3.22.0",
     "idb": "^7.0.1",
     "lodash": "^4.17.21",
