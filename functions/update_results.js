@@ -58,10 +58,12 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   // Add stats to results
   const resultsWithStats = getResultsWithStats(combinedResults);
 
-  const playerCounts = getPlayersCounts(resultsWithStats);
+  // Get all player counts with a recorded score
+  const playerCounts = getCombinedPlayerCounts(resultsWithStats, existingResults);
 
   // Add expected values to results
-  const results = getResultsWithExpected(resultsWithStats, playerCounts);
+  const playerCountMeans = getPlayerCountMeans(resultsWithStats, existingResults, playerCounts);
+  const results = getResultsWithExpected(resultsWithStats, playerCountMeans);
 
   // console.log(results.all.scoreCount);
 
@@ -506,13 +508,24 @@ const getResultsWithStats = (results) => {
   return _.mapValues(results, (result) => addStatsToResult(result, newOutliers));
 };
 
-// Add expected values to results
-const getResultsWithExpected = (results, playerCounts) => {
-  const playerCountMeans = playerCounts.reduce(
-    (result, playerCount) => ({ ...result, [playerCount]: results[`count-${playerCount}`].mean }),
-    {}
-  );
+const getPlayerCountMeans = (results, existingResults, playerCounts) => {
+  return playerCounts.reduce((means, playerCount) => {
+    const key = `count-${playerCount}`;
+    let result = results[key];
 
+    if (result == undefined) {
+      result = _.find(existingResults, (result) => result.id === key);
+    }
+
+    return {
+      ...means,
+      [playerCount]: result.mean,
+    };
+  }, {});
+};
+
+// Add expected values to results
+const getResultsWithExpected = (results, playerCountMeans) => {
   return _.mapValues(results, (result) => {
     if (result.new || result.startPosition) {
       return {
@@ -636,7 +649,13 @@ const getExplodedScores = (scores) =>
     []
   );
 
-const getPlayersCounts = (results) =>
+const getCombinedPlayerCounts = (results, existingResults) =>
+  _(getPlayerCounts(results).concat(getPlayerCounts(existingResults)))
+    .uniq()
+    .sortBy()
+    .value();
+
+const getPlayerCounts = (results) =>
   _(results)
     .filter((result) => result.playerCount)
     .map((result) => parseInt(result.playerCount))
