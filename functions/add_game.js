@@ -8,7 +8,7 @@ const _ = require('lodash');
 
 const util = require('./util');
 
-exports.addGame = async (searchTerm, exact) => {
+exports.addGame = async (searchTerm) => {
   let gameId;
 
   if (!isNaN(searchTerm)) {
@@ -24,7 +24,8 @@ exports.addGame = async (searchTerm, exact) => {
     }
 
     // eslint-disable-next-line prettier/prettier
-    const searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${searchTerm}&exact=${exact ? 1 : 0}&type=boardgame`;
+    // xmlapi2 stopped working, so we had to revert to the old search api
+    const searchUrl = `https://api.geekdo.com/xmlapi/search?search=${searchTerm}&exact=1`;
 
     console.info(`Querying ${searchUrl}`);
     const searchResult = await axios.get(searchUrl);
@@ -34,22 +35,22 @@ exports.addGame = async (searchTerm, exact) => {
       attributesKey: '$',
     });
 
-    if (json.items.item === undefined) {
+    console.log(json.boardgames.boardgame[1]);
+
+    if (json.boardgames.boardgame === undefined) {
       console.log('No search results found');
       return;
     }
 
-    // Use the newest result
-    const foundGame =
-      json.items.item.length > 1
-        ? _.orderBy(
-            json.items.item,
-            [(item) => parseInt(item.yearpublished.$.value), (item) => parseInt(item.$.id)],
-            ['desc', 'desc']
-          )[0]
-        : json.items.item;
+    const foundGames = _(json.boardgames.boardgame)
+      .filter((game) => game.yearpublished !== undefined)
+      .orderBy(
+        [(boardgame) => parseInt(boardgame.yearpublished._text), (boardgame) => parseInt(boardgame.$.objectid)],
+        ['desc', 'desc']
+      )
+      .value();
 
-    gameId = foundGame.$.id;
+    gameId = foundGames[0].$.objectid;
   }
 
   const gameByIdSnapshot = await firestore.collection('games').doc(gameId).get();

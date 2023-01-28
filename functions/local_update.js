@@ -15,11 +15,14 @@ const manual_games = require('./manual_games_update');
 const manual_results = require('./manual_results_update');
 const automatic = require('./automatic_game_updates');
 const manual_plays = require('./manual_plays_update');
-
+const add_game = require('./add_game');
 // console.log(argv);
 // console.log(process.env.FIRESTORE_EMULATOR_HOST);
 
 switch (argv.function) {
+  case 'addGame':
+    add_game.addGame([`${argv.name}`]).catch((err) => console.error(err));
+    break;
   case 'manualPlaysUpdate':
     manual_plays.manualPlaysUpdate([`${argv.id}`], argv.maxPages).catch((err) => console.error(err));
     break;

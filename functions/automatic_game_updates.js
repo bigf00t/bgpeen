@@ -95,7 +95,7 @@ const addSearchedGames = async (searches, maxPages) => {
   const batch = firestore.batch();
 
   for (const search of searches) {
-    const newGame = await add_game.addGame(search.term, true);
+    const newGame = await add_game.addGame(search.term);
 
     await util.delay();
 
