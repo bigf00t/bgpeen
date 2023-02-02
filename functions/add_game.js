@@ -9,51 +9,13 @@ const _ = require('lodash');
 const util = require('./util');
 
 exports.addGame = async (searchTerm) => {
-  let gameId;
-
-  if (!isNaN(searchTerm)) {
-    // The search term is a game id
-    gameId = searchTerm;
-  } else {
-    // The search term is a game name
-    const existingGamesByNameSnapshot = await firestore.collection('games').where('name', '==', searchTerm).get();
-
-    if (existingGamesByNameSnapshot.size > 0) {
-      console.log('Game already exists');
-      return;
-    }
-
-    // eslint-disable-next-line prettier/prettier
-    // xmlapi2 stopped working, so we had to revert to the old search api
-    const searchUrl = `https://api.geekdo.com/xmlapi/search?search=${searchTerm}&exact=1`;
-
-    console.info(`Querying ${searchUrl}`);
-    const searchResult = await axios.get(searchUrl);
-
-    const json = convert.xml2js(searchResult.data, {
-      compact: true,
-      attributesKey: '$',
-    });
-
-    console.log(json.boardgames.boardgame[1]);
-
-    if (json.boardgames.boardgame === undefined) {
-      console.log('No search results found');
-      return;
-    }
-
-    const foundGames = _(json.boardgames.boardgame)
-      .filter((game) => game.yearpublished !== undefined)
-      .orderBy(
-        [(boardgame) => parseInt(boardgame.yearpublished._text), (boardgame) => parseInt(boardgame.$.objectid)],
-        ['desc', 'desc']
-      )
-      .value();
-
-    gameId = foundGames[0].$.objectid;
+  const gameId = await getGameId(searchTerm);
+  if (!gameId) {
+    return;
   }
 
   const gameByIdSnapshot = await firestore.collection('games').doc(gameId).get();
+
   if (gameByIdSnapshot.exists) {
     console.log('Game already exists');
     return;
@@ -130,10 +92,53 @@ exports.addGame = async (searchTerm) => {
   console.info(`Adding ${newGame.name} (${newGame.id})`);
 
   await firestore.collection('games').doc(newGame.id).set(newGame);
-
   await firestore.collection('details').doc(newGame.id).set(newDetails);
-
   await firestore.collection('plays').doc(newGame.id).set(newPlays);
 
   return newGame;
+};
+
+const getGameId = async (searchTerm) => {
+  if (!isNaN(searchTerm)) {
+    // The search term is a game id
+    return searchTerm;
+  }
+
+  // The search term is a game name
+  const existingGamesByNameSnapshot = await firestore.collection('games').where('name', '==', searchTerm).get();
+
+  if (existingGamesByNameSnapshot.size > 0) {
+    console.log('Game already exists');
+    return null;
+  }
+
+  // eslint-disable-next-line prettier/prettier
+  // xmlapi2 stopped working, so we had to revert to the old search api
+  const searchUrl = `https://api.geekdo.com/xmlapi/search?search=${searchTerm}&exact=1`;
+
+  console.info(`Querying ${searchUrl}`);
+  const searchResult = await axios.get(searchUrl);
+
+  const json = convert.xml2js(searchResult.data, {
+    compact: true,
+    attributesKey: '$',
+  });
+
+  if (json.boardgames.boardgame === undefined) {
+    console.log('No search results found');
+    return null;
+  }
+
+  // Only one result
+  if (json.boardgames.boardgame.$ !== undefined) {
+    return json.boardgames.boardgame.$.objectid;
+  }
+
+  // Get newest
+  const foundGames = _(json.boardgames.boardgame)
+    .filter((game) => game.yearpublished !== undefined)
+    .orderBy([(game) => parseInt(game.yearpublished._text), (game) => parseInt(game.$.objectid)], ['desc', 'desc'])
+    .value();
+
+  return foundGames[0].$.objectid;
 };
