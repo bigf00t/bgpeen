@@ -39,7 +39,7 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   console.info('-'.repeat(100));
 
   if (validPlays.length === 0) {
-    console.error('ERROR - No valid plays!');
+    console.error('No valid plays!');
     return;
   }
 

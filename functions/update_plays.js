@@ -28,8 +28,7 @@ exports.updateGamePlays = async (game, batch, maxPages) => {
   const newPlays = _.flatMap(pageResults, 'plays');
 
   if (newPlays.length === 0) {
-    console.error('ERROR - No valid plays found!');
-    return [];
+    console.error('No plays found!');
   }
 
   await updateGamePlaysWithPageResults(game, gamePlays, gamePlaysRef, batch, pageResults, newPlays);
@@ -58,7 +57,7 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
         : gamePlays.oldestPlayDate;
   }
 
-  const remainingPlays = pageResults.slice(-1)[0].remainingPlays;
+  const remainingPlays = pageResults.length === 0 ? pageResults.slice(-1)[0].remainingPlays : 0;
   const totalPlays = _.defaultTo(gamePlays.totalPlays, 0) + newPlays.length;
 
   console.info(`${game.name} - ${newPlays.length} plays loaded - ${remainingPlays} plays remaining on BGG`);
