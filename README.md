@@ -1,3 +1,10 @@
+Setup
+- Install nvm for windows
+- Use nvm to install and use Node 16 `nvm install 16`
+- Install dependencies `npm install --legacy-peer-deps`
+- Install function dependencies `cd ./functions & npm install`
+- Install firebase CLI `npm install -g firebase-tools`
+
 To run site locally:
 - npm start
 - browse to http://localhost:3000/
@@ -16,7 +23,7 @@ To save local data state:
 - firebase emulators:export ./data --only firestore
 
 To deploy. If getting "Error: There was an error deploying functions"
-- $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
+- DEPRECATED - $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\radbl\Documents\dev\bgpeen\bgpeen-1fc16-c819bb592209.json"
 - firebase login --reauth
 - May need to update npm dependencies
 

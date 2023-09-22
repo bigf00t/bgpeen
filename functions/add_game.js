@@ -17,7 +17,7 @@ exports.addGame = async (searchTerm) => {
   const gameByIdSnapshot = await firestore.collection('games').doc(gameId).get();
 
   if (gameByIdSnapshot.exists) {
-    console.log('Game already exists');
+    console.log(`Game with ID ${gameId} already exists`);
     return;
   }
 
@@ -29,6 +29,12 @@ exports.addGame = async (searchTerm) => {
     compact: true,
     attributesKey: '$',
   }).items.item;
+
+  if (item == undefined) {
+    console.log(`Game with ID ${gameId} was not found`);
+    return;
+  }
+
   const name = Array.isArray(item.name)
     ? _.find(item.name, (name) => name.$.type === 'primary').$.value
     : item.name.$.value;
@@ -101,8 +107,11 @@ exports.addGame = async (searchTerm) => {
 const getGameId = async (searchTerm) => {
   if (!isNaN(searchTerm)) {
     // The search term is a game id
+    console.log(`Using Game ID ${searchTerm}`);
     return searchTerm;
   }
+  
+  console.log(`Searching BGG for: ${searchTerm}`);
 
   // The search term is a game name
   const existingGamesByNameSnapshot = await firestore.collection('games').where('name', '==', searchTerm).get();
@@ -139,6 +148,8 @@ const getGameId = async (searchTerm) => {
     .filter((game) => game.yearpublished !== undefined)
     .orderBy([(game) => parseInt(game.yearpublished._text), (game) => parseInt(game.$.objectid)], ['desc', 'desc'])
     .value();
+    
+  console.log(`Using Game ID ${searchTerm}`);
 
   return foundGames[0].$.objectid;
 };
