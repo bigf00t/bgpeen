@@ -121,7 +121,9 @@ const getPageResults = async (game, gamePlays, details, playsUrl, maxPages) => {
 };
 
 const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages) => {
-  const result = await axios.get(playsUrl + page);
+  const result = await axios.get(playsUrl + page, {
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+  });
 
   const json = convert.xml2js(result.data, {
     compact: true,

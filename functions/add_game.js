@@ -23,7 +23,9 @@ exports.addGame = async (searchTerm) => {
 
   await util.delay();
 
-  const thingResult = await axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`);
+  const thingResult = await axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`, {
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+  });
 
   const item = convert.xml2js(thingResult.data, {
     compact: true,
@@ -121,35 +123,35 @@ const getGameId = async (searchTerm) => {
     return null;
   }
 
-  // eslint-disable-next-line prettier/prettier
-  // xmlapi2 stopped working, so we had to revert to the old search api
-  const searchUrl = `https://api.geekdo.com/xmlapi/search?search=${searchTerm}&exact=1`;
+  const searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${encodeURIComponent(searchTerm)}&type=boardgame&exact=1`;
 
   console.info(`Querying ${searchUrl}`);
-  const searchResult = await axios.get(searchUrl);
+  const searchResult = await axios.get(searchUrl, {
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+  });
 
   const json = convert.xml2js(searchResult.data, {
     compact: true,
     attributesKey: '$',
   });
 
-  if (json.boardgames.boardgame === undefined) {
+  if (json.items.item === undefined) {
     console.log('No search results found');
     return null;
   }
 
   // Only one result
-  if (json.boardgames.boardgame.$ !== undefined) {
-    return json.boardgames.boardgame.$.objectid;
+  if (!Array.isArray(json.items.item)) {
+    return json.items.item.$.id;
   }
 
   // Get newest
-  const foundGames = _(json.boardgames.boardgame)
+  const foundGames = _(json.items.item)
     .filter((game) => game.yearpublished !== undefined)
-    .orderBy([(game) => parseInt(game.yearpublished._text), (game) => parseInt(game.$.objectid)], ['desc', 'desc'])
+    .orderBy([(game) => parseInt(game.yearpublished.$.value), (game) => parseInt(game.$.id)], ['desc', 'desc'])
     .value();
-    
-  console.log(`Using Game ID ${searchTerm}`);
 
-  return foundGames[0].$.objectid;
+  console.log(`Using Game ID ${foundGames[0].$.id}`);
+
+  return foundGames[0].$.id;
 };

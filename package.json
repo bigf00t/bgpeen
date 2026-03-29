@@ -19,23 +19,18 @@
     "react-chartjs-2": "^4.0.1",
     "react-debounce-input": "^3.2.5",
     "react-dom": "^17.0.2",
-    "react-flip-numbers": "^3.0.5",
+    "react-flip-numbers": "^3.0.9",
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.2.2",
-    "react-scripts": "5.0.0",
     "react-share": "^4.4.0",
     "redux": "^4.1.2",
     "redux-thunk": "^2.4.1"
   },
   "scripts": {
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "analyze": "source-map-explorer 'dist/assets/*.js'",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "browserslist": {
     "production": [
@@ -53,9 +48,11 @@
     "@babel/eslint-parser": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-react": "^7.16.7",
+    "@vitejs/plugin-react": "^4.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.5.1",
-    "source-map-explorer": "^2.5.2"
+    "source-map-explorer": "^2.5.2",
+    "vite": "^5.0.0"
   }
 }
