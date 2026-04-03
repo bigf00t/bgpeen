@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
@@ -32,133 +30,36 @@ import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { IconButton } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 
-const styles = (theme) => ({
-  paper: {
-    padding: theme.spacing(2, 2, 2),
-  },
-  link: {
-    color: theme.palette.action.active,
-    textDecoration: 'none',
-    '&:hover': {
-      textDecoration: 'none',
-      opacity: 0.75,
-    },
-  },
-  details: {
+const accordionDarkSx = {
+  '&.MuiAccordion-root': {
+    borderTop: 'solid 1px #424242',
+    backgroundImage: 'none',
     backgroundColor: '#282828',
+    '&::before': { opacity: 0, height: '2px' },
+    '&.Mui-expanded': { margin: 0, '&::before': { opacity: 0 } },
   },
-  card: {
-    margin: theme.spacing(1),
+  '& .MuiAccordionSummary-root': {
+    backgroundColor: '#282828',
+    '&.Mui-focusVisible': { backgroundColor: '#282828' },
   },
-  imageWrapper: {
-    margin: theme.spacing(0, 2, 0, 2),
-    maxWidth: 150,
-    // maxHeight: 100,
-    height: 'auto !important',
+  '& .MuiAccordionSummary-content': { margin: 0 },
+  '& .MuiAccordionDetails-root': { padding: 0 },
+};
+
+const accordionLightSx = {
+  '&.MuiAccordion-root': {
+    backgroundImage: 'none',
+    boxShadow: 'none',
+    '&::before': { opacity: 0 },
+    '&.Mui-expanded': { margin: 0, '&::before': { opacity: 0 } },
   },
-  image: {
-    height: '150px !important',
-    width: '150px !important',
-    objectFit: 'scale-down !important',
+  '& .MuiAccordionSummary-root': {
+    backgroundColor: 'background.default',
+    '&.Mui-focusVisible': { backgroundColor: 'background.default' },
   },
-  title: {
-    margin: theme.spacing(2, 2, 0, 2),
-  },
-  credit: {},
-  ordinal: {
-    padding: theme.spacing(0, 1, 1, 1),
-  },
-  tweet: {
-    position: 'relative',
-    // height: '24px',
-    // top: '8px',
-    padding: theme.spacing(0, 5, 1, 1),
-    '& button': {
-      position: 'absolute',
-      top: '-6px',
-      right: '0',
-      display: 'inline-block',
-    },
-  },
-  arrow: {
-    top: 2,
-    position: 'relative',
-  },
-  progress: {
-    // color: theme.palette.action.active,
-  },
-  accordionLight: {
-    '&.MuiAccordion-root': {
-      backgroundImage: 'none',
-      boxShadow: 'none',
-      '&::before': {
-        opacity: 0,
-      },
-      '&.Mui-expanded': {
-        margin: 0,
-        '&::before': {
-          opacity: 0,
-        },
-      },
-    },
-    '& .MuiAccordionSummary-root': {
-      backgroundColor: theme.palette.background.default,
-      '&.Mui-focusVisible': {
-        backgroundColor: theme.palette.background.default,
-      },
-    },
-    '& .MuiAccordionSummary-content': {
-      margin: 0,
-      paddingLeft: '24px',
-    },
-    '& .MuiAccordionDetails-root': {
-      padding: 0,
-      backgroundColor: theme.palette.background.default,
-    },
-  },
-  accordionDark: {
-    '&.MuiAccordion-root': {
-      borderTop: 'solid 1px #424242',
-      backgroundImage: 'none',
-      backgroundColor: '#282828',
-      // boxShadow: 'none',
-      '&::before': {
-        opacity: 0,
-        height: '2px',
-      },
-      '&.Mui-expanded': {
-        margin: 0,
-        '&::before': {
-          opacity: 0,
-        },
-      },
-    },
-    '& .MuiAccordionSummary-root': {
-      backgroundColor: '#282828',
-      '&.Mui-focusVisible': {
-        backgroundColor: '#282828',
-      },
-    },
-    '& .MuiAccordionSummary-content': {
-      margin: 0,
-    },
-    '& .MuiAccordionDetails-root': {
-      padding: 0,
-    },
-  },
-  textField: {
-    '& .MuiIconButton-root': {
-      padding: '4px',
-      visibility: 'hidden',
-    },
-    '&:hover .MuiIconButton-root': {
-      visibility: 'visible',
-    },
-    '& .Mui-focused .MuiIconButton-root': {
-      visibility: 'visible',
-    },
-  },
-});
+  '& .MuiAccordionSummary-content': { margin: 0, paddingLeft: '24px' },
+  '& .MuiAccordionDetails-root': { padding: 0, backgroundColor: 'background.default' },
+};
 
 const getOrdinalDesc = (percentile) => {
   if (percentile === null) {
@@ -219,8 +120,6 @@ const Result = (props) => {
   let params = useParams();
   let navigate = useNavigate();
 
-  const classes = props.classes;
-
   const handleScoreChange = (event) => {
     setScore(getIntFromParam(event.target.value));
   };
@@ -279,11 +178,10 @@ const Result = (props) => {
 
   const findOrLoadResult = () => {
     const resultId = getResultId();
+    const results = props.data.game.results;
 
-    let newResult = props.data.game.results[resultId];
-
-    if (newResult) {
-      setResult(newResult);
+    if (Object.prototype.hasOwnProperty.call(results, resultId)) {
+      setResult(results[resultId]);
     } else {
       props.loadResult(params.id, resultId);
     }
@@ -292,6 +190,13 @@ const Result = (props) => {
   const updatePercentile = () => {
     if (!score) {
       setPercentile(null);
+      return;
+    }
+
+    const total = _.sum(_.values(result.scores));
+    if (!total) {
+      setPercentile(null);
+      return;
     }
 
     // Based on https://www.30secondsofcode.org/js/s/percentile
@@ -302,7 +207,7 @@ const Result = (props) => {
         0
       ) *
         100) /
-      _.sum(_.values(result.scores));
+      total;
 
     setPercentile(newPercentile);
   };
@@ -316,7 +221,7 @@ const Result = (props) => {
   const findOrLoadGame = () => {
     var foundGame = props.data.loadedGames[params.id];
     if (foundGame) {
-      props.data.game = foundGame;
+      props.setGame(foundGame);
     } else {
       props.loadGame(params.id);
     }
@@ -360,11 +265,10 @@ const Result = (props) => {
   // componentDidMount
   useEffect(() => {
     if (props.data.game === null || props.data.game.id !== params.id) {
-      props.data.game = null;
       // console.log('Getting game');
       getGameFromUrl();
     }
-    setScore(params.score);
+    setScore(getIntFromParam(params.score));
   }, []);
 
   // Game loaded
@@ -402,7 +306,7 @@ const Result = (props) => {
   if (_.isEmpty(result)) {
     return (
       <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
-        <CircularProgress size={60} className={classes.progress} color="inherit" />
+        <CircularProgress size={60} color="inherit" />
       </Box>
     );
   }
@@ -416,12 +320,12 @@ const Result = (props) => {
           <Image
             src={props.data.game.thumbnail}
             duration={0}
-            wrapperClassName={classes.imageWrapper}
-            className={classes.image}
+            wrapperStyle={{ margin: '0 16px', maxWidth: 150 }}
+            style={{ height: 150, width: 150, objectFit: 'scale-down' }}
           />
-          <Typography variant="h2" component="h2" className={classes.title} gutterBottom align="center">
+          <Typography variant="h2" component="h2" sx={{ mt: 2, mr: 2, mb: 0, ml: 2 }} gutterBottom align="center">
             <Link
-              className={classes.link}
+              sx={{ color: 'action.active', textDecoration: 'none', '&:hover': { textDecoration: 'none', opacity: 0.75 } }}
               href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
               target="_blank"
               title="View on boardgamegeek.com"
@@ -432,7 +336,7 @@ const Result = (props) => {
           </Typography>
         </Box>
         <Filters filters={filters} />
-        <Accordion className={classes.accordionDark} sx={{ backgroundColor: '#282828' }}>
+        <Accordion sx={accordionDarkSx}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box
               component="div"
@@ -490,11 +394,11 @@ const Result = (props) => {
           </AccordionDetails>
         </Accordion>
         <Accordion
-          className={classes.accordionLight}
+          sx={accordionLightSx}
           expanded={scoreAccordionExpanded}
           onChange={handleScoreAccordionChange()}
         >
-          <AccordionSummary expandIcon={score ? <ExpandMoreIcon /> : null}>
+          <AccordionSummary component="div" expandIcon={score ? <ExpandMoreIcon /> : null}>
             <Box
               component="div"
               display="flex"
@@ -506,12 +410,16 @@ const Result = (props) => {
               <Typography component="h5" variant="h5" align="center" m={1} ml={2} mr={2}>
                 How good are you?
               </Typography>
-              <FormGroup row className={classes.formGroup}>
-                <FormControl className={classes.formControl}>
+              <FormGroup row>
+                <FormControl>
                   <DebounceInput
                     element={TextField}
                     debounceTimeout={300}
-                    className={classes.textField}
+                    sx={{
+                      '& .MuiIconButton-root': { padding: '4px', visibility: 'hidden' },
+                      '&:hover .MuiIconButton-root': { visibility: 'visible' },
+                      '& .Mui-focused .MuiIconButton-root': { visibility: 'visible' },
+                    }}
                     id="score"
                     name="score"
                     label="Your Score"
@@ -521,7 +429,7 @@ const Result = (props) => {
                     // To prevent accordion toggling
                     onClick={(event) => event.stopPropagation()}
                     InputLabelProps={{
-                      className: classes.floatingLabelFocusStyle,
+                      sx: { '&.Mui-focused': { color: 'text.primary' } },
                     }}
                     type="search"
                     InputProps={{
@@ -546,10 +454,20 @@ const Result = (props) => {
                 flexWrap="wrap"
                 sx={{ p: 2, pt: 4, pb: 0, width: 1 }}
               >
-                <Typography component="div" align="center" className={classes.ordinal}>
+                <Typography component="div" align="center" sx={{ pt: 0, pr: 1, pb: 1, pl: 1 }}>
                   {` Your score of ${score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
                 </Typography>
-                <Typography component="span" className={classes.tweet}>
+                <Typography
+                  component="span"
+                  sx={{
+                    position: 'relative',
+                    pt: 0,
+                    pr: 5,
+                    pb: 1,
+                    pl: 1,
+                    '& button': { position: 'absolute', top: '-6px', right: '0', display: 'inline-block' },
+                  }}
+                >
                   Share score:
                   <TwitterShareButton
                     title={getTwitterText(props.data.game.name, score, percentile)}
@@ -558,7 +476,7 @@ const Result = (props) => {
                     <TwitterIcon size={32} round />
                   </TwitterShareButton>
                 </Typography>
-                <Typography variant="h2" component="h2" width={1} className={classes.title} gutterBottom align="center">
+                <Typography variant="h2" component="h2" width={1} sx={{ mt: 2, mr: 2, mb: 0, ml: 2 }} gutterBottom align="center">
                   {percentile !== null ? getScoreTitle(percentile) : 'None'}
                 </Typography>
               </Box>
@@ -569,9 +487,14 @@ const Result = (props) => {
           <Graph result={result} score={score} percentile={percentile}></Graph>
         </Box>
         <Box component="div" p={2} backgroundColor="#282828">
-          <Typography component="div" align="center" className={classes.credit}>
+          <Typography component="div" align="center">
             {'Scores provided by '}
-            <Link className={classes.link} href="https://boardgamegeek.com" target="_blank" underline="hover">
+            <Link
+              sx={{ color: 'action.active', textDecoration: 'none', '&:hover': { textDecoration: 'none', opacity: 0.75 } }}
+              href="https://boardgamegeek.com"
+              target="_blank"
+              underline="hover"
+            >
               boardgamegeek.com
             </Link>
           </Typography>
@@ -583,7 +506,7 @@ const Result = (props) => {
 
 Result.propTypes = {
   data: PropTypes.object,
-  classes: PropTypes.object,
+  setGame: PropTypes.func,
   loadGames: PropTypes.func,
   loadGame: PropTypes.func,
   loadResult: PropTypes.func,
@@ -593,4 +516,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(Result)));
+export default connect(mapStateToProps, actions)(Result);

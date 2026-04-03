@@ -5,51 +5,30 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Link as RouterLink } from 'react-router-dom';
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import PropTypes from 'prop-types';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import Link from '@mui/material/Link';
 
-const styles = () => ({
-  appbar: {
-    backgroundColor: '#050505',
-  },
-  logo: {
-    textDecoration: 'none',
-    '&:hover': {
-      opacity: 0.75,
-    },
-    '& span': {
-      verticalAlign: 'top',
-    },
-  },
-  twitter: {
-    textDecoration: 'none',
-    '&:hover': {
-      opacity: 0.75,
-    },
-  },
-});
-
-const Menu = (props) => {
-  const classes = props.classes;
-
+const Menu = () => {
   return (
-    <AppBar className={classes.appbar} position="absolute" enableColorOnDark={true} display="flex" elevation={3}>
+    <AppBar sx={{ backgroundColor: '#050505' }} position="absolute" enableColorOnDark={true} display="flex" elevation={3}>
       <Toolbar>
         <Box display="flex" flexGrow={1}>
-          <RouterLink className={classes.logo} to="/">
+          <Link
+            component={RouterLink}
+            to="/"
+            sx={{ textDecoration: 'none', color: 'text.primary', '&:hover': { opacity: 0.75 }, '& span': { verticalAlign: 'top' } }}
+          >
             <Typography component="span" variant="h4" color="textPrimary">
               {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
             </Typography>
             <Typography component="span" variant="subtitle2" color="textPrimary">
               &nbsp;beta
             </Typography>
-          </RouterLink>
+          </Link>
         </Box>
         <Link
-          className={classes.twitter}
+          sx={{ textDecoration: 'none', '&:hover': { opacity: 0.75 } }}
           href="https://twitter.com/GoodAtDotGames"
           target="_blank"
           rel="noreferrer"
@@ -63,8 +42,6 @@ const Menu = (props) => {
   );
 };
 
-Menu.propTypes = {
-  classes: PropTypes.object,
-};
+Menu.propTypes = {};
 
-export default withStyles(styles)(withTheme(Menu));
+export default Menu;

@@ -1,17 +1,20 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import reduxThunk from 'redux-thunk';
+import { configureStore } from '@reduxjs/toolkit';
 import reducers from './reducers';
 import './index.css';
 import App from './App';
 
-const store = createStore(reducers, {}, applyMiddleware(reduxThunk));
+const store = configureStore({
+  reducer: reducers,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({ serializableCheck: false, immutableCheck: false }),
+});
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root'));
+root.render(
   <Provider store={store}>
     <App />
-  </Provider>,
-  document.getElementById('root')
+  </Provider>
 );

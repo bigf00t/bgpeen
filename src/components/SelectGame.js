@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { collection, addDoc } from 'firebase/firestore';
 import * as actions from '../actions';
@@ -7,8 +7,6 @@ import { db } from '../fire';
 
 import { connect } from 'react-redux';
 
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import TextField from '@mui/material/TextField';
 import FormGroup from '@mui/material/FormGroup';
 import FormControl from '@mui/material/FormControl';
@@ -20,24 +18,6 @@ import Typography from '@mui/material/Typography';
 
 import { getGameSlug } from '../utils';
 
-const styles = (theme) => ({
-  button: {
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(2),
-  },
-  formControl: {
-    maxWidth: 330,
-  },
-  formGroup: {
-    margin: theme.spacing(2),
-    justifyContent: 'center',
-  },
-  message: {
-    margin: theme.spacing(2),
-    textAlign: 'center',
-  },
-});
-
 const SelectGame = (props) => {
   const [game, setGame] = useState('');
   const [gameText, setGameText] = useState('');
@@ -45,8 +25,7 @@ const SelectGame = (props) => {
   const [gameHighlightValue, setGameHighlightValue] = useState('');
 
   let navigate = useNavigate();
-
-  const classes = props.classes;
+  const location = useLocation();
 
   const handleGameHighlightChange = (event, option) => {
     setGameHighlightValue(option);
@@ -117,15 +96,15 @@ const SelectGame = (props) => {
   // componentDidUpdate game
   useEffect(() => {
     setAddedGame('');
-  }, [props.location]);
+  }, [location]);
 
   return (
     <Box component="div">
       <Typography variant="h4" component="h4" align="center">
         Find a Game
       </Typography>
-      <FormGroup row className={classes.formGroup}>
-        <FormControl className={classes.formControl} fullWidth>
+      <FormGroup row sx={{ m: 2, justifyContent: 'center' }}>
+        <FormControl sx={{ maxWidth: 330 }} fullWidth>
           <Autocomplete
             freeSolo
             autoHighlight
@@ -157,8 +136,8 @@ const SelectGame = (props) => {
           />
         </FormControl>
         {gameText && !gameHighlightValue && !addedGame ? (
-          <FormControl className={classes.formControl}>
-            <Button className={classes.button} variant="contained" color="primary" onClick={handleAddClick}>
+          <FormControl sx={{ maxWidth: 330 }}>
+            <Button sx={{ mt: 1, ml: 2 }} variant="contained" color="primary" onClick={handleAddClick}>
               Add Game
             </Button>
           </FormControl>
@@ -167,7 +146,7 @@ const SelectGame = (props) => {
         )}
       </FormGroup>
       {gameText && !gameHighlightValue && !addedGame ? (
-        <Box component="div" className={classes.message}>
+        <Box component="div" sx={{ m: 2, textAlign: 'center' }}>
           No games were found matching your search term. <br />
           Enter the exact name (including punctuation) or BGG ID of a game and press Add Game.
         </Box>
@@ -175,7 +154,7 @@ const SelectGame = (props) => {
         ''
       )}
       {addedGame ? (
-        <Box component="div" className={classes.message}>
+        <Box component="div" sx={{ m: 2, textAlign: 'center' }}>
           {addedGame} has been added to the queue, but it could take up to 10 minutes for the data to be available.{' '}
           <br />
           Please wait and refresh the site in a little while. Thanks!
@@ -189,7 +168,6 @@ const SelectGame = (props) => {
 
 SelectGame.propTypes = {
   data: PropTypes.object,
-  classes: PropTypes.object,
   location: PropTypes.object,
   loadGames: PropTypes.func,
   handleChange: PropTypes.func,
@@ -199,4 +177,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(SelectGame)));
+export default connect(mapStateToProps, actions)(SelectGame);

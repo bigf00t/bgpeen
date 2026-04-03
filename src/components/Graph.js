@@ -1,6 +1,6 @@
 import React from 'react';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import withTheme from '@mui/styles/withTheme';
+import { useTheme } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
@@ -30,6 +30,8 @@ ChartJS.register(
 );
 
 const Graph = (props) => {
+  const theme = useTheme();
+
   const getScoreColor = (percentile) => {
     return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
   };
@@ -41,20 +43,20 @@ const Graph = (props) => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: props.theme.palette.text.secondary,
+          color: theme.palette.text.secondary,
         },
         grid: {
-          color: props.theme.palette.divider,
+          color: theme.palette.divider,
         },
       },
       x: {
         type: 'linear',
         position: 'bottom',
         grid: {
-          color: props.theme.palette.divider,
+          color: theme.palette.divider,
         },
         ticks: {
-          color: props.theme.palette.text.secondary,
+          color: theme.palette.text.secondary,
         },
       },
     },
@@ -67,7 +69,7 @@ const Graph = (props) => {
             mode: 'vertical',
             scaleID: 'x',
             value: props.result.mean,
-            borderColor: props.theme.palette.text.secondary,
+            borderColor: theme.palette.text.secondary,
             borderDash: [5],
             borderWidth: 2,
           },
@@ -91,7 +93,7 @@ const Graph = (props) => {
       legend: {
         display: false,
         labels: {
-          color: props.theme.palette.text.primary,
+          color: theme.palette.text.primary,
           font: {
             size: 16,
           },
@@ -106,20 +108,21 @@ const Graph = (props) => {
       .orderBy(['x'])
       .value();
 
-  const labels = getDataFromResult().map((item) => item.x, []);
+  const chartData = getDataFromResult();
+  const labels = chartData.map((item) => item.x);
 
   const data = {
     labels,
     datasets: [
       {
         // label: getLabelText(),
-        data: getDataFromResult().map((item) => item.y, []),
-        backgroundColor: props.theme.palette.graph.background[props.theme.palette.mode],
-        borderColor: props.theme.palette.graph.border[props.theme.palette.mode],
-        pointBackgroundColor: props.theme.palette.graph.point[props.theme.palette.mode],
+        data: chartData.map((item) => item.y),
+        backgroundColor: theme.palette.graph.background[theme.palette.mode],
+        borderColor: theme.palette.graph.border[theme.palette.mode],
+        pointBackgroundColor: theme.palette.graph.point[theme.palette.mode],
         fill: true,
         spanGaps: true,
-        lineTension: 0,
+        tension: 0,
       },
     ],
   };
@@ -132,7 +135,6 @@ Graph.propTypes = {
   result: PropTypes.object,
   score: PropTypes.any,
   percentile: PropTypes.number,
-  theme: PropTypes.any,
 };
 
-export default withTheme(Graph);
+export default Graph;

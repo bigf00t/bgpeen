@@ -1,33 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import PropTypes from 'prop-types';
 import Autocomplete from '@mui/material/Autocomplete';
-
-const styles = (theme) => ({
-  root: {
-    backgroundColor: '#282828',
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 180,
-    height: 60,
-    flex: 3,
-  },
-  selectEmpty: {},
-  formGroup: {
-    justifyContent: 'center',
-  },
-  floatingLabelFocusStyle: {
-    '&.Mui-focused': {
-      color: theme.palette.text.primary,
-    },
-  },
-});
 
 const FilterDropdown = (props) => {
   const [value, setValue] = useState();
@@ -35,8 +12,6 @@ const FilterDropdown = (props) => {
 
   let params = useParams();
   let navigate = useNavigate();
-
-  const classes = props.classes;
 
   const handleValueChange = (event, newValue) => {
     if (!newValue) {
@@ -128,7 +103,7 @@ const FilterDropdown = (props) => {
 
   return (
     <FormControl
-      className={classes.formControl}
+      sx={{ m: 1, minWidth: 180, height: 60, flex: 3 }}
       // To prevent accordion toggling
       onClick={(event) => event.stopPropagation()}
     >
@@ -154,7 +129,7 @@ const FilterDropdown = (props) => {
               fullWidth
               labelid={`${props.field}-label`}
               InputLabelProps={{
-                className: classes.floatingLabelFocusStyle,
+                sx: { '&.Mui-focused': { color: 'text.primary' } },
               }}
             />
           );
@@ -165,7 +140,6 @@ const FilterDropdown = (props) => {
 };
 
 FilterDropdown.propTypes = {
-  classes: PropTypes.object,
   field: PropTypes.string,
   dependentFilters: PropTypes.array,
   enabledByFilter: PropTypes.string,
@@ -176,4 +150,4 @@ FilterDropdown.propTypes = {
   paramIndex: PropTypes.number,
 };
 
-export default withStyles(styles)(withTheme(FilterDropdown));
+export default FilterDropdown;

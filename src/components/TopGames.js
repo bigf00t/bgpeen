@@ -4,8 +4,6 @@ import * as actions from '../actions';
 
 import { connect } from 'react-redux';
 
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
@@ -19,20 +17,12 @@ import Fade from '@mui/material/Fade';
 import { getGameSlug } from '../utils';
 import _ from 'lodash';
 
-const styles = (theme) => ({
-  card: {
-    margin: theme.spacing(1),
-  },
-});
-
 const TopGames = (props) => {
   const [topGames, setTopGames] = useState([]);
   const [imagesLoaded, setImagesLoaded] = useState(0);
 
-  const classes = props.classes;
-
   const handleLoad = () => {
-    setImagesLoaded(imagesLoaded + 1);
+    setImagesLoaded((prev) => prev + 1);
   };
 
   // componentDidMount
@@ -58,7 +48,7 @@ const TopGames = (props) => {
               alignItems="center"
             >
               {topGames.map((game) => (
-                <Card key={game.id} className={classes.card}>
+                <Card key={game.id} sx={{ m: 1 }}>
                   <CardActionArea
                     component={Link}
                     to={`/${game.id}/${getGameSlug(game)}`}
@@ -117,7 +107,7 @@ const TopGames = (props) => {
         {(imagesLoaded == 0 || imagesLoaded < topGames.length) && (
           <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
             <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px" m={1}>
-              <CircularProgress size={40} className={classes.progress} color="inherit" m={1} />
+              <CircularProgress size={40} color="inherit" m={1} />
             </Box>
           </Box>
         )}
@@ -128,7 +118,6 @@ const TopGames = (props) => {
 
 TopGames.propTypes = {
   data: PropTypes.object,
-  classes: PropTypes.object,
   title: PropTypes.string,
   field: PropTypes.string,
 };
@@ -137,4 +126,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps, actions)(withStyles(styles)(withTheme(TopGames)));
+export default connect(mapStateToProps, actions)(TopGames);

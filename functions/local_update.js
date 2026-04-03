@@ -9,7 +9,7 @@ if (!argv.prod) {
 }
 
 const { initializeApp } = require('firebase-admin/app');
-initializeApp();
+initializeApp({ projectId: 'bgpeen-1fc16' });
 
 const manual_games = require('./manual_games_update');
 const manual_results = require('./manual_results_update');

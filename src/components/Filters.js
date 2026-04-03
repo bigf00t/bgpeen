@@ -4,8 +4,6 @@ import { useParams } from 'react-router-dom';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 
-import withStyles from '@mui/styles/withStyles';
-import withTheme from '@mui/styles/withTheme';
 import FormGroup from '@mui/material/FormGroup';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -19,36 +17,32 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const styles = () => ({
-  accordion: {
-    '&.MuiAccordion-root': {
-      backgroundImage: 'none',
+const accordionSx = {
+  '&.MuiAccordion-root': {
+    backgroundImage: 'none',
+    '&::before': {
+      opacity: 0,
+    },
+    '&.Mui-expanded': {
+      margin: 0,
       '&::before': {
         opacity: 0,
       },
-      '&.Mui-expanded': {
-        margin: 0,
-        '&::before': {
-          opacity: 0,
-        },
-      },
-    },
-    '& .MuiAccordionSummary-root': {
-      // backgroundColor: theme.palette.background.default,
-      '&.Mui-focusVisible': {
-        backgroundColor: 'inherit',
-      },
-    },
-    '& .MuiAccordionSummary-content': {
-      margin: 0,
-      paddingLeft: '24px',
-    },
-    '& .MuiAccordionDetails-root': {
-      padding: 0,
-      // backgroundColor: theme.palette.background.default,
     },
   },
-});
+  '& .MuiAccordionSummary-root': {
+    '&.Mui-focusVisible': {
+      backgroundColor: 'inherit',
+    },
+  },
+  '& .MuiAccordionSummary-content': {
+    margin: 0,
+    paddingLeft: '24px',
+  },
+  '& .MuiAccordionDetails-root': {
+    padding: 0,
+  },
+};
 
 const Filters = (props) => {
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
@@ -57,8 +51,6 @@ const Filters = (props) => {
   const [colors, setColors] = useState([]);
 
   let params = useParams();
-
-  const classes = props.classes;
 
   // Players changed
   useEffect(() => {
@@ -75,11 +67,11 @@ const Filters = (props) => {
   };
 
   const getYears = () => {
-    return _.uniq(props.data.game.months.map((month) => month.split('-')[0]));
+    return _.uniq((props.data.game.months || []).map((month) => month.split('-')[0]));
   };
 
   const getMonths = () => {
-    let months = props.data.game.months
+    let months = (props.data.game.months || [])
       .filter((month) => month.split('-')[0] == params.year)
       .map((month) => month.split('-')[1]);
 
@@ -89,7 +81,7 @@ const Filters = (props) => {
   };
 
   const getColors = () => {
-    return props.data.game.colors.map((color) => color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
+    return (props.data.game.colors || []).map((color) => color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
   };
 
   const toMonthName = (monthNumber) => {
@@ -109,19 +101,19 @@ const Filters = (props) => {
   }, []);
 
   return (
-    <Accordion className={classes.accordion}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+    <Accordion sx={accordionSx}>
+      <AccordionSummary component="div" expandIcon={<ExpandMoreIcon />}>
         <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={1} width={1}>
           <Typography component="h5" variant="h5" align="right" m={1} pr={2} width="180px">
             Filter scores by
           </Typography>
-          <FormGroup row className={classes.formGroup} display="block">
+          <FormGroup row display="block">
             <FilterDropdown
               field="players"
               dependentFilters={['start', 'finish', 'new']}
               clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
               label="Player Count"
-              options={props.data.game.playerCounts.split(',')}
+              options={(props.data.game.playerCounts || '').split(',').filter(Boolean)}
               paramIndex={2}
             />
             <FilterDropdown
@@ -147,7 +139,7 @@ const Filters = (props) => {
           pt={0}
           width={1}
         >
-          <FormGroup row className={classes.formGroup}>
+          <FormGroup row>
             <FilterDropdown
               field="start"
               enabledByFilter="players"
@@ -199,7 +191,6 @@ const Filters = (props) => {
 
 Filters.propTypes = {
   data: PropTypes.object,
-  classes: PropTypes.object,
   filters: PropTypes.object,
 };
 
@@ -207,4 +198,4 @@ const mapStateToProps = ({ data }) => {
   return { data };
 };
 
-export default connect(mapStateToProps)(withStyles(styles)(withTheme(Filters)));
+export default connect(mapStateToProps)(Filters);

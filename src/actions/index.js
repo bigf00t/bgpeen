@@ -1,65 +1,79 @@
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
-import { LOAD_GAMES, LOAD_GAME, LOAD_RESULT } from '../actions/types';
+import { LOAD_GAMES, LOAD_GAME, LOAD_RESULT, SET_GAME } from '../actions/types';
 import _ from 'lodash';
 import { db } from '../fire';
 
+export const setGame = (game) => ({ type: SET_GAME, payload: game });
+
 export const loadGames = () => async (dispatch) => {
-  const q = query(collection(db, 'games'), where('totalScores', '>', 0));
-  const querySnapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, 'games'), where('totalScores', '>', 0));
+    const querySnapshot = await getDocs(q);
 
-  const games = [];
-  querySnapshot.forEach((doc) => {
-    if (!_.isEmpty(doc.data())) {
-      games.push({
-        id: doc.data().id,
-        name: doc.data().name,
-        totalScores: doc.data().totalScores,
-        mean: doc.data().mean,
-        thumbnail: doc.data().thumbnail,
-        popularity: doc.data().popularity,
-        addedDate: new Date(doc.data().addedDate.seconds * 1000),
-      });
-    }
-  });
+    const games = [];
+    querySnapshot.forEach((doc) => {
+      if (!_.isEmpty(doc.data())) {
+        games.push({
+          id: doc.data().id,
+          name: doc.data().name,
+          totalScores: doc.data().totalScores,
+          mean: doc.data().mean,
+          thumbnail: doc.data().thumbnail,
+          popularity: doc.data().popularity,
+          addedDate: new Date(doc.data().addedDate.seconds * 1000),
+        });
+      }
+    });
 
-  const sortedGameNames = _.sortBy(games, 'name');
+    const sortedGameNames = _.sortBy(games, 'name');
 
-  dispatch({
-    type: LOAD_GAMES,
-    payload: sortedGameNames,
-  });
+    dispatch({
+      type: LOAD_GAMES,
+      payload: sortedGameNames,
+    });
+  } catch (e) {
+    console.error('loadGames failed:', e);
+  }
 };
 
 export const loadGame = (gameId) => async (dispatch) => {
-  const gameRef = doc(db, 'games', gameId);
-  const gameSnapshot = await getDoc(gameRef);
+  try {
+    const gameRef = doc(db, 'games', gameId);
+    const gameSnapshot = await getDoc(gameRef);
+    const result = await _loadResult(gameId, 'all');
 
-  const result = await _loadResult(gameId, 'all');
+    dispatch({
+      type: LOAD_GAME,
+      payload: { ...gameSnapshot.data(), results: result },
+    });
 
-  await updateDoc(gameRef, {
-    popularity: (gameSnapshot.data().popularity || 0) + 1,
-    lastLoadedDate: new Date(),
-  });
-
-  dispatch({
-    type: LOAD_GAME,
-    payload: { ...gameSnapshot.data(), results: result },
-  });
+    updateDoc(gameRef, {
+      popularity: (gameSnapshot.data().popularity || 0) + 1,
+      lastLoadedDate: new Date(),
+    }).catch((e) => console.error('Failed to update game stats:', e));
+  } catch (e) {
+    console.error('loadGame failed:', e);
+  }
 };
 
 export const loadResult = (gameId, resultId) => async (dispatch) => {
-  const result = await _loadResult(gameId, resultId);
+  try {
+    const result = await _loadResult(gameId, resultId);
 
-  dispatch({
-    type: LOAD_RESULT,
-    payload: result,
-  });
+    dispatch({
+      type: LOAD_RESULT,
+      payload: result,
+    });
+  } catch (e) {
+    console.error('loadResult failed:', e);
+  }
 };
 
 const _loadResult = async (gameId, resultId) => {
   const resultDocSnapshot = await getDoc(doc(db, 'games', gameId, 'results', resultId));
-  let result = resultDocSnapshot.data();
-
-  return { [resultId]: { ...result, id: resultId } };
+  if (!resultDocSnapshot.exists()) {
+    return { [resultId]: null };
+  }
+  return { [resultId]: { ...resultDocSnapshot.data(), id: resultId } };
 };

@@ -1,4 +1,4 @@
-import { LOAD_GAMES, LOAD_GAME, LOAD_RESULT } from '../actions/types';
+import { LOAD_GAMES, LOAD_GAME, LOAD_RESULT, SET_GAME } from '../actions/types';
 
 const dataState = {
   game: null,
@@ -18,6 +18,11 @@ export default (state = dataState, action) => {
         ...state,
         game: action.payload,
         loadedGames: { ...state.loadedGames, [action.payload.id]: { ...action.payload } },
+      };
+    case SET_GAME:
+      return {
+        ...state,
+        game: action.payload,
       };
     case LOAD_RESULT:
       var newGame = { ...state.game, results: { ...state.game.results, ...action.payload } };

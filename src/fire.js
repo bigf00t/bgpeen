@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 // import { getPerformance } from 'firebase/performance';
 
@@ -15,9 +15,15 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-getAnalytics(firebaseApp);
+try {
+  getAnalytics(firebaseApp);
+} catch (e) {
+  // Analytics may fail in development or unsupported environments
+}
 // const perf = getPerformance(firebaseApp);
-export const db = getFirestore(firebaseApp);
+export const db = initializeFirestore(firebaseApp, {
+  experimentalForceLongPolling: true,
+});
 
 if (window.location.hostname === 'localhost') {
   connectFirestoreEmulator(db, 'localhost', 5002);
