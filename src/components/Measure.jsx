@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ScoreCounter from './ScoreCounter';
 import SelectGame from './SelectGame';
 import TopGames from './TopGames';
 import Box from '@mui/material/Box';
 
 const Measure = () => {
-  document.title = 'Good at Games';
+  useEffect(() => {
+    document.title = 'Good at Games';
+  }, []);
 
   return (
     <Box component="div" pt={'64px'} height={'100vh'}>

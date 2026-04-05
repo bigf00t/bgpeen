@@ -544,7 +544,9 @@ const getResultsWithExpected = (results, playerCountMeans) => {
       _.transform(
         result.playerCounts,
         (means, num, playerCount) => {
-          means.push(Array(num).fill(playerCountMeans[playerCount]));
+          if (playerCountMeans[playerCount] != undefined) {
+            means.push(Array(num).fill(playerCountMeans[playerCount]));
+          }
         },
         []
       )

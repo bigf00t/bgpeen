@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import * as actions from '../actions';
 
@@ -15,22 +15,19 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Fade from '@mui/material/Fade';
 
 import { getGameSlug } from '../utils';
-import _ from 'lodash';
 
 const TopGames = (props) => {
-  const [topGames, setTopGames] = useState([]);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
-
-  const handleLoad = () => {
-    setImagesLoaded((prev) => prev + 1);
-  };
-
-  // componentDidMount
   useEffect(() => {
-    if (props.data.games.length > 0) {
-      setTopGames(_.orderBy(props.data.games, props.field, 'desc').slice(0, 10));
+    if (props.topGames.length === 0) {
+      props.loadTopGames(props.field);
     }
-  }, [props.data.games]);
+  }, []);
+
+  const handleMouseEnter = (gameId) => {
+    if (!props.loadedGames[gameId]) {
+      props.prefetchGame(gameId);
+    }
+  };
 
   return (
     <Box component="div" width={1}>
@@ -38,23 +35,29 @@ const TopGames = (props) => {
         <Typography variant="h4" component="h4" align="center">
           {props.title}
         </Typography>
-        {topGames.length > 0 && (
-          <Fade in={imagesLoaded > 0 && imagesLoaded == topGames.length} timeout={500}>
+        {props.topGames.length === 0 ? (
+          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
+            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px" m={1}>
+              <CircularProgress size={40} color="inherit" m={1} />
+            </Box>
+          </Box>
+        ) : (
+          <Fade in timeout={500}>
             <Box
               component="div"
-              display={imagesLoaded > 0 && imagesLoaded == topGames.length ? 'flex' : 'none'}
+              display="flex"
               flexWrap="wrap"
               justifyContent="center"
               alignItems="center"
             >
-              {topGames.map((game) => (
-                <Card key={game.id} sx={{ m: 1 }}>
+              {props.topGames.map((game) => (
+                <Card key={game.id} sx={{ m: 1 }} onMouseEnter={() => handleMouseEnter(game.id)}>
                   <CardActionArea
                     component={Link}
                     to={`/${game.id}/${getGameSlug(game)}`}
                     title={`${game.name} - ${game[props.field]}`}
                   >
-                    <CardMedia component="img" image={game.thumbnail} alt={game.name} onLoad={handleLoad} />
+                    <CardMedia component="img" image={game.thumbnail} alt={game.name} loading="lazy" />
                     <Box
                       sx={{
                         position: 'absolute',
@@ -104,26 +107,23 @@ const TopGames = (props) => {
             </Box>
           </Fade>
         )}
-        {(imagesLoaded == 0 || imagesLoaded < topGames.length) && (
-          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px" m={1}>
-              <CircularProgress size={40} color="inherit" m={1} />
-            </Box>
-          </Box>
-        )}
       </Box>
     </Box>
   );
 };
 
 TopGames.propTypes = {
-  data: PropTypes.object,
+  topGames: PropTypes.array,
+  loadedGames: PropTypes.object,
   title: PropTypes.string,
   field: PropTypes.string,
+  loadTopGames: PropTypes.func,
+  prefetchGame: PropTypes.func,
 };
 
-const mapStateToProps = ({ data }) => {
-  return { data };
-};
+const mapStateToProps = (state, ownProps) => ({
+  topGames: state.data.topGames[ownProps.field] || [],
+  loadedGames: state.data.loadedGames,
+});
 
 export default connect(mapStateToProps, actions)(TopGames);

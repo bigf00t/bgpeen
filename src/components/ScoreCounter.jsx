@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import * as actions from '../actions';
 
 import { connect } from 'react-redux';
-import _ from 'lodash';
 
 import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
@@ -36,17 +35,17 @@ const ScoreCounter = (props) => {
   const [gameValue, setGameValue] = useState('000');
 
   useEffect(() => {
-    if (props.data.games.length > 0) {
-      const newTotalScores = _.reduce(
-        props.data.games,
-        (sum, game) => sum + (game.totalScores || 0),
-        0
-      ).toLocaleString();
-      const newTotalGames = props.data.games.length.toLocaleString();
-      setScoreValue(newTotalScores);
-      setGameValue(newTotalGames);
+    if (!props.scoreStats) {
+      props.loadScoreStats();
     }
-  }, [props.data.games]);
+  }, []);
+
+  useEffect(() => {
+    if (props.scoreStats) {
+      setScoreValue(props.scoreStats.totalScores.toLocaleString());
+      setGameValue(props.scoreStats.totalGames.toLocaleString());
+    }
+  }, [props.scoreStats]);
 
   return (
     <Box
@@ -66,7 +65,6 @@ const ScoreCounter = (props) => {
             width={36}
             color="white"
             background=""
-            // play={totalScores != null}
             play
             numbers={scoreValue}
             duration="2"
@@ -102,11 +100,12 @@ const ScoreCounter = (props) => {
 };
 
 ScoreCounter.propTypes = {
-  data: PropTypes.object,
+  scoreStats: PropTypes.object,
+  loadScoreStats: PropTypes.func,
 };
 
-const mapStateToProps = ({ data }) => {
-  return { data };
-};
+const mapStateToProps = (state) => ({
+  scoreStats: state.data.scoreStats,
+});
 
 export default connect(mapStateToProps, actions)(ScoreCounter);

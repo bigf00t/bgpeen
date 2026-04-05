@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  connectFirestoreEmulator,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 // import { getPerformance } from 'firebase/performance';
 
@@ -21,10 +26,14 @@ try {
   // Analytics may fail in development or unsupported environments
 }
 // const perf = getPerformance(firebaseApp);
+
+const isLocalhost = window.location.hostname === 'localhost';
+
 export const db = initializeFirestore(firebaseApp, {
   experimentalForceLongPolling: true,
+  ...(isLocalhost ? {} : { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }),
 });
 
-if (window.location.hostname === 'localhost') {
+if (isLocalhost) {
   connectFirestoreEmulator(db, 'localhost', 5002);
 }

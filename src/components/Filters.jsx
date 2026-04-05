@@ -50,7 +50,15 @@ const Filters = (props) => {
   const [months, setMonths] = useState([]);
   const [colors, setColors] = useState([]);
 
-  let params = useParams();
+  const rawParams = useParams();
+  const params = React.useMemo(() => {
+    const p = { id: rawParams.id, name: rawParams.name };
+    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
+    for (let i = 0; i < parts.length - 1; i += 2) {
+      p[parts[i]] = parts[i + 1];
+    }
+    return p;
+  }, [rawParams]);
 
   // Players changed
   useEffect(() => {
@@ -67,11 +75,11 @@ const Filters = (props) => {
   };
 
   const getYears = () => {
-    return _.uniq((props.data.game.months || []).map((month) => month.split('-')[0]));
+    return _.uniq((props.data.months || []).map((month) => month.split('-')[0]));
   };
 
   const getMonths = () => {
-    let months = (props.data.game.months || [])
+    let months = (props.data.months || [])
       .filter((month) => month.split('-')[0] == params.year)
       .map((month) => month.split('-')[1]);
 
@@ -81,7 +89,7 @@ const Filters = (props) => {
   };
 
   const getColors = () => {
-    return (props.data.game.colors || []).map((color) => color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
+    return (props.data.colors || []).map((color) => color.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
   };
 
   const toMonthName = (monthNumber) => {
@@ -113,7 +121,7 @@ const Filters = (props) => {
               dependentFilters={['start', 'finish', 'new']}
               clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
               label="Player Count"
-              options={(props.data.game.playerCounts || '').split(',').filter(Boolean)}
+              options={(props.data.playerCounts || '').split(',').filter(Boolean)}
               paramIndex={2}
             />
             <FilterDropdown
@@ -191,11 +199,10 @@ const Filters = (props) => {
 
 Filters.propTypes = {
   data: PropTypes.object,
-  filters: PropTypes.object,
 };
 
-const mapStateToProps = ({ data }) => {
-  return { data };
-};
+const mapStateToProps = ({ data }) => ({
+  data: data.game,
+});
 
 export default connect(mapStateToProps)(Filters);

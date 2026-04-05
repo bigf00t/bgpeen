@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { useTheme } from '@mui/material/styles';
 import PropTypes from 'prop-types';
@@ -36,7 +36,7 @@ const Graph = (props) => {
     return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
   };
 
-  const options = {
+  const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -100,7 +100,7 @@ const Graph = (props) => {
         },
       },
     },
-  };
+  }), [theme, props.result.mean, props.score, props.percentile]);
 
   const getDataFromResult = () =>
     _.chain(props.result.scores)

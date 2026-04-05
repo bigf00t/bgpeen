@@ -24,7 +24,7 @@ exports.addGame = async (searchTerm) => {
   await util.delay();
 
   const thingResult = await axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
   });
 
   const item = convert.xml2js(thingResult.data, {
@@ -127,7 +127,7 @@ const getGameId = async (searchTerm) => {
 
   console.info(`Querying ${searchUrl}`);
   const searchResult = await axios.get(searchUrl, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
   });
 
   const json = convert.xml2js(searchResult.data, {

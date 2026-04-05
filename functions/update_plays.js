@@ -122,7 +122,7 @@ const getPageResults = async (game, gamePlays, details, playsUrl, maxPages) => {
 
 const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages) => {
   const result = await axios.get(playsUrl + page, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY}` },
+    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
   });
 
   const json = convert.xml2js(result.data, {
@@ -141,7 +141,7 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
 
   const totalPlays = json.plays.$.total;
 
-  const plays = totalPlays > 1 ? json.plays.play : [json.plays.play];
+  const plays = Array.isArray(json.plays.play) ? json.plays.play : [json.plays.play];
   const cleanPlays = getCleanPlaysFromJson(plays);
   const newPlays = getNewPlays(gamePlays, cleanPlays);
 

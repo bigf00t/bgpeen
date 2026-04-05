@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createSelector } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
@@ -10,7 +11,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Fade from '@mui/material/Fade';
 
 import Filters from './Filters';
-import Graph from './Graph';
+const Graph = React.lazy(() => import('./Graph'));
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -117,8 +118,18 @@ const Result = (props) => {
   const [score, setScore] = useState();
   const [scoreAccordionExpanded, setScoreAccordionExpanded] = useState(false);
 
-  let params = useParams();
+  const rawParams = useParams();
   let navigate = useNavigate();
+
+  // Parse named params from wildcard splat e.g. "players/4/finish/2/score/180"
+  const params = React.useMemo(() => {
+    const p = { id: rawParams.id, name: rawParams.name };
+    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
+    for (let i = 0; i < parts.length - 1; i += 2) {
+      p[parts[i]] = parts[i + 1];
+    }
+    return p;
+  }, [rawParams]);
 
   const handleScoreChange = (event) => {
     setScore(getIntFromParam(event.target.value));
@@ -302,7 +313,22 @@ const Result = (props) => {
     }
   }, [props.data.game?.results]);
 
-  // No data loaded
+  useEffect(() => {
+    if (props.data.game && result) {
+      document.title = `Good at ${props.data.game.name}${result.id !== 'all' ? ' | ' + result.id : ''}`;
+    }
+  }, [props.data.game?.name, result?.id]);
+
+  // Result explicitly missing (no data for this filter combo)
+  if (result === null) {
+    return (
+      <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
+        <Typography variant="h5" align="center">No data available for these filters.</Typography>
+      </Box>
+    );
+  }
+
+  // Still loading
   if (_.isEmpty(result)) {
     return (
       <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
@@ -310,8 +336,6 @@ const Result = (props) => {
       </Box>
     );
   }
-
-  document.title = `Good at ${props.data.game.name}${result && result.id !== 'all' ? ' | ' + result.id : ''}`;
 
   return (
     <Fade in={!_.isEmpty(result)} timeout={500}>
@@ -335,7 +359,7 @@ const Result = (props) => {
             </Link>
           </Typography>
         </Box>
-        <Filters filters={filters} />
+        <Filters />
         <Accordion sx={accordionDarkSx}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box
@@ -483,8 +507,10 @@ const Result = (props) => {
             )}
           </AccordionDetails>
         </Accordion>
-        <Box component="div" flex="1" p={2} backgroundColor={'#303030'}>
-          <Graph result={result} score={score} percentile={percentile}></Graph>
+        <Box component="div" flex="1" p={2} backgroundColor={'#303030'} minHeight={600}>
+          <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
+            <Graph result={result} score={score} percentile={percentile} />
+          </React.Suspense>
         </Box>
         <Box component="div" p={2} backgroundColor="#282828">
           <Typography component="div" align="center">
@@ -512,8 +538,14 @@ Result.propTypes = {
   loadResult: PropTypes.func,
 };
 
-const mapStateToProps = ({ data }) => {
-  return { data };
-};
+const selectResultData = createSelector(
+  (state) => state.data.game,
+  (state) => state.data.loadedGames,
+  (game, loadedGames) => ({ game, loadedGames })
+);
+
+const mapStateToProps = (state) => ({
+  data: selectResultData(state),
+});
 
 export default connect(mapStateToProps, actions)(Result);

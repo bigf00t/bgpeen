@@ -87,7 +87,7 @@ const SelectGame = (props) => {
 
   // componentDidMount
   useEffect(() => {
-    if (props.data.games.length == 0) {
+    if (props.games.length == 0) {
       // setTimeout(() => { props.loadGames(); }, 2000);
       props.loadGames();
     }
@@ -116,7 +116,7 @@ const SelectGame = (props) => {
             onInputChange={handleGameInputChange}
             onHighlightChange={handleGameHighlightChange}
             onBlur={handleGameBlur}
-            options={props.data.games}
+            options={props.games}
             fullWidth
             getOptionLabel={(option) => option.name || option}
             renderInput={(params) => {
@@ -167,14 +167,12 @@ const SelectGame = (props) => {
 };
 
 SelectGame.propTypes = {
-  data: PropTypes.object,
-  location: PropTypes.object,
+  games: PropTypes.array,
   loadGames: PropTypes.func,
-  handleChange: PropTypes.func,
 };
 
-const mapStateToProps = ({ data }) => {
-  return { data };
-};
+const mapStateToProps = ({ data }) => ({
+  games: data.games,
+});
 
 export default connect(mapStateToProps, actions)(SelectGame);

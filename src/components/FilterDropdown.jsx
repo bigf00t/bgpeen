@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import TextField from '@mui/material/TextField';
@@ -10,8 +10,17 @@ const FilterDropdown = (props) => {
   const [value, setValue] = useState();
   const [highlightValue, setHighlightValue] = useState('');
 
-  let params = useParams();
+  const rawParams = useParams();
   let navigate = useNavigate();
+
+  const params = useMemo(() => {
+    const p = { id: rawParams.id, name: rawParams.name };
+    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
+    for (let i = 0; i < parts.length - 1; i += 2) {
+      p[parts[i]] = parts[i + 1];
+    }
+    return p;
+  }, [rawParams]);
 
   const handleValueChange = (event, newValue) => {
     if (!newValue) {
@@ -26,7 +35,7 @@ const FilterDropdown = (props) => {
     setHighlightValue(option);
   };
 
-  const updateHistory = () => {
+  const updateHistory = useCallback(() => {
     var flatParams = Object.entries(params).flat();
 
     // Remove id and name keys
@@ -60,7 +69,12 @@ const FilterDropdown = (props) => {
     }
 
     navigate(`/${flatParams.join('/')}`);
-  };
+  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate]);
+
+  const updateHistoryRef = useRef(updateHistory);
+  useEffect(() => {
+    updateHistoryRef.current = updateHistory;
+  }, [updateHistory]);
 
   const handleKeyDown = (event) => {
     switch (event.key) {
@@ -97,7 +111,7 @@ const FilterDropdown = (props) => {
   // Dropdown value changed
   useEffect(() => {
     if (value !== undefined && (value || '').toString() !== (params[props.field] || '')) {
-      updateHistory();
+      updateHistoryRef.current();
     }
   }, [value]);
 
