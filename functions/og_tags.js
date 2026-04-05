@@ -6,7 +6,15 @@ const _ = require('lodash');
 
 const BUCKET = 'bgpeen-1fc16.appspot.com';
 
-const getCacheKey = (reqPath) => `og-tags${reqPath.replace(/\/$/, '')}.html`;
+const getBuildVersion = () => {
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const match = html.match(/index-([^"]+)\.js/);
+  return match ? match[1] : 'default';
+};
+
+const BUILD_VERSION = getBuildVersion();
+
+const getCacheKey = (reqPath) => `og-tags/${BUILD_VERSION}${reqPath.replace(/\/$/, '')}.html`;
 
 const getCachedHtml = async (cacheKey) => {
   const file = getStorage().bucket(BUCKET).file(cacheKey);
