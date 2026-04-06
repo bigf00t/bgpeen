@@ -102,13 +102,13 @@ const Graph = (props) => {
     },
   }), [theme, props.result.mean, props.score, props.percentile]);
 
-  const getDataFromResult = () =>
+  const chartData = useMemo(() =>
     _.chain(props.result.scores)
       .reduce((points, count, score) => points.concat([{ x: parseInt(score), y: count }]), [])
       .orderBy(['x'])
-      .value();
+      .value(),
+  [props.result.scores]);
 
-  const chartData = getDataFromResult();
   const labels = chartData.map((item) => item.x);
 
   const data = {

@@ -4,6 +4,7 @@ import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
 
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
@@ -319,8 +320,38 @@ const Result = (props) => {
     }
   }, [props.data.game?.name, result?.id]);
 
-  // Result explicitly missing (no data for this filter combo)
+  // Result explicitly missing
   if (result === null) {
+    // Game was added but has no plays recorded yet
+    if (props.data.game?.totalScores === 0) {
+      return (
+        <Box component="div" display="flex" flexDirection="column" pt={'64px'} alignItems="center">
+          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
+            <Image
+              src={props.data.game.thumbnail}
+              duration={0}
+              wrapperStyle={{ margin: '0 16px', maxWidth: 150 }}
+              style={{ height: 150, width: 150, objectFit: 'scale-down' }}
+            />
+            <Typography variant="h2" component="h2" sx={{ mt: 2, mr: 2, mb: 0, ml: 2 }} gutterBottom align="center">
+              <Link
+                sx={{ color: 'action.active', textDecoration: 'none', '&:hover': { textDecoration: 'none', opacity: 0.75 } }}
+                href={`https://boardgamegeek.com/boardgame/${props.data.game.id}`}
+                target="_blank"
+                underline="hover"
+              >
+                {props.data.game.name}
+              </Link>
+            </Typography>
+          </Box>
+          <Alert severity="info" sx={{ maxWidth: 500, mx: 3 }}>
+            No plays have been recorded yet. Data is usually available within 10 minutes of a game being added.
+          </Alert>
+        </Box>
+      );
+    }
+
+    // No data for the selected filter combination
     return (
       <Box component="div" height="100vh" justifyContent="center" display="flex" alignItems="center">
         <Typography variant="h5" align="center">No data available for these filters.</Typography>

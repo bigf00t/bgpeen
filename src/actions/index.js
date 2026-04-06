@@ -21,7 +21,7 @@ export const setGame = (game) => ({ type: SET_GAME, payload: game });
 
 export const loadGames = () => async (dispatch) => {
   try {
-    const q = query(collection(db, 'games'), where('totalScores', '>', 0));
+    const q = query(collection(db, 'games'));
     const querySnapshot = await getDocs(q);
 
     const games = [];

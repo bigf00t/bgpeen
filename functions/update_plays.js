@@ -28,7 +28,7 @@ exports.updateGamePlays = async (game, batch, maxPages) => {
   const newPlays = _.flatMap(pageResults, 'plays');
 
   if (newPlays.length === 0) {
-    console.error('No plays found!');
+    console.info(`${game.name} — no new plays found for the queried date range`);
   }
 
   await updateGamePlaysWithPageResults(game, gamePlays, gamePlaysRef, batch, pageResults, newPlays);
@@ -57,10 +57,10 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
         : gamePlays.oldestPlayDate;
   }
 
-  const remainingPlays = pageResults.length === 0 ? pageResults.slice(-1)[0].remainingPlays : 0;
+  const remainingPlays = pageResults.length > 0 ? pageResults.slice(-1)[0].remainingPlays : 0;
   const totalPlays = _.defaultTo(gamePlays.totalPlays, 0) + newPlays.length;
 
-  console.info(`${game.name} - ${newPlays.length} plays loaded - ${remainingPlays} plays remaining on BGG`);
+  console.info(`${game.name} — ${newPlays.length} new plays loaded, ${remainingPlays} remaining on BGG (date range: ${gamePlays.minDate || `${details.yearpublished}-01-01`} → ${gamePlays.maxDate || 'today'})`);
 
   const minDate = remainingPlays === 0 ? newestPlayDate : _.defaultTo(gamePlays.minDate, '');
   const maxDate = remainingPlays === 0 ? '' : currentOldestPlayDate;
@@ -121,9 +121,17 @@ const getPageResults = async (game, gamePlays, details, playsUrl, maxPages) => {
 };
 
 const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages) => {
-  const result = await axios.get(playsUrl + page, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
-  });
+  let result;
+  try {
+    result = await util.withRetry(() =>
+      axios.get(playsUrl + page, {
+        headers: { Authorization: `Bearer ${util.getApiKey()}` },
+      })
+    );
+  } catch (err) {
+    console.error(`BGG plays API request failed for ${game.name} page ${page}: ${err.message} (status: ${err.response?.status}, url: ${playsUrl + page})`);
+    throw err;
+  }
 
   const json = convert.xml2js(result.data, {
     compact: true,
@@ -139,7 +147,7 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
     };
   }
 
-  const totalPlays = json.plays.$.total;
+  const totalPlays = parseInt(json.plays.$.total);
 
   const plays = Array.isArray(json.plays.play) ? json.plays.play : [json.plays.play];
   const cleanPlays = getCleanPlaysFromJson(plays);
@@ -177,8 +185,8 @@ const getCleanPlaysFromJson = (plays) =>
 
 // Filter out plays that we've already recorded in a previous run
 const getNewPlays = (gamePlays, plays) => {
-  const minDatePlayIds = gamePlays.minDatePlayIds.split(',');
-  const maxDatePlayIds = gamePlays.maxDatePlayIds.split(',');
+  const minDatePlayIds = _.defaultTo(gamePlays.minDatePlayIds, '').split(',');
+  const maxDatePlayIds = _.defaultTo(gamePlays.maxDatePlayIds, '').split(',');
 
   return plays.filter(
     (play) =>

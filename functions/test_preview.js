@@ -7,17 +7,22 @@ const WIDTH = 1200;
 const HEIGHT = 600;
 
 const COLORS = {
-  background: 'rgba(255, 205, 86, 0.25)',
-  border: 'rgba(255, 205, 86, 0.5)',
+  background: 'rgba(255, 205, 86, 1)',
+  border: 'rgba(255, 205, 86, 1)',
   point: 'rgba(255, 205, 86, 1)',
   text: 'rgba(255, 255, 255, 0.7)',
   grid: 'rgba(255, 255, 255, 0.12)',
-  mean: 'rgba(255, 255, 255, 0.5)',
+  mean: 'rgba(255, 255, 255, 1)',
 };
 
 const getScoreColor = (percentile) => {
   if (percentile === null || percentile === undefined) return null;
-  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
+  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : '#cccccc';
+};
+
+const getScoreColorOpaque = (percentile) => {
+  if (percentile === null || percentile === undefined) return '#ffffff';
+  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : '#cccccc';
 };
 
 const mockResult = {
@@ -49,18 +54,53 @@ async function renderChart(result, score, percentile) {
       scaleID: 'x',
       value: result.mean,
       borderColor: COLORS.mean,
-      borderDash: [5],
-      borderWidth: 2,
+      borderWidth: 6,
+      z: 1,
+    },
+    meanLabel: {
+      type: 'label',
+      xScaleID: 'x',
+      yScaleID: 'y',
+      xValue: result.mean,
+      yAdjust: -20,
+      content: `Avg - ${Math.round(result.mean)}`,
+      backgroundColor: '#ffffff',
+      color: '#000',
+      rotation: -90,
+      font: { size: 42, weight: 'bold' },
+      padding: 8,
+      z: 10,
     },
   };
 
   if (score) {
+    const scoreColor = getScoreColor(percentile) || COLORS.text;
+    const scoreFraction = (parseInt(score) - xMin) / (xMax - xMin);
+    const LABEL_HALF_WIDTH = 90;
+    const xAdjust = scoreFraction * WIDTH < LABEL_HALF_WIDTH ? LABEL_HALF_WIDTH - scoreFraction * WIDTH :
+                    (1 - scoreFraction) * WIDTH < LABEL_HALF_WIDTH ? (1 - scoreFraction) * WIDTH - LABEL_HALF_WIDTH : 0;
     annotations.score = {
       type: 'line',
       scaleID: 'x',
       value: parseInt(score),
-      borderColor: getScoreColor(percentile) || COLORS.text,
-      borderWidth: 4,
+      borderColor: scoreColor,
+      borderWidth: 6,
+      z: 1,
+    };
+    annotations.scoreLabel = {
+      type: 'label',
+      xScaleID: 'x',
+      yScaleID: 'y',
+      xValue: parseInt(score),
+      yAdjust: 200,
+      xAdjust,
+      content: `You - ${Math.round(score)}`,
+      backgroundColor: getScoreColorOpaque(percentile),
+      color: '#000',
+      rotation: -90,
+      font: { size: 42, weight: 'bold' },
+      padding: 8,
+      z: 10,
     };
   }
 
@@ -87,7 +127,7 @@ async function renderChart(result, score, percentile) {
           spanGaps: true,
           tension: 0,
           clip: false,
-          pointRadius: 3,
+          pointRadius: 0,
         },
       ],
     },
@@ -144,9 +184,6 @@ async function main() {
   } catch (e) {
     console.warn('Could not load game image:', e.message);
   }
-
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   const OVERSCAN_X = 20;
   const OVERSCAN_Y = 50;

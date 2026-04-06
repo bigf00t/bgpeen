@@ -1,27 +1,27 @@
 const { getFirestore } = require('firebase-admin/firestore');
-const { getStorage } = require('firebase-admin/storage');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 const _ = require('lodash');
-
-const BUCKET = 'bgpeen-1fc16.appspot.com';
+const { getFromCache, setToCache } = require('./shared');
 
 const WIDTH = 1200;
 const HEIGHT = 600;
+const OVERSCAN_X = 20;
+const OVERSCAN_Y = 50;
 
 const COLORS = {
-  background: 'rgba(255, 205, 86, 0.25)',
-  border: 'rgba(255, 205, 86, 0.5)',
+  background: 'rgba(255, 205, 86, 1)',
+  border: 'rgba(255, 205, 86, 1)',
   point: 'rgba(255, 205, 86, 1)',
   text: 'rgba(255, 255, 255, 0.7)',
   grid: 'rgba(255, 255, 255, 0.12)',
-  mean: 'rgba(255, 255, 255, 0.5)',
+  mean: 'rgba(255, 255, 255, 1)',
 };
 
-const getScoreColor = (percentile) => {
-  if (percentile === null || percentile === undefined) return null;
-  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : 'rgba(255, 255, 255, 0.7)';
+const getScoreColor = (percentile, { opaque = false } = {}) => {
+  if (percentile === null || percentile === undefined) return opaque ? '#ffffff' : null;
+  return percentile < 40 ? '#e57373' : percentile > 60 ? '#66bb6a' : '#cccccc';
 };
 
 const renderChart = async (result, score, percentile) => {
@@ -41,23 +41,56 @@ const renderChart = async (result, score, percentile) => {
       scaleID: 'x',
       value: result.mean,
       borderColor: COLORS.mean,
-      borderDash: [5],
-      borderWidth: 2,
+      borderWidth: 6,
+      z: 1,
+    },
+    meanLabel: {
+      type: 'label',
+      xScaleID: 'x',
+      yScaleID: 'y',
+      xValue: result.mean,
+      yAdjust: -20,
+      content: `Avg - ${Math.round(result.mean)}`,
+      backgroundColor: '#ffffff',
+      color: '#000',
+      rotation: -90,
+      font: { size: 42, weight: 'bold' },
+      padding: 8,
+      z: 10,
     },
   };
 
   if (score) {
+    const scoreColor = getScoreColor(percentile) || COLORS.text;
+    const scoreFraction = (parseInt(score) - xMin) / (xMax - xMin);
+    const LABEL_HALF_WIDTH = 90;
+    const xAdjust = scoreFraction * WIDTH < LABEL_HALF_WIDTH ? LABEL_HALF_WIDTH - scoreFraction * WIDTH :
+                    (1 - scoreFraction) * WIDTH < LABEL_HALF_WIDTH ? (1 - scoreFraction) * WIDTH - LABEL_HALF_WIDTH : 0;
     annotations.score = {
       type: 'line',
       scaleID: 'x',
       value: parseInt(score),
-      borderColor: getScoreColor(percentile) || COLORS.text,
-      borderWidth: 4,
+      borderColor: scoreColor,
+      borderWidth: 6,
+      z: 1,
+    };
+    annotations.scoreLabel = {
+      type: 'label',
+      xScaleID: 'x',
+      yScaleID: 'y',
+      xValue: parseInt(score),
+      yAdjust: 200,
+      xAdjust,
+      content: `You - ${Math.round(score)}`,
+      backgroundColor: getScoreColor(percentile, { opaque: true }),
+      color: '#000',
+      rotation: -90,
+      font: { size: 42, weight: 'bold' },
+      padding: 8,
+      z: 10,
     };
   }
 
-  const OVERSCAN_X = 20;
-  const OVERSCAN_Y = 50;
   const canvas = new ChartJSNodeCanvas({
     width: WIDTH + OVERSCAN_X * 2,
     height: HEIGHT + OVERSCAN_Y,
@@ -79,7 +112,7 @@ const renderChart = async (result, score, percentile) => {
           spanGaps: true,
           tension: 0,
           clip: false,
-          pointRadius: 3,
+          pointRadius: 0,
         },
       ],
     },
@@ -140,13 +173,7 @@ const composite = async (gameImageUrl, chartBuffer) => {
     }
   }
 
-  // Dark overlay for chart readability across full image
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
   // Chart overlaid full canvas — crop overscan margins
-  const OVERSCAN_X = 20;
-  const OVERSCAN_Y = 50;
   const chartImg = await loadImage(chartBuffer);
   ctx.drawImage(chartImg, OVERSCAN_X, 0, WIDTH, HEIGHT + OVERSCAN_Y, 0, 0, WIDTH, HEIGHT + 5);
 
@@ -156,42 +183,6 @@ const composite = async (gameImageUrl, chartBuffer) => {
 const getCacheKey = (gameId, resultId, score) => {
   const scorePart = score ? `_score-${score}` : '';
   return `previews/${gameId}/${resultId}${scorePart}.png`;
-};
-
-const getCachedImage = async (cacheKey) => {
-  const file = getStorage().bucket(BUCKET).file(cacheKey);
-  const [exists] = await file.exists();
-  if (!exists) return null;
-  const [buffer] = await file.download();
-  return buffer;
-};
-
-const setCachedImage = async (cacheKey, png) => {
-  const file = getStorage().bucket(BUCKET).file(cacheKey);
-  await file.save(png, { contentType: 'image/png', resumable: false });
-  await file.makePublic();
-};
-
-exports.warmCache = async (gameId, resultId, score, percentile) => {
-  const cacheKey = getCacheKey(gameId, resultId, score);
-  const [exists] = await getStorage().bucket(BUCKET).file(cacheKey).exists();
-  if (exists) return;
-
-  const db = getFirestore();
-  const [gameSnap, resultSnap] = await Promise.all([
-    db.collection('games').doc(gameId).get(),
-    db.collection('games').doc(gameId).collection('results').doc(resultId).get(),
-  ]);
-
-  if (!resultSnap.exists) return;
-
-  const game = gameSnap.exists ? gameSnap.data() : null;
-  const result = resultSnap.data();
-  const gameImageUrl = game?.image || game?.thumbnail || null;
-
-  const chartBuffer = await renderChart(result, score, percentile ? parseFloat(percentile) : null);
-  const png = await composite(gameImageUrl, chartBuffer);
-  await setCachedImage(cacheKey, png);
 };
 
 exports.servePreviewImage = async (req, res) => {
@@ -205,7 +196,7 @@ exports.servePreviewImage = async (req, res) => {
     const cacheKey = getCacheKey(gameId, resultId, score);
 
     // Serve from cache if available
-    const cached = await getCachedImage(cacheKey);
+    const cached = await getFromCache(cacheKey);
     if (cached) {
       res.set('Content-Type', 'image/png');
       res.set('Cache-Control', 'public, max-age=86400');
@@ -233,7 +224,7 @@ exports.servePreviewImage = async (req, res) => {
     const png = await composite(gameImageUrl, chartBuffer);
 
     // Cache in background — don't block the response
-    setCachedImage(cacheKey, png).catch((e) => console.error('Failed to cache preview image:', e));
+    setToCache(cacheKey, png, 'image/png', { makePublic: true }).catch((e) => console.error('Failed to cache preview image:', e));
 
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=86400');

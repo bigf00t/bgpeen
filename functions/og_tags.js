@@ -1,33 +1,22 @@
 const { getFirestore } = require('firebase-admin/firestore');
-const { getStorage } = require('firebase-admin/storage');
 const fs = require('fs');
 const path = require('path');
-const _ = require('lodash');
-
-const BUCKET = 'bgpeen-1fc16.appspot.com';
+const { getResultId, calcPercentile, getPercentileQuip, getFromCache, setToCache } = require('./shared');
 
 const getBuildVersion = () => {
-  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-  const match = html.match(/index-([^"]+)\.js/);
-  return match ? match[1] : 'default';
+  try {
+    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const match = html.match(/index-([^"]+)\.js/);
+    return match ? match[1] : 'default';
+  } catch (e) {
+    console.warn('Could not read index.html for build version:', e.message);
+    return 'default';
+  }
 };
 
 const BUILD_VERSION = getBuildVersion();
 
 const getCacheKey = (reqPath) => `og-tags/${BUILD_VERSION}${reqPath.replace(/\/$/, '')}.html`;
-
-const getCachedHtml = async (cacheKey) => {
-  const file = getStorage().bucket(BUCKET).file(cacheKey);
-  const [exists] = await file.exists();
-  if (!exists) return null;
-  const [buffer] = await file.download();
-  return buffer.toString('utf8');
-};
-
-const setCachedHtml = async (cacheKey, html) => {
-  const file = getStorage().bucket(BUCKET).file(cacheKey);
-  await file.save(html, { contentType: 'text/html' });
-};
 
 // Parse URL path into named params
 // e.g. /127060/bora-bora/players/4/finish/2/score/180
@@ -40,34 +29,6 @@ const parseParams = (reqPath) => {
   return params;
 };
 
-const getResultId = (params) => {
-  if (params.players) {
-    let id = `count-${params.players}`;
-    if (params.start) id += `-start-${params.start}`;
-    else if (params.finish) id += `-finish-${params.finish}`;
-    else if (params.new) id += `-new`;
-    return id;
-  }
-  if (params.color) return `color-${params.color}`;
-  if (params.year) {
-    let id = `year-${params.year}`;
-    if (params.month) id += `-month-${params.month}`;
-    return id;
-  }
-  return 'all';
-};
-
-const calcPercentile = (scores, score) => {
-  const s = parseInt(score);
-  const total = _.sum(_.values(scores));
-  if (!total) return null;
-  return (
-    (_.reduce(scores, (acc, c, key) => acc + (parseInt(key) < s ? c : 0) + (parseInt(key) === s ? c / 0.5 : 0), 0) *
-      100) /
-    total
-  );
-};
-
 const getPercentileDesc = (percentile) => {
   if (percentile === null) return null;
   const position = percentile < 50 ? 'bottom' : percentile > 50 ? 'top' : 'middle';
@@ -75,18 +36,14 @@ const getPercentileDesc = (percentile) => {
   return `${position} ${pct}%`;
 };
 
-const getPercentileQuip = (percentile) => {
-  if (Math.ceil(percentile) === 69) return 'nice.';
-  if (percentile < 1) return 'quite possibly one of the worst in the world!';
-  if (percentile < 10) return 'just terrible.';
-  if (percentile < 40) return 'not very good.';
-  if (percentile < 60) return 'boringly average.';
-  if (percentile < 90) return 'actually pretty decent...';
-  if (percentile < 99) return 'legit amazing!';
-  return 'probably cheating :(';
-};
+const escapeHtml = (str) =>
+  String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
-const getHtmlWithTags = (game, result, params, percentile) => {
+const getHtmlWithTags = (game, params, percentile) => {
   const htmlPath = path.join(__dirname, 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
 
@@ -95,8 +52,7 @@ const getHtmlWithTags = (game, result, params, percentile) => {
   const resultId = getResultId(params);
   let image = `https://goodat.games/preview/${params.id}/${resultId}`;
 
-  if (params.score && result?.scores) {
-    const percentile = calcPercentile(result.scores, params.score);
+  if (params.score && percentile !== null && percentile !== undefined) {
     const percentileDesc = getPercentileDesc(percentile);
     const query = [`score=${params.score}`, `percentile=${percentile.toFixed(2)}`].join('&');
     image = `https://goodat.games/preview/${params.id}/${resultId}?${query}`;
@@ -122,13 +78,6 @@ const getHtmlWithTags = (game, result, params, percentile) => {
   return html.replace('</head>', `${tags}\n  </head>`);
 };
 
-const escapeHtml = (str) =>
-  String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
 exports.serveOgTags = async (req, res) => {
   try {
     const params = parseParams(req.path);
@@ -136,17 +85,18 @@ exports.serveOgTags = async (req, res) => {
     const db = getFirestore();
 
     // Race Storage cache against Firestore — serve whichever wins
-    const cached = await Promise.race([
-      getCachedHtml(cacheKey),
+    const cachedBuffer = await Promise.race([
+      getFromCache(cacheKey),
       new Promise((resolve) => setTimeout(() => resolve(null), 800)),
     ]);
 
-    if (cached) {
+    if (cachedBuffer) {
       res.set('Content-Type', 'text/html');
       res.set('Cache-Control', 'public, max-age=300');
-      res.status(200).send(cached);
+      res.status(200).send(cachedBuffer.toString('utf8'));
       return;
     }
+
     const gameSnap = await db.collection('games').doc(params.id).get();
     if (!gameSnap.exists) {
       res.status(404).send('Not found');
@@ -166,9 +116,9 @@ exports.serveOgTags = async (req, res) => {
       }
     }
 
-    const html = getHtmlWithTags(game, result, params, percentile);
+    const html = getHtmlWithTags(game, params, percentile);
 
-    setCachedHtml(cacheKey, html).catch((e) => console.error('Failed to cache og tags:', e));
+    setToCache(cacheKey, html, 'text/html').catch((e) => console.error('Failed to cache og tags:', e));
 
     res.set('Content-Type', 'text/html');
     res.set('Cache-Control', 'public, max-age=300');

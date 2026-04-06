@@ -13,16 +13,14 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     return;
   }
 
-  console.info('-'.repeat(100));
-  console.info(`Updating results for ${game.name}`);
-  console.info('-'.repeat(100));
+  console.info(`Updating results for ${game.name} — ${newPlays.length} plays`);
 
   const resultsRef = firestore.collection('games').doc(game.id).collection('results');
 
   const resultsSnapshot = await resultsRef.get();
 
   const existingResults = clear ? [] : util.docsToArray(resultsSnapshot);
-  const existingAllResult = _.find(existingResults, (result) => result.id == 'all');
+  const existingAllResult = _.find(existingResults, (result) => result.id === 'all');
 
   const detailsRef = firestore.collection('details').doc(game.id);
   const detailsSnapshot = await detailsRef.get();
@@ -34,8 +32,8 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const validPlays = getValidPlays(newPlays, details, gameType);
 
   const invalidPlaysCount = newPlays.length - validPlays.length;
-  console.log(`Ignoring ${invalidPlaysCount} invalid plays`);
-  console.log(`Parsing ${validPlays.length} valid plays`);
+  console.info(`Ignoring ${invalidPlaysCount} invalid plays`);
+  console.info(`Parsing ${validPlays.length} valid plays`);
   console.info('-'.repeat(100));
 
   if (validPlays.length === 0) {
@@ -65,8 +63,6 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const playerCountMeans = getPlayerCountMeans(resultsWithStats, existingResults, playerCounts);
   const results = getResultsWithExpected(resultsWithStats, playerCountMeans);
 
-  // console.log(results.all.scoreCount);
-
   const existingResultsWithKeys = existingResults.reduce((result, item) => ({ ...result, [item.id]: item }), {});
   const allResults = { ...existingResultsWithKeys, ...results };
   const updatedColors = getUpdatedColors(allResults);
@@ -74,7 +70,7 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   const newScoresCount = results.all.scoreCount - game.totalScores;
   const newOutlierScoreCount = results.all.outlierScoreCount - (existingAllResult?.outlierScoreCount || 0);
-  console.log(`Ignoring ${newOutlierScoreCount} outlier scores`);
+  console.info(`Ignoring ${newOutlierScoreCount} outlier scores`);
   console.info(`Adding ${newScoresCount} new scores to results`);
 
   _.forOwn(results, (result, key) => {
@@ -116,32 +112,32 @@ const getUpdatedMonths = (allResults) => {
 };
 
 const getGameType = (plays) => {
-  const playsWithAtLeastOneWin = _.filter(plays, (play) => play.players.some((player) => parseInt(player.win) == 1));
+  const playsWithAtLeastOneWin = _.filter(plays, (play) => play.players.some((player) => parseInt(player.win) === 1));
 
   const playsWithAllWinners = _.filter(playsWithAtLeastOneWin, (play) =>
-    _.every(play.players, (player) => player.win == 1)
+    _.every(play.players, (player) => parseInt(player.win) === 1)
   );
 
   const coopLikelihood = parseInt((playsWithAllWinners.length / playsWithAtLeastOneWin.length) * 100);
-  console.log(`Cooperative game likelihood: ${coopLikelihood}`);
+  console.info(`Cooperative game likelihood: ${coopLikelihood}`);
 
   if (coopLikelihood > 80) {
     return 'co-op';
   }
 
   const playsWithAtLeastOneScoreAndWin = _.filter(playsWithAtLeastOneWin, (play) =>
-    play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) == 0))
+    play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) === 0))
   );
 
   const playsWithLowestWinner = _.filter(
     playsWithAtLeastOneScoreAndWin,
-    (play) => _.minBy(play.players, (player) => parseInt(player.score)).win == 1
+    (play) => parseInt(_.minBy(play.players, (player) => parseInt(player.score)).win) === 1
   );
 
   const lowestScoreWinsLikelihood = parseInt(
     (playsWithLowestWinner.length / playsWithAtLeastOneScoreAndWin.length) * 100
   );
-  console.log(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
+  console.info(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
 
   if (lowestScoreWinsLikelihood > 25) {
     return 'lowest-wins';
@@ -158,7 +154,7 @@ const getValidPlays = (plays, details, gameType) => {
   // Only include plays where game was completed
   let validPlays = _.filter(plays, (play) => parseInt(play.incomplete) === 0);
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} plays for being incomplete`);
+  console.info(`Removed ${removedPlays} plays for being incomplete`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // There weren't too many or too few players
@@ -167,7 +163,7 @@ const getValidPlays = (plays, details, gameType) => {
     (play) => play.playerCount >= details.minplayers && play.playerCount <= details.maxplayers
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} plays for having too few or too many players`);
+  console.info(`Removed ${removedPlays} plays for having too few or too many players`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // Play date was after game was published, and not in the future
@@ -178,56 +174,51 @@ const getValidPlays = (plays, details, gameType) => {
       dayjs(play.date).isBefore(dayjs().add(1, 'day'), 'day')
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} plays for having a date before game was published or in the future`);
+  console.info(`Removed ${removedPlays} plays for having a date before game was published or in the future`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // Every non-empty score is numeric.
   validPlays = _.filter(validPlays, (play) =>
-    _.every(play.players, (player) => player.score == '' || player.score == undefined || !isNaN(parseInt(player.score)))
+    _.every(play.players, (player) => player.score === '' || player.score === undefined || !isNaN(parseInt(player.score)))
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} because not every score is empty or numeric`);
+  console.info(`Removed ${removedPlays} because not every score is empty or numeric`);
   totalRemovedPlays = plays.length - validPlays.length;
-
-  // // For co-op games, we're more lenient about winners and scores
-  // if (gameType === 'co-op') {
-  //   return validPlays;
-  // }
 
   // Every player has a numeric score.
   validPlays = _.filter(validPlays, (play) => _.every(play.players, (player) => !isNaN(parseInt(player.score))));
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} because not every player had a valid numeric score`);
+  console.info(`Removed ${removedPlays} because not every player had a valid numeric score`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // At least one player has a non-zero score. This may include some plays with erroneous 0s.
   validPlays = _.filter(validPlays, (play) => _.some(play.players, (player) => parseInt(player.score) > 0));
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} because all players had a score of 0`);
+  console.info(`Removed ${removedPlays} because all players had a score of 0`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // At most one player has a score of zero. This may exclude more plays than we want to.
   validPlays = _.filter(
     validPlays,
-    (play) => _.filter(play.players, (player) => parseInt(player.score) == 0).length <= 1
+    (play) => _.filter(play.players, (player) => parseInt(player.score) === 0).length <= 1
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.log(`Removed ${removedPlays} because more than one player had a score of 0`);
+  console.info(`Removed ${removedPlays} because more than one player had a score of 0`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // Lowest score is winner
   if (gameType === 'lowest-wins') {
-    validPlays = _.filter(validPlays, (play) => _.minBy(play.players, (player) => parseInt(player.score)).win == 1);
+    validPlays = _.filter(validPlays, (play) => parseInt(_.minBy(play.players, (player) => parseInt(player.score)).win) === 1);
     removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-    console.log(`Removed ${removedPlays} because the lowest scoring player was not the winner`);
+    console.info(`Removed ${removedPlays} because the lowest scoring player was not the winner`);
     totalRemovedPlays = plays.length - validPlays.length;
   }
 
   // Highest score is winner
   if (gameType === 'highest-wins') {
-    validPlays = _.filter(validPlays, (play) => _.maxBy(play.players, (player) => parseInt(player.score)).win == 1);
+    validPlays = _.filter(validPlays, (play) => parseInt(_.maxBy(play.players, (player) => parseInt(player.score)).win) === 1);
     removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-    console.log(`Removed ${removedPlays} because the highest scoring player was not the winner`);
+    console.info(`Removed ${removedPlays} because the highest scoring player was not the winner`);
   }
 
   return validPlays;
@@ -250,11 +241,11 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
         const tieBreakerWin = Boolean(
           parseInt(player.win) === 1 &&
             _.filter(sortedPlayers, (p) => parseInt(p.win) === 1).length === 1 &&
-            _.filter(sortedPlayers, (p) => parseInt(p.score) == parseInt(player.score)).length > 1
+            _.filter(sortedPlayers, (p) => parseInt(p.score) === parseInt(player.score)).length > 1
         );
 
         const sharedWin = Boolean(
-          _.filter(sortedPlayers, (p) => parseInt(p.win) === 1 && parseInt(p.score) == parseInt(player.score)).length >
+          _.filter(sortedPlayers, (p) => parseInt(p.win) === 1 && parseInt(p.score) === parseInt(player.score)).length >
             1
         );
 
@@ -280,7 +271,6 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
     }
   });
 
-  // return _.filter(playerResults, (result) => result.finishPosition && result.score);
   return playerResults;
 };
 
@@ -379,11 +369,11 @@ const getKeysFromResult = (result) => {
 };
 
 const combineScores = (existingScores, newScores) => {
-  if (newScores == undefined) {
+  if (newScores === undefined) {
     return existingScores;
   }
 
-  let scores = existingScores == undefined ? {} : existingScores;
+  let scores = existingScores === undefined ? {} : existingScores;
 
   _.forOwn(newScores, (newCount, score) => {
     scores[score] = _.defaultTo(scores[score], 0) + newCount;
@@ -410,16 +400,16 @@ const getCombinedResults = (keyedResults, existingResults) => {
       outlierScores: existingResult?.outlierScores,
     };
 
-    if (result.wins != undefined) {
+    if (result.wins !== undefined) {
       combinedResults[key].wins = combineScores(existingResult?.wins, result.wins);
     }
-    if (result.tieBreakerWins != undefined) {
+    if (result.tieBreakerWins !== undefined) {
       combinedResults[key].tieBreakerWins = combineScores(existingResult?.tieBreakerWins, result.tieBreakerWins);
     }
-    if (result.sharedWins != undefined) {
+    if (result.sharedWins !== undefined) {
       combinedResults[key].sharedWins = combineScores(existingResult?.sharedWins, result.sharedWins);
     }
-    if (result.playerCounts != undefined) {
+    if (result.playerCounts !== undefined) {
       combinedResults[key].playerCounts = combineScores(existingResult?.playerCounts, result.playerCounts);
     }
   });
@@ -432,7 +422,7 @@ const filterResults = (newResults) => {
   const colorPlayCounts = _.map(colorResults, 'playCount');
   const colorPlayCountTotal = _.sum(colorPlayCounts);
 
-  console.log(`Total color results: ${colorPlayCountTotal}`);
+  console.info(`Total color results: ${colorPlayCountTotal}`);
 
   const filteredResults = _.pickBy(
     newResults,
@@ -448,11 +438,11 @@ const filterResults = (newResults) => {
   // Log results
   for (const result of sortedColorResults) {
     if (filteredResults[getColorKey(result.color)] === undefined) {
-      console.log(
+      console.info(
         `Skipping color: ${result.color} - ${result.playCount} - ${(result.playCount / colorPlayCountTotal).toFixed(4)}`
       );
     } else {
-      console.log(
+      console.info(
         `Including color: ${result.color} - ${result.playCount} - ${(result.playCount / colorPlayCountTotal).toFixed(
           4
         )}`
@@ -480,8 +470,8 @@ const calculateNewOutliers = (result) => {
   const leftMad = mad(leftHalf);
   const rightMad = mad(rightHalf);
 
-  console.log(`Left mad: ${leftMad} - Median: ${medianVal} - Right mad: ${rightMad} - Cutoff: ${madCutoff}`);
-  console.log(`Finding outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
+  console.info(`Left mad: ${leftMad} - Median: ${medianVal} - Right mad: ${rightMad} - Cutoff: ${madCutoff}`);
+  console.info(`Finding outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
 
   const leftOutliers = _(leftHalf)
     .filter((score) => abs(score - medianVal) / leftMad > madCutoff)
@@ -493,8 +483,8 @@ const calculateNewOutliers = (result) => {
     .value();
 
   const outliers = leftOutliers.concat(rightOutliers);
-  console.log(`Found ${outliers.length} outlier score values: `);
-  console.log(outliers);
+  console.info(`Found ${outliers.length} outlier score values: `);
+  console.info(outliers);
   console.info('-'.repeat(100));
 
   return outliers;
@@ -503,6 +493,10 @@ const calculateNewOutliers = (result) => {
 // Add stats to each result
 const getResultsWithStats = (results) => {
   // We only calc outliers on the "all" result, since it has all datapoints
+  if (!results.all) {
+    console.error('getResultsWithStats: no "all" result found, cannot calculate outliers');
+    return _.mapValues(results, (result) => addStatsToResult(result, []));
+  }
   const newOutliers = calculateNewOutliers(results.all);
 
   return _.mapValues(results, (result) => addStatsToResult(result, newOutliers));
@@ -513,8 +507,13 @@ const getPlayerCountMeans = (results, existingResults, playerCounts) => {
     const key = `count-${playerCount}`;
     let result = results[key];
 
-    if (result == undefined) {
+    if (result === undefined) {
       result = _.find(existingResults, (result) => result.id === key);
+    }
+
+    if (result === undefined) {
+      console.warn(`getPlayerCountMeans: no result found for key "${key}", skipping`);
+      return means;
     }
 
     return {
@@ -544,7 +543,7 @@ const getResultsWithExpected = (results, playerCountMeans) => {
       _.transform(
         result.playerCounts,
         (means, num, playerCount) => {
-          if (playerCountMeans[playerCount] != undefined) {
+          if (playerCountMeans[playerCount] !== undefined) {
             means.push(Array(num).fill(playerCountMeans[playerCount]));
           }
         },
@@ -572,7 +571,7 @@ const getResultsWithExpected = (results, playerCountMeans) => {
 
 // Calculates stats like mean and std
 const getStats = (explodedScores) => {
-  if (explodedScores.length == 0) {
+  if (explodedScores.length === 0) {
     return {};
   }
 
@@ -598,46 +597,40 @@ const addStatsToResult = (result, outliers) => {
   // Remove outlier scores
   const trimmedScores = removeOutlierScores(result.scores, outliers);
   const outlierScores = getOutlierScores(result.scores, outliers);
-  // const combinedOutlierScores = combineScores(result.outlierScores, outlierScores);
   const outlierScoreCount = _.sum(Object.values(outlierScores));
 
   // Get stats based on trimmed scores. This will recalculate mean, std etc.
   const explodedScores = getExplodedScores(trimmedScores);
-  // const scoreCount = _.sum(Object.values(result.scores));
   const trimmedScoreCount = explodedScores.length;
 
-  result.scores = trimmedScores;
-  result.scoreCount = trimmedScoreCount;
-  result.outlierScores = outlierScores;
-  result.outlierScoreCount = outlierScoreCount;
+  const updated = {
+    ...result,
+    scores: trimmedScores,
+    scoreCount: trimmedScoreCount,
+    outlierScores,
+    outlierScoreCount,
+  };
 
-  // console.log(`Removed ${scoreCount - trimmedScoreCount} outlier scores`);
-
-  if (result.wins != undefined) {
+  if (result.wins !== undefined) {
     // Get win percentage based on filtered wins
     const trimmedWins = removeOutlierScores(result.wins, outliers);
-    result.trimmedWinCount = _.sum(Object.values(trimmedWins));
-    result.trimmedWinPercentage = ((result.trimmedWinCount / result.scoreCount) * 100).toFixed(2);
+    updated.trimmedWinCount = _.sum(Object.values(trimmedWins));
+    updated.trimmedWinPercentage = ((updated.trimmedWinCount / trimmedScoreCount) * 100).toFixed(2);
   }
 
-  if (result.tieBreakerWins != undefined) {
+  if (result.tieBreakerWins !== undefined) {
     // Get tieBreakerWinCount based on filtered tieBreakerWins
     const trimmedTieBreakerWins = removeOutlierScores(result.tieBreakerWins, outliers);
-    result.trimmedTieBreakerWinCount = _.sum(Object.values(trimmedTieBreakerWins));
+    updated.trimmedTieBreakerWinCount = _.sum(Object.values(trimmedTieBreakerWins));
   }
 
-  if (result.sharedWins != undefined) {
+  if (result.sharedWins !== undefined) {
     // Get sharedWinCount based on filtered sharedWins
     const trimmedSharedWins = removeOutlierScores(result.sharedWins, outliers);
-    result.trimmedSharedWinCount = _.sum(Object.values(trimmedSharedWins));
+    updated.trimmedSharedWinCount = _.sum(Object.values(trimmedSharedWins));
   }
 
-  const stats = getStats(explodedScores);
-
-  return {
-    ...result,
-    ...stats,
-  };
+  return { ...updated, ...getStats(explodedScores) };
 };
 
 // The expanded array of scores e.g. [23,23,23,4,4,7] instead of {23: 3, 4: 2, 7: 1}
@@ -664,3 +657,23 @@ const getPlayerCounts = (results) =>
     .uniq()
     .sortBy()
     .value();
+
+// Exported for testing only
+exports._test = {
+  getExplodedScores,
+  getStats,
+  combineScores,
+  removeOutlierScores,
+  getOutlierScores,
+  calculateNewOutliers,
+  addStatsToResult,
+  getGameType,
+  getValidPlays,
+  getColorKey,
+  getKeysFromResult,
+  getResultsWithExpected,
+  filterResults,
+  getKeyedResultsFromPlayerResults,
+  getPlayerResultsFromPlays,
+  getCombinedResults,
+};

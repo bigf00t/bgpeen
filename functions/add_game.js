@@ -17,15 +17,23 @@ exports.addGame = async (searchTerm) => {
   const gameByIdSnapshot = await firestore.collection('games').doc(gameId).get();
 
   if (gameByIdSnapshot.exists) {
-    console.log(`Game with ID ${gameId} already exists`);
+    console.log(`Game with ID ${gameId} already exists, skipping`);
     return;
   }
 
   await util.delay();
 
-  const thingResult = await axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
-  });
+  let thingResult;
+  try {
+    thingResult = await util.withRetry(() =>
+      axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`, {
+        headers: { Authorization: `Bearer ${util.getApiKey()}` },
+      })
+    );
+  } catch (err) {
+    console.error(`BGG things API request failed for ID ${gameId}: ${err.message} (status: ${err.response?.status})`);
+    return;
+  }
 
   const item = convert.xml2js(thingResult.data, {
     compact: true,
@@ -33,7 +41,7 @@ exports.addGame = async (searchTerm) => {
   }).items.item;
 
   if (item == undefined) {
-    console.log(`Game with ID ${gameId} was not found`);
+    console.error(`Game with ID ${gameId} was not found in BGG things API response`);
     return;
   }
 
@@ -41,8 +49,11 @@ exports.addGame = async (searchTerm) => {
     ? _.find(item.name, (name) => name.$.type === 'primary').$.value
     : item.name.$.value;
   const suggestedplayerspoll = _.find(item.poll, (poll) => poll.$.name === 'suggested_numplayers');
+  if (!suggestedplayerspoll) {
+    console.warn(`No suggested_numplayers poll found for ${name} (${gameId}) — suggestedplayers will be empty`);
+  }
   const suggestedplayers = _.reduce(
-    suggestedplayerspoll.results,
+    suggestedplayerspoll?.results,
     (redPoll, results) => {
       redPoll[results.$.numplayers] = _.reduce(
         results.result,
@@ -92,16 +103,18 @@ exports.addGame = async (searchTerm) => {
     oldestPlayDate: '',
     maxDate: '',
     minDate: '',
-    playsLastUpdated: null,
+    playsLastUpdated: new Date(0),
     minDatePlayIds: '',
     maxDatePlayIds: '',
   };
 
-  console.info(`Adding ${newGame.name} (${newGame.id})`);
+  console.info(`Adding ${newGame.name} (${newGame.id}) — published ${newDetails.yearpublished}, ${newDetails.minplayers}–${newDetails.maxplayers} players`);
 
   await firestore.collection('games').doc(newGame.id).set(newGame);
   await firestore.collection('details').doc(newGame.id).set(newDetails);
   await firestore.collection('plays').doc(newGame.id).set(newPlays);
+
+  console.info(`✓ ${newGame.name} (${newGame.id}) added successfully`);
 
   return newGame;
 };
@@ -119,16 +132,24 @@ const getGameId = async (searchTerm) => {
   const existingGamesByNameSnapshot = await firestore.collection('games').where('name', '==', searchTerm).get();
 
   if (existingGamesByNameSnapshot.size > 0) {
-    console.log('Game already exists');
+    console.log(`Game already exists with name "${searchTerm}", skipping`);
     return null;
   }
 
   const searchUrl = `https://api.geekdo.com/xmlapi2/search?query=${encodeURIComponent(searchTerm)}&type=boardgame&exact=1`;
 
-  console.info(`Querying ${searchUrl}`);
-  const searchResult = await axios.get(searchUrl, {
-    headers: { Authorization: `Bearer ${process.env.BGG_API_KEY.trim()}` },
-  });
+  console.info(`Querying BGG search API: ${searchUrl}`);
+  let searchResult;
+  try {
+    searchResult = await util.withRetry(() =>
+      axios.get(searchUrl, {
+        headers: { Authorization: `Bearer ${util.getApiKey()}` },
+      })
+    );
+  } catch (err) {
+    console.error(`BGG search API request failed for "${searchTerm}": ${err.message} (status: ${err.response?.status})`);
+    return null;
+  }
 
   const json = convert.xml2js(searchResult.data, {
     compact: true,
@@ -136,7 +157,7 @@ const getGameId = async (searchTerm) => {
   });
 
   if (json.items.item === undefined) {
-    console.log('No search results found');
+    console.log(`No BGG search results found for "${searchTerm}"`);
     return null;
   }
 
@@ -151,7 +172,12 @@ const getGameId = async (searchTerm) => {
     .orderBy([(game) => parseInt(game.yearpublished.$.value), (game) => parseInt(game.$.id)], ['desc', 'desc'])
     .value();
 
-  console.log(`Using Game ID ${foundGames[0].$.id}`);
+  if (foundGames.length === 0) {
+    console.warn(`No BGG search results with a published year found for "${searchTerm}", skipping`);
+    return null;
+  }
+
+  console.info(`Using Game ID ${foundGames[0].$.id}`);
 
   return foundGames[0].$.id;
 };
