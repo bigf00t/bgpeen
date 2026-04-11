@@ -18,7 +18,7 @@
     "@firebase/component": "^0.5.17",
     "@firebase/logger": "^0.3.3",
     "@firebase/util": "^1.6.3",
-    "axios": "^0.30.3",
+    "axios": "^1.15.0",
     "dayjs": "^1.10.7",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.22.0",
