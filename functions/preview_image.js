@@ -3,12 +3,19 @@ const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 const _ = require('lodash');
-const { getFromCache, setToCache } = require('./shared');
+const { existsInCache, setToCache } = require('./shared');
 
 const WIDTH = 1200;
 const HEIGHT = 600;
 const OVERSCAN_X = 20;
 const OVERSCAN_Y = 50;
+
+const chartCanvas = new ChartJSNodeCanvas({
+  width: WIDTH + OVERSCAN_X * 2,
+  height: HEIGHT + OVERSCAN_Y,
+  backgroundColour: 'transparent',
+  plugins: { modern: ['chartjs-plugin-annotation'] },
+});
 
 const COLORS = {
   background: 'rgba(255, 205, 86, 1)',
@@ -91,14 +98,7 @@ const renderChart = async (result, score, percentile) => {
     };
   }
 
-  const canvas = new ChartJSNodeCanvas({
-    width: WIDTH + OVERSCAN_X * 2,
-    height: HEIGHT + OVERSCAN_Y,
-    backgroundColour: 'transparent',
-    plugins: { modern: ['chartjs-plugin-annotation'] },
-  });
-
-  return canvas.renderToBuffer({
+  return chartCanvas.renderToBuffer({
     type: 'line',
     data: {
       labels,
@@ -180,10 +180,14 @@ const composite = async (gameImageUrl, chartBuffer) => {
   return canvas.toBuffer('image/png');
 };
 
+const { BUCKET } = require('./util');
+
 const getCacheKey = (gameId, resultId, score) => {
   const scorePart = score ? `_score-${score}` : '';
   return `previews/${gameId}/${resultId}${scorePart}.png`;
 };
+
+const getPublicUrl = (cacheKey) => `https://storage.googleapis.com/${BUCKET}/${cacheKey}`;
 
 exports.servePreviewImage = async (req, res) => {
   try {
@@ -194,14 +198,11 @@ exports.servePreviewImage = async (req, res) => {
     const percentile = req.query.percentile ? parseFloat(req.query.percentile) : null;
 
     const cacheKey = getCacheKey(gameId, resultId, score);
+    const publicUrl = getPublicUrl(cacheKey);
 
-    // Serve from cache if available
-    const cached = await getFromCache(cacheKey);
-    if (cached) {
-      res.set('Content-Type', 'image/png');
-      res.set('Cache-Control', 'public, max-age=86400');
-      res.set('X-Cache', 'HIT');
-      res.status(200).send(cached);
+    // Redirect to GCS if already cached — GCS serves it directly, no function bytes proxied
+    if (await existsInCache(cacheKey)) {
+      res.redirect(302, publicUrl);
       return;
     }
 
@@ -223,13 +224,10 @@ exports.servePreviewImage = async (req, res) => {
     const chartBuffer = await renderChart(result, score, percentile);
     const png = await composite(gameImageUrl, chartBuffer);
 
-    // Cache in background — don't block the response
-    setToCache(cacheKey, png, 'image/png', { makePublic: true }).catch((e) => console.error('Failed to cache preview image:', e));
+    // Must await — redirect to GCS requires the file to exist before we send the 302
+    await setToCache(cacheKey, png, 'image/png', { makePublic: true });
 
-    res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=86400');
-    res.set('X-Cache', 'MISS');
-    res.status(200).send(png);
+    res.redirect(302, publicUrl);
   } catch (e) {
     console.error('servePreviewImage failed:', e);
     res.status(500).send('Internal server error');

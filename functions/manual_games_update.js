@@ -8,7 +8,7 @@ exports.manualGamesUpdate = async (gameIds) => {
   let query = firestore.collection('games');
 
   if (gameIds && gameIds.length > 0) {
-    query = query.where('id', 'in', gameIds);
+    query = query.where(admin.firestore.FieldPath.documentId(), 'in', gameIds);
   }
 
   const gamesSnapshot = await query.get();
@@ -40,8 +40,8 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     // Reset all plays
     batch.set(playsRef, {
-      minDatePlayIds: '',
-      maxDatePlayIds: '',
+      minDatePlayIds: [],
+      maxDatePlayIds: [],
       totalPlays: 0,
       unusablePlays: 0,
       remainingPlays: 0,

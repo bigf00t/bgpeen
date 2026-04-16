@@ -41,6 +41,11 @@ const getPercentileQuip = (percentile) => {
   return 'probably cheating :(';
 };
 
+const existsInCache = async (cacheKey) => {
+  const [exists] = await getStorage().bucket(BUCKET).file(cacheKey).exists();
+  return exists;
+};
+
 const getFromCache = async (cacheKey) => {
   const file = getStorage().bucket(BUCKET).file(cacheKey);
   try {
@@ -58,4 +63,4 @@ const setToCache = async (cacheKey, data, contentType, { makePublic = false } = 
   if (makePublic) await file.makePublic();
 };
 
-module.exports = { BUCKET, getResultId, calcPercentile, getPercentileQuip, getFromCache, setToCache };
+module.exports = { BUCKET, getResultId, calcPercentile, getPercentileQuip, existsInCache, getFromCache, setToCache };

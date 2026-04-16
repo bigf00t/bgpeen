@@ -55,7 +55,7 @@ const TopGames = (props) => {
                   <CardActionArea
                     component={Link}
                     to={`/${game.id}/${getGameSlug(game)}`}
-                    title={`${game.name} - ${game[props.field]}`}
+                    title={`${game.name} - ${game[props.field] instanceof Date ? game[props.field].toLocaleDateString() : game[props.field]}`}
                   >
                     <CardMedia component="img" image={game.thumbnail} alt={game.name} loading="lazy" />
                     <Box

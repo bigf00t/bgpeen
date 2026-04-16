@@ -69,7 +69,7 @@ const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
   for (const gamePlay of gamePlays) {
     // gamePlay.id is added by util.docsToArray()
     const gameSnapshot = await firestore.collection('games').doc(gamePlay.id).get();
-    const game = gameSnapshot.data();
+    const game = { id: gameSnapshot.id, ...gameSnapshot.data() };
 
     gameNum++;
 
@@ -83,6 +83,10 @@ const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
     const gameStartTime = Date.now();
 
     try {
+      // Claim this game before the expensive BGG fetch so a concurrent scheduler
+      // run won't pick it up again while we're processing it
+      await firestore.collection('plays').doc(gamePlay.id).update({ playsLastUpdated: new Date() });
+
       // Separate batch transaction for each game
       const batch = firestore.batch();
 

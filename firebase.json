@@ -22,6 +22,10 @@
         "function": "servePreviewImage"
       },
       {
+        "source": "/api/record-view",
+        "function": "recordGameView"
+      },
+      {
         "source": "/:id/:name/**",
         "function": "serveOgTags"
       },

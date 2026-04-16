@@ -60,7 +60,7 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
   const remainingPlays = pageResults.length > 0 ? pageResults.slice(-1)[0].remainingPlays : 0;
   const totalPlays = _.defaultTo(gamePlays.totalPlays, 0) + newPlays.length;
 
-  console.info(`${game.name} — ${newPlays.length} new plays loaded, ${remainingPlays} remaining on BGG (date range: ${gamePlays.minDate || `${details.yearpublished}-01-01`} → ${gamePlays.maxDate || 'today'})`);
+  console.info(`${game.name} — ${newPlays.length} new plays loaded, ${remainingPlays} remaining on BGG (date range: ${gamePlays.minDate || 'start'} → ${gamePlays.maxDate || 'today'})`);
 
   const minDate = remainingPlays === 0 ? newestPlayDate : _.defaultTo(gamePlays.minDate, '');
   const maxDate = remainingPlays === 0 ? '' : currentOldestPlayDate;
@@ -85,7 +85,7 @@ const updateGamePlaysWithPageResults = async (game, gamePlays, gamePlaysRef, bat
 
 const getDatePlayIds = (plays, newDate, oldDate, playIds) => {
   if (newDate === '') {
-    return '';
+    return [];
   }
 
   const newMinDatePlayIds = _(plays)
@@ -93,7 +93,7 @@ const getDatePlayIds = (plays, newDate, oldDate, playIds) => {
     .map((play) => play.id)
     .value();
 
-  return newDate != oldDate ? newMinDatePlayIds.join(',') : playIds.split(',').concat(newMinDatePlayIds).join(',');
+  return newDate != oldDate ? newMinDatePlayIds : (Array.isArray(playIds) ? playIds : []).concat(newMinDatePlayIds);
 };
 
 const getPlaysUrl = (game, gamePlays, details) =>
@@ -185,8 +185,8 @@ const getCleanPlaysFromJson = (plays) =>
 
 // Filter out plays that we've already recorded in a previous run
 const getNewPlays = (gamePlays, plays) => {
-  const minDatePlayIds = _.defaultTo(gamePlays.minDatePlayIds, '').split(',');
-  const maxDatePlayIds = _.defaultTo(gamePlays.maxDatePlayIds, '').split(',');
+  const minDatePlayIds = Array.isArray(gamePlays.minDatePlayIds) ? gamePlays.minDatePlayIds : [];
+  const maxDatePlayIds = Array.isArray(gamePlays.maxDatePlayIds) ? gamePlays.maxDatePlayIds : [];
 
   return plays.filter(
     (play) =>

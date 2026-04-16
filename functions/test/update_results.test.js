@@ -106,7 +106,7 @@ describe('Update Results', () => {
     expect(gameUpdate.totalScores).toBe(84);
     expect(gameUpdate.totalValidPlays).toBe(21);
     expect(gameUpdate.totalInvalidPlays).toBe(0);
-    expect(gameUpdate.playerCounts).toBe('4');
+    expect(gameUpdate.playerCounts).toEqual([4]);
   });
 
   // -------------------------------------------------------------------------

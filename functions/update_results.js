@@ -26,7 +26,13 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const detailsSnapshot = await detailsRef.get();
   const details = detailsSnapshot.data();
 
-  const gameType = game.gameType ? game.gameType : getGameType(newPlays);
+  // Re-evaluate game type until enough plays have accumulated to be confident.
+  // A small early sample can misclassify a game permanently.
+  const GAME_TYPE_MIN_PLAYS = 50;
+  const gameType =
+    game.gameType && (game.totalValidPlays || 0) >= GAME_TYPE_MIN_PLAYS
+      ? game.gameType
+      : getGameType(newPlays);
 
   // Filter out invalid plays
   const validPlays = getValidPlays(newPlays, details, gameType);
@@ -81,8 +87,8 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     totalScores: results.all.scoreCount,
     totalValidPlays: _.defaultTo(game.totalValidPlays, 0) + validPlays.length,
     totalInvalidPlays: _.defaultTo(game.totalInvalidPlays, 0) + invalidPlaysCount,
-    mean: results.all.mean,
-    playerCounts: playerCounts.join(','),
+    mean: parseFloat(results.all.mean),
+    playerCounts: playerCounts,
     gameType: gameType,
     colors: updatedColors,
     months: updatedMonths,
@@ -139,7 +145,7 @@ const getGameType = (plays) => {
   );
   console.info(`Lowest score wins game likelihood: ${lowestScoreWinsLikelihood}`);
 
-  if (lowestScoreWinsLikelihood > 25) {
+  if (lowestScoreWinsLikelihood > 50) {
     return 'lowest-wins';
   }
 
@@ -175,14 +181,6 @@ const getValidPlays = (plays, details, gameType) => {
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
   console.info(`Removed ${removedPlays} plays for having a date before game was published or in the future`);
-  totalRemovedPlays = plays.length - validPlays.length;
-
-  // Every non-empty score is numeric.
-  validPlays = _.filter(validPlays, (play) =>
-    _.every(play.players, (player) => player.score === '' || player.score === undefined || !isNaN(parseInt(player.score)))
-  );
-  removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
-  console.info(`Removed ${removedPlays} because not every score is empty or numeric`);
   totalRemovedPlays = plays.length - validPlays.length;
 
   // Every player has a numeric score.
@@ -249,8 +247,14 @@ const getPlayerResultsFromPlays = (plays, gameType) => {
             1
         );
 
-        // Handles sharedWins
-        const finishPosition = i > 0 && sharedWin ? 1 : i + 1;
+        // Count how many players have a strictly better score to determine finish position.
+        // This correctly handles ties among non-winners (e.g. two players both 2nd).
+        const betterPlayers = sortedPlayers.filter((p) =>
+          gameType === 'lowest-wins'
+            ? parseInt(p.score) < parseInt(player.score)
+            : parseInt(p.score) > parseInt(player.score)
+        );
+        const finishPosition = sharedWin ? 1 : betterPlayers.length + 1;
 
         playerResults.push({
           // Undefined scores are valid for co-op games
@@ -373,7 +377,7 @@ const combineScores = (existingScores, newScores) => {
     return existingScores;
   }
 
-  let scores = existingScores === undefined ? {} : existingScores;
+  const scores = existingScores === undefined ? {} : { ...existingScores };
 
   _.forOwn(newScores, (newCount, score) => {
     scores[score] = _.defaultTo(scores[score], 0) + newCount;
@@ -467,8 +471,10 @@ const calculateNewOutliers = (result) => {
   const leftHalf = _.filter(explodedScores, (score) => score <= medianVal);
   const rightHalf = _.filter(explodedScores, (score) => score >= medianVal);
 
-  const leftMad = mad(leftHalf);
-  const rightMad = mad(rightHalf);
+  // Floor at 1 to prevent division by zero when a single score dominates a half,
+  // which would collapse MAD to 0 and flag all other scores as infinite outliers.
+  const leftMad = Math.max(mad(leftHalf), 1);
+  const rightMad = Math.max(mad(rightHalf), 1);
 
   console.info(`Left mad: ${leftMad} - Median: ${medianVal} - Right mad: ${rightMad} - Cutoff: ${madCutoff}`);
   console.info(`Finding outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
@@ -527,9 +533,10 @@ const getPlayerCountMeans = (results, existingResults, playerCounts) => {
 const getResultsWithExpected = (results, playerCountMeans) => {
   return _.mapValues(results, (result) => {
     if (result.new || result.startPosition) {
+      const expectedMean = playerCountMeans[result.playerCount];
       return {
         ...result,
-        expectedMean: playerCountMeans[result.playerCount],
+        ...(expectedMean !== undefined && { expectedMean }),
         expectedWinPercentage: (100 / result.playerCount).toFixed(2),
       };
     }
@@ -539,17 +546,16 @@ const getResultsWithExpected = (results, playerCountMeans) => {
     }
 
     // Get the mean of means for all playsCounts
-    const expectedMean = mean(
-      _.transform(
-        result.playerCounts,
-        (means, num, playerCount) => {
-          if (playerCountMeans[playerCount] !== undefined) {
-            means.push(Array(num).fill(playerCountMeans[playerCount]));
-          }
-        },
-        []
-      )
+    const meanInputs = _.transform(
+      result.playerCounts,
+      (means, num, playerCount) => {
+        if (playerCountMeans[playerCount] !== undefined) {
+          means.push(Array(num).fill(playerCountMeans[playerCount]));
+        }
+      },
+      []
     );
+    const expectedMean = meanInputs.length > 0 ? mean(meanInputs) : undefined;
 
     const expectedWinPercentage = mean(
       _.transform(
@@ -563,7 +569,7 @@ const getResultsWithExpected = (results, playerCountMeans) => {
 
     return {
       ...result,
-      expectedMean: expectedMean.toFixed(2),
+      ...(expectedMean !== undefined && { expectedMean: expectedMean.toFixed(2) }),
       expectedWinPercentage: expectedWinPercentage.toFixed(2),
     };
   });
@@ -575,28 +581,37 @@ const getStats = (explodedScores) => {
     return {};
   }
 
+  const modeResult = mode(explodedScores);
+  // mathjs returns an array when multiple values share the highest frequency;
+  // use the median of the modes so the result is a single representative number.
+  const modeValue = Array.isArray(modeResult)
+    ? parseFloat(median(modeResult))
+    : parseFloat(modeResult);
+
   return {
     mean: parseFloat(mean(explodedScores)).toFixed(2),
     std: parseFloat(std(explodedScores)).toFixed(2),
     median: parseFloat(median(explodedScores)),
-    mode: parseFloat(mode(explodedScores)),
+    mode: modeValue,
     mad: parseFloat(mad(explodedScores)),
   };
 };
 
 const removeOutlierScores = (scores, outliers) => {
-  return _.pickBy(scores, (count, score) => !outliers.includes(parseInt(score)));
+  return _.pickBy(scores, (_, score) => !outliers.includes(parseInt(score)));
 };
 
 const getOutlierScores = (scores, outliers) => {
-  return _.pickBy(scores, (count, score) => outliers.includes(parseInt(score)));
+  return _.pickBy(scores, (_, score) => outliers.includes(parseInt(score)));
 };
 
 // Fills in the stat section of the result, such as mean and std
 const addStatsToResult = (result, outliers) => {
-  // Remove outlier scores
-  const trimmedScores = removeOutlierScores(result.scores, outliers);
-  const outlierScores = getOutlierScores(result.scores, outliers);
+  // Re-evaluate the full distribution (current scores + previously flagged outliers)
+  // so that scores which are no longer anomalous can be promoted back.
+  const allScores = combineScores(result.scores, result.outlierScores);
+  const trimmedScores = removeOutlierScores(allScores, outliers);
+  const outlierScores = getOutlierScores(allScores, outliers);
   const outlierScoreCount = _.sum(Object.values(outlierScores));
 
   // Get stats based on trimmed scores. This will recalculate mean, std etc.

@@ -89,7 +89,7 @@ describe('getStats', () => {
   test('known distribution: [10, 20, 30, 40, 50]', () => {
     // mean = 30, median = 30
     // std (sample) = sqrt(250) ≈ 15.81
-    // mode = 10 (all equal frequency, mathjs returns first)
+    // mode = all equal frequency → mathjs returns array → median of modes = 30
     // mad = median of [20,10,0,10,20] = 10
     const result = getStats([10, 20, 30, 40, 50]);
     expect(result.mean).toBe('30.00');
@@ -355,21 +355,28 @@ describe('getGameType', () => {
     expect(result).not.toBe('co-op');
   });
 
-  test('lowest scorer wins > 25% → lowest-wins', () => {
+  test('lowest scorer wins majority → lowest-wins', () => {
+    const lowest = Array(3).fill(makeGamePlay([{ score: '10', win: '1' }, { score: '20', win: '0' }]));
+    const highest = [makeGamePlay([{ score: '20', win: '1' }, { score: '10', win: '0' }])];
+    // 3/4 = 75% → parseInt = 75 > 50 → lowest-wins
+    expect(getGameType(lowest.concat(highest))).toBe('lowest-wins');
+  });
+
+  test('exactly 50% lowest-wins → NOT lowest-wins (must be strictly > 50)', () => {
     const plays = [
       makeGamePlay([{ score: '10', win: '1' }, { score: '20', win: '0' }]), // lowest wins
       makeGamePlay([{ score: '10', win: '1' }, { score: '20', win: '0' }]), // lowest wins
       makeGamePlay([{ score: '20', win: '1' }, { score: '10', win: '0' }]), // highest wins
       makeGamePlay([{ score: '20', win: '1' }, { score: '10', win: '0' }]), // highest wins
     ];
-    // 2/4 = 50% → parseInt = 50 > 25 → lowest-wins
-    expect(getGameType(plays)).toBe('lowest-wins');
+    // 2/4 = 50% → parseInt = 50 → NOT > 50
+    expect(getGameType(plays)).toBe('highest-wins');
   });
 
-  test('exactly 25% lowest-wins → NOT lowest-wins (must be strictly > 25)', () => {
+  test('exactly 25% lowest-wins → NOT lowest-wins', () => {
     const lowest = [makeGamePlay([{ score: '10', win: '1' }, { score: '20', win: '0' }])];
     const highest = Array(3).fill(makeGamePlay([{ score: '20', win: '1' }, { score: '10', win: '0' }]));
-    // 1/4 = 25% → parseInt = 25 → NOT > 25
+    // 1/4 = 25% → parseInt = 25 → NOT > 50
     expect(getGameType(lowest.concat(highest))).toBe('highest-wins');
   });
 

@@ -5,8 +5,6 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Link as RouterLink } from 'react-router-dom';
-import PropTypes from 'prop-types';
-import TwitterIcon from '@mui/icons-material/Twitter';
 import Link from '@mui/material/Link';
 
 const Menu = () => {
@@ -27,21 +25,9 @@ const Menu = () => {
             </Typography>
           </Link>
         </Box>
-        <Link
-          sx={{ textDecoration: 'none', '&:hover': { opacity: 0.75 } }}
-          href="https://twitter.com/GoodAtDotGames"
-          target="_blank"
-          rel="noreferrer"
-          title="Contact @GoodAtDotGames"
-          underline="hover"
-        >
-          <TwitterIcon />
-        </Link>
       </Toolbar>
     </AppBar>
   );
 };
-
-Menu.propTypes = {};
 
 export default Menu;

@@ -80,7 +80,7 @@ exports.addGame = async (searchTerm) => {
     totalScores: 0,
     mean: 0,
     addedDate: new Date(),
-    playerCounts: '',
+    playerCounts: [],
     colors: [],
     months: [],
   };
@@ -104,8 +104,8 @@ exports.addGame = async (searchTerm) => {
     maxDate: '',
     minDate: '',
     playsLastUpdated: new Date(0),
-    minDatePlayIds: '',
-    maxDatePlayIds: '',
+    minDatePlayIds: [],
+    maxDatePlayIds: [],
   };
 
   console.info(`Adding ${newGame.name} (${newGame.id}) — published ${newDetails.yearpublished}, ${newDetails.minplayers}–${newDetails.maxplayers} players`);

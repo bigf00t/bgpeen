@@ -28,7 +28,6 @@ import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import { DebounceInput } from 'react-debounce-input';
 
-import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { IconButton } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 
@@ -81,12 +80,6 @@ const getScoreTitle = (percentile) => {
   } else {
     return `You're ${getPercentileQuip(percentile)}`;
   }
-};
-
-const getTwitterText = (game, score, percentile) => {
-  return `I just played ${game} and my score of ${score} was in the ${getOrdinalDesc(
-    percentile
-  )} of similar scores. I'm ${getPercentileQuip(percentile)}`;
 };
 
 // TODO: Case or switch
@@ -234,6 +227,7 @@ const Result = (props) => {
     var foundGame = props.data.loadedGames[params.id];
     if (foundGame) {
       props.setGame(foundGame);
+      fetch(`/api/record-view?id=${params.id}`).catch((e) => console.error('Failed to record game view:', e));
     } else {
       props.loadGame(params.id);
     }
@@ -511,25 +505,6 @@ const Result = (props) => {
               >
                 <Typography component="div" align="center" sx={{ pt: 0, pr: 1, pb: 1, pl: 1 }}>
                   {` Your score of ${score} places you in the ${getOrdinalDesc(percentile)} of similar scores.`}
-                </Typography>
-                <Typography
-                  component="span"
-                  sx={{
-                    position: 'relative',
-                    pt: 0,
-                    pr: 5,
-                    pb: 1,
-                    pl: 1,
-                    '& button': { position: 'absolute', top: '-6px', right: '0', display: 'inline-block' },
-                  }}
-                >
-                  Share score:
-                  <TwitterShareButton
-                    title={getTwitterText(props.data.game.name, score, percentile)}
-                    url={window.location.href}
-                  >
-                    <TwitterIcon size={32} round />
-                  </TwitterShareButton>
                 </Typography>
                 <Typography variant="h2" component="h2" width={1} sx={{ mt: 2, mr: 2, mb: 0, ml: 2 }} gutterBottom align="center">
                   {percentile !== null ? getScoreTitle(percentile) : 'None'}

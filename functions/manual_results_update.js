@@ -1,3 +1,4 @@
+const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
@@ -8,7 +9,7 @@ exports.manualResultsUpdate = async (gameIds) => {
   let query = firestore.collection('games');
 
   if (gameIds && gameIds.length > 0) {
-    query = query.where('id', 'in', gameIds);
+    query = query.where(admin.firestore.FieldPath.documentId(), 'in', gameIds);
   }
 
   const gamesSnapshot = await query.get();

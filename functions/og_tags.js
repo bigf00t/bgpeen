@@ -3,18 +3,17 @@ const fs = require('fs');
 const path = require('path');
 const { getResultId, calcPercentile, getPercentileQuip, getFromCache, setToCache } = require('./shared');
 
-const getBuildVersion = () => {
+const loadIndexHtml = () => {
   try {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-    const match = html.match(/index-([^"]+)\.js/);
-    return match ? match[1] : 'default';
+    return fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
   } catch (e) {
-    console.warn('Could not read index.html for build version:', e.message);
-    return 'default';
+    console.warn('Could not read index.html:', e.message);
+    return null;
   }
 };
 
-const BUILD_VERSION = getBuildVersion();
+const INDEX_HTML = loadIndexHtml();
+const BUILD_VERSION = INDEX_HTML ? (INDEX_HTML.match(/index-([^"]+)\.js/)?.[1] ?? 'default') : 'default';
 
 const getCacheKey = (reqPath) => `og-tags/${BUILD_VERSION}${reqPath.replace(/\/$/, '')}.html`;
 
@@ -44,8 +43,7 @@ const escapeHtml = (str) =>
     .replace(/>/g, '&gt;');
 
 const getHtmlWithTags = (game, params, percentile) => {
-  const htmlPath = path.join(__dirname, 'index.html');
-  const html = fs.readFileSync(htmlPath, 'utf8');
+  const html = INDEX_HTML;
 
   let title = `How good at ${game.name} are you?`;
   let description = title;

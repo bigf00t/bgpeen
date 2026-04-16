@@ -121,7 +121,7 @@ const Filters = (props) => {
               dependentFilters={['start', 'finish', 'new']}
               clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
               label="Player Count"
-              options={(props.data.playerCounts || '').split(',').filter(Boolean)}
+              options={props.data.playerCounts || []}
               paramIndex={2}
             />
             <FilterDropdown

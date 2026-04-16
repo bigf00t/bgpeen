@@ -7,7 +7,6 @@ import {
   getDocs,
   doc,
   getDoc,
-  updateDoc,
   getAggregateFromServer,
   sum,
   count,
@@ -19,7 +18,9 @@ import { db } from '../fire';
 
 export const setGame = (game) => ({ type: SET_GAME, payload: game });
 
-export const loadGames = () => async (dispatch) => {
+export const loadGames = () => async (dispatch, getState) => {
+  if (getState().data.games.length > 0) return;
+
   try {
     const q = query(collection(db, 'games'));
     const querySnapshot = await getDocs(q);
@@ -28,7 +29,7 @@ export const loadGames = () => async (dispatch) => {
     querySnapshot.forEach((doc) => {
       if (!_.isEmpty(doc.data())) {
         games.push({
-          id: doc.data().id,
+          id: doc.id,
           name: doc.data().name,
           totalScores: doc.data().totalScores,
           mean: doc.data().mean,
@@ -57,13 +58,13 @@ export const loadTopGames = (field) => async (dispatch) => {
     querySnapshot.forEach((doc) => {
       if (!_.isEmpty(doc.data()) && doc.data().totalScores > 0) {
         games.push({
-          id: doc.data().id,
+          id: doc.id,
           name: doc.data().name,
           totalScores: doc.data().totalScores,
           mean: doc.data().mean,
           thumbnail: doc.data().thumbnail,
           popularity: doc.data().popularity,
-          addedDate: doc.data().addedDate,
+          addedDate: new Date(doc.data().addedDate.seconds * 1000),
         });
       }
     });
@@ -107,13 +108,10 @@ export const loadGame = (gameId) => async (dispatch) => {
 
     dispatch({
       type: LOAD_GAME,
-      payload: { ...gameSnapshot.data(), results: result },
+      payload: { id: gameSnapshot.id, ...gameSnapshot.data(), results: result },
     });
 
-    updateDoc(gameRef, {
-      popularity: (gameSnapshot.data().popularity || 0) + 1,
-      lastLoadedDate: new Date(),
-    }).catch((e) => console.error('Failed to update game stats:', e));
+    fetch(`/api/record-view?id=${gameId}`).catch((e) => console.error('Failed to record game view:', e));
   } catch (e) {
     console.error('loadGame failed:', e);
   }
@@ -129,7 +127,7 @@ export const prefetchGame = (gameId) => async (dispatch) => {
 
     dispatch({
       type: PREFETCH_GAME,
-      payload: { ...gameSnapshot.data(), results: result },
+      payload: { id: gameSnapshot.id, ...gameSnapshot.data(), results: result },
     });
   } catch (e) {
     console.error('prefetchGame failed:', e);
