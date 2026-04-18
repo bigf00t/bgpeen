@@ -172,17 +172,7 @@
   position: relative;
   height: 320px;
 }
-.rv2-chart-empty {
-  display: none;
-  position: absolute;
-  inset: 0;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.88rem;
-  color: #666;
-  background: #1e2028;
-}
-.rv2-chart-empty.visible { display: flex; }
+
 
 /* ── FOOTER ── */
 .rv2-data-source { font-size: 0.68rem; color: #666; text-align: center; margin-top: 28px; }

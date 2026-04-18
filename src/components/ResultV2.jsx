@@ -157,6 +157,7 @@ const ResultV2 = (props) => {
 
   // Results arrive from Redux
   useEffect(() => {
+    if (_.isEmpty(filters)) return;
     if (props.data?.game?.results && Object.keys(props.data.game.results).length > 1) {
       setResult(props.data.game.results[getResultId()]);
     }

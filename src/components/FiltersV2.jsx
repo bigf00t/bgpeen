@@ -41,6 +41,7 @@ const FiltersV2 = ({ data }) => {
     (data.colors || []).map((c) => c.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
 
   useEffect(() => {
+    if (!data) return;
     setValidPlayerPlaces(getValidPlayerPlaces());
     setYears(getYears());
     setColors(getColors());
