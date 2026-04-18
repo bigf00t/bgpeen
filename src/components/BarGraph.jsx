@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -11,6 +10,9 @@ import {
 } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
+
+const getPercentileColor = (pct) =>
+  (pct ?? 0) < 33 ? '#ef5350' : (pct ?? 0) < 66 ? '#ffc107' : '#66bb6a';
 
 const barLabelPlugin = {
   id: 'rv2BarLabels',
@@ -73,7 +75,7 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
   const backgroundColors = useMemo(() => {
     return labels.map((s) => {
       if (userBin !== null && s === userBin) {
-        return (percentile ?? 0) < 33 ? '#ef5350' : (percentile ?? 0) < 66 ? '#ffc107' : '#66bb6a';
+        return getPercentileColor(percentile);
       }
       if (s === avgBin) return 'rgba(180,190,240,0.8)';
       const sd = Math.abs(s - mean) / stdDev;
@@ -91,7 +93,7 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
     if (userBin !== null) {
       const userIdx = labels.indexOf(userBin);
       if (userIdx !== -1) {
-        const color = (percentile ?? 0) < 33 ? '#ef5350' : (percentile ?? 0) < 66 ? '#ffc107' : '#66bb6a';
+        const color = getPercentileColor(percentile);
         items.push({ labelIndex: userIdx, lines: [String(userBin)], color });
       }
     }
