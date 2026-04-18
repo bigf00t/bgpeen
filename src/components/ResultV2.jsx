@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import * as actions from '../actions';
@@ -40,7 +40,7 @@ const ResultV2 = (props) => {
     return p;
   }, [rawParams]);
 
-  const getResultId = useCallback(() => {
+  const getResultId = () => {
     if (filters.players) {
       let id = `count-${filters.players}`;
       if (filters.start) id += `-start-${filters.start}`;
@@ -55,9 +55,9 @@ const ResultV2 = (props) => {
       return id;
     }
     return 'all';
-  }, [filters]);
+  };
 
-  const updateHistory = useCallback((newScore) => {
+  const updateHistory = (newScore) => {
     const flatParams = Object.entries(params).flat();
     flatParams.splice(2, 1);
     flatParams.splice(0, 1);
@@ -67,7 +67,7 @@ const ResultV2 = (props) => {
     const startIndex = fieldIndex > -1 ? fieldIndex : flatParams.length;
     flatParams.splice(startIndex, paramsToRemove, ...paramsToAdd);
     navigate(`/${flatParams.join('/')}?v2=1`);
-  }, [params, navigate]);
+  };
 
   const handleScoreInput = (e) => {
     const val = e.target.value;
@@ -79,12 +79,12 @@ const ResultV2 = (props) => {
     }, 400);
   };
 
-  const handleScoreClick = useCallback((binScore) => {
+  const handleScoreClick = (binScore) => {
     setScore(binScore);
     if (scoreInputRef.current) scoreInputRef.current.value = binScore;
-  }, []);
+  };
 
-  const findOrLoadResult = useCallback(() => {
+  const findOrLoadResult = () => {
     const resultId = getResultId();
     const results = props.data.game.results;
     if (Object.prototype.hasOwnProperty.call(results, resultId)) {
@@ -92,10 +92,11 @@ const ResultV2 = (props) => {
     } else {
       props.loadResult(params.id, resultId);
     }
-  }, [getResultId, props.data.game, params.id]);
+  };
 
-  const updatePercentile = useCallback(() => {
+  const updatePercentile = () => {
     if (!score) { setPercentile(null); return; }
+    if (!result?.scores) { setPercentile(null); return; }
     const total = _.sum(_.values(result.scores));
     if (!total) { setPercentile(null); return; }
     const newPct = (_.reduce(
@@ -104,9 +105,9 @@ const ResultV2 = (props) => {
       0
     ) * 100) / total;
     setPercentile(newPct);
-  }, [score, result]);
+  };
 
-  const setFiltersFromUrl = useCallback(() => {
+  const setFiltersFromUrl = () => {
     setFilters({
       players: getIntFromParam(params.players),
       finish:  getIntFromParam(params.finish),
@@ -116,9 +117,9 @@ const ResultV2 = (props) => {
       year:    getIntFromParam(params.year),
       month:   getIntFromParam(params.month),
     });
-  }, [params]);
+  };
 
-  const findOrLoadGame = useCallback(() => {
+  const findOrLoadGame = () => {
     const foundGame = props.data.loadedGames[params.id];
     if (foundGame) {
       props.setGame(foundGame);
@@ -127,7 +128,7 @@ const ResultV2 = (props) => {
     } else {
       props.loadGame(params.id);
     }
-  }, [params.id, props.data.loadedGames]);
+  };
 
   // Mount
   useEffect(() => {
