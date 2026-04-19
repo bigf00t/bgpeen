@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
@@ -11,7 +11,8 @@ const FilterDropdown = (props) => {
   const [highlightValue, setHighlightValue] = useState('');
 
   const rawParams = useParams();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const params = useMemo(() => {
     const p = { id: rawParams.id, name: rawParams.name };
@@ -68,8 +69,9 @@ const FilterDropdown = (props) => {
       }
     }
 
-    navigate(`/${flatParams.join('/')}`);
-  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate]);
+    const qs = searchParams.toString();
+    navigate(`/${flatParams.join('/')}${qs ? `?${qs}` : ''}`);
+  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate, searchParams]);
 
   const updateHistoryRef = useRef(updateHistory);
   useEffect(() => {
