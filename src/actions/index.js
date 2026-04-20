@@ -27,7 +27,7 @@ export const loadGames = () => async (dispatch, getState) => {
 
     const games = [];
     querySnapshot.forEach((doc) => {
-      if (!_.isEmpty(doc.data())) {
+      if (!_.isEmpty(doc.data()) && doc.data().name) {
         games.push({
           id: doc.id,
           name: doc.data().name,
@@ -35,7 +35,7 @@ export const loadGames = () => async (dispatch, getState) => {
           mean: doc.data().mean,
           thumbnail: doc.data().thumbnail,
           popularity: doc.data().popularity,
-          addedDate: new Date(doc.data().addedDate.seconds * 1000),
+          addedDate: doc.data().addedDate ? new Date(doc.data().addedDate.seconds * 1000) : null,
         });
       }
     });
@@ -63,8 +63,9 @@ export const loadTopGames = (field) => async (dispatch) => {
           totalScores: doc.data().totalScores,
           mean: doc.data().mean,
           thumbnail: doc.data().thumbnail,
+          image: doc.data().image,
           popularity: doc.data().popularity,
-          addedDate: new Date(doc.data().addedDate.seconds * 1000),
+          addedDate: doc.data().addedDate ? new Date(doc.data().addedDate.seconds * 1000) : null,
         });
       }
     });

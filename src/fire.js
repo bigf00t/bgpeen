@@ -30,7 +30,7 @@ try {
 const isLocalhost = window.location.hostname === 'localhost';
 
 export const db = initializeFirestore(firebaseApp, {
-  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: true,
   ...(isLocalhost ? {} : { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }),
 });
 

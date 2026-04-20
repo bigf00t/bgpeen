@@ -124,6 +124,11 @@ const getGameType = (plays) => {
     _.every(play.players, (player) => parseInt(player.win) === 1)
   );
 
+  if (playsWithAtLeastOneWin.length === 0) {
+    console.info('No plays with win data — defaulting to highest-wins');
+    return 'highest-wins';
+  }
+
   const coopLikelihood = parseInt((playsWithAllWinners.length / playsWithAtLeastOneWin.length) * 100);
   console.info(`Cooperative game likelihood: ${coopLikelihood}`);
 
@@ -134,6 +139,11 @@ const getGameType = (plays) => {
   const playsWithAtLeastOneScoreAndWin = _.filter(playsWithAtLeastOneWin, (play) =>
     play.players.some((player) => !(isNaN(parseInt(player.score)) || parseInt(player.score) === 0))
   );
+
+  if (playsWithAtLeastOneScoreAndWin.length === 0) {
+    console.info('No plays with both score and win data — defaulting to highest-wins');
+    return 'highest-wins';
+  }
 
   const playsWithLowestWinner = _.filter(
     playsWithAtLeastOneScoreAndWin,

@@ -25,6 +25,7 @@ const getIntFromParam = (param) => (param && !isNaN(param) ? parseInt(param) : '
 const ResultV2 = (props) => {
   const [filters, setFilters] = useState({});
   const [result, setResult] = useState();
+  const [resultLoading, setResultLoading] = useState(false);
   const [percentile, setPercentile] = useState(null);
   const [score, setScore] = useState('');
   const scoreDebounceRef = useRef(null);
@@ -66,7 +67,7 @@ const ResultV2 = (props) => {
     const fieldIndex = flatParams.indexOf('score');
     const startIndex = fieldIndex > -1 ? fieldIndex : flatParams.length;
     flatParams.splice(startIndex, paramsToRemove, ...paramsToAdd);
-    navigate(`/${flatParams.join('/')}?v2=1`);
+    navigate(`/${flatParams.join('/')}`);
   };
 
   const handleScoreInput = (e) => {
@@ -89,7 +90,9 @@ const ResultV2 = (props) => {
     const results = props.data.game.results;
     if (Object.prototype.hasOwnProperty.call(results, resultId)) {
       setResult(results[resultId]);
+      setResultLoading(false);
     } else {
+      setResultLoading(true);
       props.loadResult(params.id, resultId);
     }
   };
@@ -136,6 +139,8 @@ const ResultV2 = (props) => {
     const initialScore = getIntFromParam(params.score);
     setScore(initialScore);
     if (scoreInputRef.current && initialScore) scoreInputRef.current.value = initialScore;
+    const isTouch = window.matchMedia('(hover: none)').matches;
+    if (!isTouch && scoreInputRef.current) scoreInputRef.current.focus();
   }, []);
 
   // Game loaded / URL params changed
@@ -160,6 +165,7 @@ const ResultV2 = (props) => {
     if (_.isEmpty(filters)) return;
     if (props.data?.game?.results && Object.keys(props.data.game.results).length > 1) {
       setResult(props.data.game.results[getResultId()]);
+      setResultLoading(false);
     }
   }, [props.data.game?.results]);
 
@@ -215,19 +221,21 @@ const ResultV2 = (props) => {
 
   const game = props.data.game;
   const totalScores = result.scoreCount ?? 0;
-  const scoreLabel = result.id === 'all' ? 'scores' : `of ${game.totalScores?.toLocaleString()} scores`;
+  const scoreLabel = result.id === 'all' ? 'scores' : `scores of ${game.totalScores?.toLocaleString()}`;
 
   return (
     <Fade in timeout={500}>
       <div className="rv2-page">
 
         <div className="rv2-header">
-          <Image
-            src={game.thumbnail}
-            duration={0}
-            wrapperStyle={{ width: 120, height: 148, flexShrink: 0 }}
-            style={{ width: '100%', height: '100%', objectFit: 'scale-down', borderRadius: 8 }}
-          />
+          <div className="rv2-thumb-wrap">
+            <Image
+              src={game.thumbnail}
+              duration={0}
+              wrapperStyle={{ width: '100%', height: '100%' }}
+              style={{ width: '100%', height: '100%', objectFit: 'scale-down', borderRadius: 8 }}
+            />
+          </div>
           <div className="rv2-header-name">
             <div className="rv2-game-name">{game.name}</div>
             <a
@@ -258,10 +266,10 @@ const ResultV2 = (props) => {
                 <span className="rv2-stat-sm">win % <strong>{result.trimmedWinPercentage}%</strong></span>
               )}
               {result.expectedMean !== undefined && (
-                <span className="rv2-stat-sm">expected avg <strong>{result.expectedMean}</strong></span>
+                <span className="rv2-stat-sm rv2-stat-dim">expected avg <strong>{result.expectedMean}</strong></span>
               )}
               {result.expectedWinPercentage !== undefined && (
-                <span className="rv2-stat-sm">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
+                <span className="rv2-stat-sm rv2-stat-dim">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
               )}
             </div>
           </div>
@@ -285,9 +293,11 @@ const ResultV2 = (props) => {
           <PercentileBar score={score} percentile={percentile} />
         </div>
 
-        <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
-          <BarGraph result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
-        </React.Suspense>
+        <div className={resultLoading ? 'rv2-result-loading' : ''}>
+          <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
+            <BarGraph result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
+          </React.Suspense>
+        </div>
 
         <div className="rv2-data-source">
           data provided by{' '}

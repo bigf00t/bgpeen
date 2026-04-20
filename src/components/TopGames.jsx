@@ -1,128 +1,143 @@
-import React, { useEffect } from 'react';
-
+import React, { useEffect, useState, useRef } from 'react';
 import * as actions from '../actions';
-
 import { connect } from 'react-redux';
-
-import Box from '@mui/material/Box';
-import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import CardMedia from '@mui/material/CardMedia';
-import CircularProgress from '@mui/material/CircularProgress';
-import Fade from '@mui/material/Fade';
-
+import PropTypes from 'prop-types';
 import { getGameSlug } from '../utils';
 
+const fmtCount = (n) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n));
+
+const TABS = [
+  { key: 'popularity', label: 'Popular All Time', short: 'Top' },
+  { key: 'addedDate',  label: 'Recently Added',   short: 'New' },
+];
+
+const SkeletonGrid = () => (
+  <div className="game-grid">
+    {Array.from({ length: 10 }).map((_, i) => (
+      <div key={i} className="game-card-skeleton">
+        <div className="sk-img" />
+        <div className="sk-name" />
+        <div className="sk-count" />
+      </div>
+    ))}
+  </div>
+);
+
 const TopGames = (props) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const sectionRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
   useEffect(() => {
-    if (props.topGames.length === 0) {
-      props.loadTopGames(props.field);
-    }
+    TABS.forEach(({ key }) => {
+      if (!props.topGames[key] || props.topGames[key].length === 0) {
+        props.loadTopGames(key);
+      }
+    });
   }, []);
 
-  const handleMouseEnter = (gameId) => {
-    if (!props.loadedGames[gameId]) {
-      props.prefetchGame(gameId);
+  const switchTab = (index) => {
+    if (index === activeTab) return;
+    setShowSkeleton(true);
+    setActiveTab(index);
+    if (sectionRef.current) sectionRef.current.closest('.measure-section')?.scrollTo(0, 0);
+    setTimeout(() => setShowSkeleton(false), 350);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && activeTab < TABS.length - 1) switchTab(activeTab + 1);
+      if (dx > 0 && activeTab > 0) switchTab(activeTab - 1);
     }
   };
 
+  const currentKey = TABS[activeTab].key;
+  const games = props.topGames[currentKey] || [];
+  const loading = games.length === 0;
+
+  const handleMouseEnter = (gameId) => {
+    if (!props.loadedGames[gameId]) props.prefetchGame(gameId);
+  };
+
   return (
-    <Box component="div" width={1}>
-      <Box component="div">
-        <Typography variant="h4" component="h4" align="center">
-          {props.title}
-        </Typography>
-        {props.topGames.length === 0 ? (
-          <Box component="div" display="flex" flexWrap="wrap" justifyContent="center" alignItems="center">
-            <Box component="div" justifyContent="center" display="flex" alignItems="center" minHeight="150px" m={1}>
-              <CircularProgress size={40} color="inherit" m={1} />
-            </Box>
-          </Box>
-        ) : (
-          <Fade in timeout={500}>
-            <Box
-              component="div"
-              display="flex"
-              flexWrap="wrap"
-              justifyContent="center"
-              alignItems="center"
+    <div
+      ref={sectionRef}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="home-tabs">
+        {TABS.map((tab, i) => (
+          <button
+            key={tab.key}
+            className={`home-tab${i === activeTab ? ' home-tab--active' : ''}`}
+            onClick={() => switchTab(i)}
+          >
+            <span className="tab-full">{tab.label}</span>
+            <span className="tab-short">{tab.short}</span>
+          </button>
+        ))}
+        <button className="home-tab home-tab--disabled" disabled title="Coming soon">
+          <span className="tab-full">Popular This Month</span>
+          <span className="tab-short">Hot</span>
+        </button>
+      </div>
+
+      {showSkeleton || loading ? (
+        <SkeletonGrid />
+      ) : (
+        <div className="game-grid">
+          {games.map((game, i) => (
+            <Link
+              key={game.id}
+              className="game-card"
+              to={`/${game.id}/${getGameSlug(game)}`}
+              title={game.name}
+              onMouseEnter={() => handleMouseEnter(game.id)}
             >
-              {props.topGames.map((game) => (
-                <Card key={game.id} sx={{ m: 1 }} onMouseEnter={() => handleMouseEnter(game.id)}>
-                  <CardActionArea
-                    component={Link}
-                    to={`/${game.id}/${getGameSlug(game)}`}
-                    title={`${game.name} - ${game[props.field] instanceof Date ? game[props.field].toLocaleDateString() : game[props.field]}`}
-                  >
-                    <CardMedia component="img" image={game.thumbnail} alt={game.name} loading="lazy" />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        height: '100%',
-                        bottom: 0,
-                        left: 0,
-                        width: '100%',
-                        bgcolor: 'rgba(0, 0, 0, 0.75)',
-                        color: 'white',
-                        padding: '10px',
-                        textAlign: 'center',
-                        opacity: 0,
-                        transition: '0.3s',
-                        '&:hover': {
-                          opacity: 1,
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          padding: '10px',
-                        }}
-                      >
-                        <Typography variant="body2">Scores</Typography>
-                        <Typography variant="h5">{game.totalScores}</Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          bottom: 0,
-                          left: 0,
-                          width: '100%',
-                          padding: '10px',
-                        }}
-                      >
-                        <Typography variant="body2">Average</Typography>
-                        <Typography variant="h5">{game.mean}</Typography>
-                      </Box>
-                    </Box>
-                  </CardActionArea>
-                </Card>
-              ))}
-            </Box>
-          </Fade>
-        )}
-      </Box>
-    </Box>
+              {i < 3 && <span className="hot-badge">🔥 #{i + 1}</span>}
+              <img
+                className="game-card-img"
+                src={game.thumbnail}
+                alt={game.name}
+                loading="lazy"
+              />
+              <div className="game-card-info">
+                <div className="game-card-name">{game.name}</div>
+                <div className="game-card-stats">
+                  <span className="game-card-stat--primary">{fmtCount(game.totalScores)}</span>
+                  <span className="game-card-stat"> scores</span>
+                  <span className="game-card-sep">·</span>
+                  <span className="game-card-stat">avg </span>
+                  <span className="game-card-stat--primary">{typeof game.mean === 'number' ? Math.round(game.mean) : game.mean}</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
 TopGames.propTypes = {
-  topGames: PropTypes.array,
+  topGames: PropTypes.object,
   loadedGames: PropTypes.object,
-  title: PropTypes.string,
-  field: PropTypes.string,
   loadTopGames: PropTypes.func,
   prefetchGame: PropTypes.func,
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  topGames: state.data.topGames[ownProps.field] || [],
+const mapStateToProps = (state) => ({
+  topGames: state.data.topGames,
   loadedGames: state.data.loadedGames,
 });
 

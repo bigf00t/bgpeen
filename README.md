@@ -23,12 +23,12 @@ WARNING: .env can mess with function deployment
 
 Start emulators (with saved data):
 ```
-firebase emulators:start --only "firestore,storage" --import=data
+firebase emulators:start --only "firestore,storage" --import=firebase-export
 ```
 
 Save local data state:
 ```
-firebase emulators:export ./data --only firestore
+firebase emulators:export firebase-export --only "firestore,storage"
 ```
 
 ## Deploying

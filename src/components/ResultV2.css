@@ -1,8 +1,11 @@
+/* ── THUMBNAIL WRAPPER ── */
+.rv2-thumb-wrap { width: 120px; height: 148px; flex-shrink: 0; }
+
 /* ── PAGE ── */
 .rv2-page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 56px 32px 64px;
+  padding: 0 32px 32px;
 }
 
 /* ── GAME HEADER ── */
@@ -47,8 +50,10 @@
 }
 .rv2-stat-sm { font-size: 0.78rem; color: #999; }
 .rv2-stat-sm strong { color: #ccc; font-weight: 600; }
+.rv2-stat-dim { color: #666; }
+.rv2-stat-dim strong { color: #888; }
 
-.rv2-divider { border: none; border-top: 1px solid #333; }
+.rv2-divider { border: none; border-top: 1px solid #333; margin: 0; }
 
 /* ── FILTERS ── */
 .rv2-filters-section {
@@ -56,19 +61,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 .rv2-filters-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
 .rv2-primary-filters { display: flex; align-items: center; gap: 8px; }
 .rv2-advanced-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .rv2-advanced-filters-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* Shrink MUI dropdowns in v2 filters */
+.rv2-filters-section .MuiFormControl-root { min-width: 118px !important; height: auto !important; margin: 0 !important; flex: unset !important; }
+.rv2-filters-section .MuiInputBase-root { font-size: 0.78rem; }
+.rv2-filters-section .MuiInputLabel-root { font-size: 0.78rem; }
+.rv2-filters-section .MuiInputBase-input { padding: 6px 8px !important; }
+.rv2-filters-section .MuiOutlinedInput-root { border-radius: 8px; }
+.rv2-filters-section .MuiAutocomplete-endAdornment { right: 2px !important; }
+.rv2-filters-section .MuiInputLabel-shrink { transform: translate(8px, -8px) scale(0.7) !important; }
+
 /* ── SCORE ROW ── */
 .rv2-score-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 0 20px;
+  padding: 13px 0 20px;
   flex-wrap: wrap;
 }
 .rv2-score-label {
@@ -81,28 +94,32 @@
 }
 .rv2-score-input {
   width: 105px;
-  background: #1e2028;
-  border: 1px solid #3a3a3a;
+  height: 48px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.23);
   border-radius: 8px;
   color: #fff;
-  font-size: 0.9rem;
-  padding: 7px 12px;
+  font-size: 0.78rem;
+  line-height: 1.4375em;
+  padding: 6px 8px;
   outline: none;
   font-family: inherit;
   transition: border-color 0.15s;
   -moz-appearance: textfield;
+  box-sizing: border-box;
 }
 .rv2-score-input::-webkit-outer-spin-button,
 .rv2-score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.rv2-score-input:focus { border-color: #7986cb; }
-.rv2-score-input::placeholder { color: #777; font-size: 0.72rem; }
+.rv2-score-input:hover { border-color: rgba(255,255,255,0.6); }
+.rv2-score-input:focus { border-color: #7986cb; border-width: 2px; padding: 6px 7px; }
+.rv2-score-input::placeholder { color: transparent; font-size: 0.72rem; }
 
 /* ── PERCENTILE BAR ── */
 .rv2-pct-result {
   display: block;
   flex: 1;
   position: relative;
-  transform: translateY(1px);
+  transform: translateY(-4px);
   margin-left: 18px;
 }
 .rv2-pct-bubble {
@@ -144,7 +161,10 @@
   margin-top: 36px;
   margin-bottom: 6px;
   overflow: hidden;
+  opacity: 0.2;
+  transition: opacity 0.3s;
 }
+.rv2-pct-result.has-score .rv2-pct-track { opacity: 1; }
 .rv2-pct-cover {
   position: absolute;
   right: 0; top: 0; bottom: 0;
@@ -159,6 +179,14 @@
   color: #aaa;
   margin-top: 10px;
   pointer-events: none;
+  min-height: 1.2em;
+}
+
+/* ── FILTER / RESULT LOADING ── */
+.rv2-result-loading {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.2s;
 }
 
 /* ── CHART ── */
@@ -183,6 +211,7 @@
 @media (max-width: 700px) {
   .rv2-page { padding-left: 16px; padding-right: 16px; }
 
+  .rv2-thumb-wrap { width: 64px; height: 78px; }
   .rv2-header { flex-wrap: wrap; padding: 16px 0 8px; gap: 12px; }
   .rv2-header-name { flex: 1; }
   .rv2-game-name { font-size: 1.4rem; }
@@ -198,42 +227,51 @@
   }
   .rv2-stats-secondary .rv2-stat-sm:nth-child(even) { text-align: right; }
 
-  .rv2-filters-section { flex-wrap: wrap; gap: 0; padding: 12px 0 0; }
+  .rv2-filters-section { flex-wrap: wrap; gap: 0; padding: 14px 0 0; }
   .rv2-filters-label { display: none; }
   .rv2-primary-filters {
     overflow-x: auto;
     flex-wrap: nowrap;
     width: 100%;
-    padding-bottom: 6px;
+    padding-top: 20px;
+    padding-bottom: 4px;
   }
   .rv2-primary-filters::-webkit-scrollbar { display: none; }
   .rv2-advanced-filters {
     flex-wrap: nowrap;
+    align-items: center;
     margin-left: 0;
     flex-basis: 100%;
-    padding: 6px 0 14px;
+    padding: 0 0 14px;
     border-bottom: 1px solid #333;
-    gap: 8px;
+    gap: 0;
+    width: 100%;
     overflow: hidden;
   }
   .rv2-advanced-filters-inner {
     flex-wrap: nowrap;
     overflow-x: auto;
     flex: 1;
-    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
-    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    min-width: 0;
+    gap: 8px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
+    mask-image: linear-gradient(to right, black 75%, transparent 100%);
   }
   .rv2-advanced-filters-inner.scrolled-end {
     -webkit-mask-image: none;
     mask-image: none;
   }
   .rv2-advanced-filters-inner::-webkit-scrollbar { display: none; }
+  .rv2-filters-section .MuiFormControl-root { min-width: 120px !important; }
+  .rv2-filters-section .MuiFormControl-root:first-child { margin-left: 0 !important; }
 
-  .rv2-score-row { flex-wrap: nowrap; align-items: center; padding-top: 8px; padding-bottom: 14px; }
+  .rv2-score-row { flex-wrap: nowrap; align-items: center; padding-top: 13px; padding-bottom: 14px; }
   .rv2-score-label { display: none; }
-  .rv2-score-input { width: 72px; font-size: 1rem; }
-  .rv2-score-input::placeholder { font-size: 0.82rem; }
-  .rv2-pct-result { flex-basis: auto; flex: 1; margin-left: 8px; transform: translateY(1px); min-width: 0; }
+  .rv2-score-input { width: 72px; font-size: 0.78rem; }
+  .rv2-score-input::placeholder { color: #777; font-size: 0.78rem; }
+  .rv2-pct-result { flex-basis: auto; flex: 1; margin-left: 8px; transform: translateY(-4px); min-width: 0; }
 
   .rv2-chart-scroll {
     overflow-x: auto;

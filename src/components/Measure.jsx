@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import ScoreCounter from './ScoreCounter';
 import SelectGame from './SelectGame';
 import TopGames from './TopGames';
-import Box from '@mui/material/Box';
+import RecentlyViewed from './RecentlyViewed';
+import './Measure.css';
 
 const Measure = () => {
   useEffect(() => {
@@ -10,18 +10,16 @@ const Measure = () => {
   }, []);
 
   return (
-    <Box component="div" pt={'64px'} height={'100vh'}>
-      <Box component="div" p={4}>
+    <div className="measure-layout">
+      <div className="measure-top">
         <SelectGame />
-      </Box>
-      <ScoreCounter />
-      <Box component="div" p={4} pb={0}>
-        <TopGames title="Most Popular Games" field="popularity" />
-      </Box>
-      <Box component="div" p={4}>
-        <TopGames title="Recently Added Games" field="addedDate" />
-      </Box>
-    </Box>
+      </div>
+      <hr className="measure-divider" />
+      <RecentlyViewed />
+      <div className="measure-section">
+        <TopGames />
+      </div>
+    </div>
   );
 };
 

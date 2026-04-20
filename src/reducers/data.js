@@ -42,6 +42,7 @@ export default (state = dataState, action) => {
         game: action.payload,
       };
     case LOAD_RESULT:
+      if (!state.game) return state;
       var newGame = { ...state.game, results: { ...state.game.results, ...action.payload } };
       return {
         ...state,

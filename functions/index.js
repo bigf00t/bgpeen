@@ -17,8 +17,8 @@ exports.servePreviewImage = onRequest({ memory: '512MiB' }, (req, res) => {
 
 exports.recordGameView = onRequest({ memory: '256MiB' }, async (req, res) => {
   const gameId = req.query.id;
-  if (!gameId) {
-    res.status(400).send('Missing id');
+  if (!gameId || !/^\d+$/.test(gameId)) {
+    res.status(400).send('Invalid id');
     return;
   }
   try {

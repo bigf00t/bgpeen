@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
@@ -12,7 +12,6 @@ const FilterDropdown = (props) => {
 
   const rawParams = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const params = useMemo(() => {
     const p = { id: rawParams.id, name: rawParams.name };
@@ -69,9 +68,8 @@ const FilterDropdown = (props) => {
       }
     }
 
-    const qs = searchParams.toString();
-    navigate(`/${flatParams.join('/')}${qs ? `?${qs}` : ''}`);
-  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate, searchParams]);
+    navigate(`/${flatParams.join('/')}`);
+  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate]);
 
   const updateHistoryRef = useRef(updateHistory);
   useEffect(() => {
@@ -133,7 +131,7 @@ const FilterDropdown = (props) => {
         onHighlightChange={handleHighlightChange}
         options={props.options}
         fullWidth
-        getOptionLabel={(option) => (props.optionLabelFormat ? props.optionLabelFormat(option) : option)}
+        getOptionLabel={(option) => (props.optionLabelFormat ? props.optionLabelFormat(option) : String(option))}
         disabled={isDisabled()}
         renderInput={(params) => {
           params.inputProps.onKeyDown = handleKeyDown;

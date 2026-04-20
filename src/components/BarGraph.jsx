@@ -111,14 +111,8 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
     scales: {
       x: {
         grid: { color: '#2a2d35' },
-        ticks: {
-          color: '#777',
-          maxRotation: 0,
-          callback(val) {
-            const label = this.getLabelForValue(val);
-            return label % 20 === 0 ? label : '';
-          },
-        },
+        ticks: { color: '#777', maxRotation: 0, maxTicksLimit: 20 },
+        title: { display: true, text: 'Score', color: '#555', font: { size: 11 } },
       },
       y: {
         beginAtZero: true,
@@ -129,6 +123,7 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
     plugins: {
       legend: { display: false },
       tooltip: {
+        displayColors: false,
         callbacks: {
           title: () => '',
           label: (ctx) => ` Score ${labels[ctx.dataIndex]}: ${ctx.parsed.y.toLocaleString()} players`,

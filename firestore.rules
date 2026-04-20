@@ -7,5 +7,14 @@ service cloud.firestore {
       allow read;
       allow write: if false;
     }
+
+    // Allow users to submit game search requests ("Add this game")
+    match /searches/{searchId} {
+      allow create: if request.resource.data.keys().hasOnly(['term', 'completed', 'date'])
+        && request.resource.data.completed == false
+        && request.resource.data.term is string
+        && request.resource.data.term.size() > 0
+        && request.resource.data.term.size() <= 200;
+    }
   }
 }

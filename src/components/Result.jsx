@@ -3,6 +3,7 @@ import { createSelector } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 import * as actions from '../actions';
+import { addRecentlyViewed } from './RecentlyViewed';
 
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -227,6 +228,7 @@ const Result = (props) => {
     var foundGame = props.data.loadedGames[params.id];
     if (foundGame) {
       props.setGame(foundGame);
+      addRecentlyViewed(foundGame);
       fetch(`/api/record-view?id=${params.id}`).catch((e) => console.error('Failed to record game view:', e));
     } else {
       props.loadGame(params.id);
@@ -283,6 +285,7 @@ const Result = (props) => {
     // console.log(props.data.game);
     if (props.data.game) {
       // console.log('Game loaded');
+      addRecentlyViewed(props.data.game);
       setFiltersFromUrl();
     }
   }, [

@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSearchParams } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -7,23 +6,32 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import Link from '@mui/material/Link';
 
 const Menu = () => {
-  const [searchParams] = useSearchParams();
-  const isV2 = searchParams.get('v2') === '1';
   const navigate = useNavigate();
+  const location = useLocation();
+  const isGamePage = location.pathname.length > 1;
 
-  const handleSearch = () => navigate('/?v2=1');
+  const handleSearch = () => navigate('/');
 
   return (
-    <AppBar sx={{ backgroundColor: '#1e2028', boxShadow: 'none' }} position="fixed" enableColorOnDark elevation={0}>
-      <Toolbar>
-        <Box display="flex" flexGrow={1} alignItems="center">
+    <AppBar sx={{ backgroundColor: '#1e2028', boxShadow: 'none' }} position="static" enableColorOnDark elevation={0}>
+      <Toolbar sx={{ padding: '0 !important' }}>
+        <Box
+          display="flex"
+          alignItems="center"
+          sx={{
+            width: '100%',
+            maxWidth: 1100,
+            mx: 'auto',
+            px: { xs: '16px', sm: '32px' },
+          }}
+        >
           <Link
             component={RouterLink}
-            to={isV2 ? '/?v2=1' : '/'}
+            to="/"
             sx={{ textDecoration: 'none', color: 'text.primary', '&:hover': { opacity: 0.75 }, '& span': { verticalAlign: 'top' } }}
           >
             <Typography
@@ -33,32 +41,30 @@ const Menu = () => {
             >
               {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
             </Typography>
-            <Typography component="span" variant="subtitle2" color="textPrimary" sx={{ fontSize: { xs: '0.55rem', sm: '0.75rem' } }}>
-              &nbsp;beta
-            </Typography>
           </Link>
 
-          {isV2 && (
+          {isGamePage && (
             <>
               <Button
                 onClick={handleSearch}
+                startIcon={<SearchIcon sx={{ fontSize: '13px !important' }} />}
                 sx={{
                   ml: 'auto',
                   display: { xs: 'none', sm: 'flex' },
-                  background: 'none',
-                  border: '1px solid #444',
-                  borderRadius: '8px',
-                  color: '#999',
-                  fontSize: '0.82rem',
-                  padding: '7px 14px',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid #3a3a3a',
+                  borderRadius: '6px',
+                  color: '#888',
+                  fontSize: '0.72rem',
+                  padding: '5px 12px 5px 10px',
                   textTransform: 'none',
                   fontFamily: 'inherit',
-                  maxWidth: 420,
-                  justifyContent: 'flex-start',
-                  '&:hover': { borderColor: '#666', color: '#ccc', background: 'none' },
+                  letterSpacing: '0.01em',
+                  minWidth: 0,
+                  '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: '#555', color: '#bbb' },
                 }}
               >
-                Search games and scores...
+                Find another game
               </Button>
               <IconButton
                 onClick={handleSearch}
