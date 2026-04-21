@@ -32,6 +32,7 @@ const RecentlyViewed = () => {
 
   return (
     <div className="recently-viewed">
+      <div className="recently-viewed-label">Recently viewed</div>
       <div className="recent-chips">
         {games.map((game) => (
           <Link

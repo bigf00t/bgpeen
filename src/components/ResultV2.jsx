@@ -199,7 +199,7 @@ const ResultV2 = (props) => {
             </Typography>
           </Box>
           <Alert severity="info" sx={{ maxWidth: 500, mx: 3 }}>
-            No plays have been recorded yet. Data is usually available within 10 minutes of a game being added.
+            No plays recorded yet. Data is usually available within a few minutes of searching for a game.
           </Alert>
         </Box>
       );

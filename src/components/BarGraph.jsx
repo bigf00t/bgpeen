@@ -34,7 +34,7 @@ const barLabelPlugin = {
       ctx.lineTo(bx, barTop);
       ctx.stroke();
       ctx.fillStyle = color;
-      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
       ctx.textAlign = 'center';
       const lineH = 13;
       lines.forEach((text, i) => {
@@ -111,13 +111,13 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
     scales: {
       x: {
         grid: { color: '#2a2d35' },
-        ticks: { color: '#777', maxRotation: 0, maxTicksLimit: 20 },
+        ticks: { color: '#777', maxRotation: 0, maxTicksLimit: 20, font: { size: 13 } },
         title: { display: true, text: 'Score', color: '#555', font: { size: 11 } },
       },
       y: {
         beginAtZero: true,
         grid: { color: '#2a2d35' },
-        ticks: { color: '#777' },
+        ticks: { color: '#777', font: { size: 13 } },
       },
     },
     plugins: {

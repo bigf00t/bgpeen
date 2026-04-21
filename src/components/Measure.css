@@ -204,6 +204,14 @@
   padding: 0 32px;
 }
 
+.recently-viewed-label {
+  font-size: 0.72rem;
+  color: #555;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .recent-chips {
   display: flex;
   gap: 8px;
