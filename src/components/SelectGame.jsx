@@ -12,6 +12,8 @@ const fmtCount = (n) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') +
 const BLACKLIST = ['munchkin', 'fluxx', 'cards against humanity'];
 const MAX_OPTIONS = 8;
 
+const SHOWCASE_GAMES = ['Catan', 'Wingspan', 'Ticket to Ride', 'Pandemic', 'Azul', 'Carcassonne', 'Gaia Project', 'Agricola'];
+
 const SelectGame = (props) => {
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -19,6 +21,8 @@ const SelectGame = (props) => {
   const [bannerGame, setBannerGame] = useState('');
   const [showBanner, setShowBanner] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [showcaseIndex, setShowcaseIndex] = useState(0);
+  const [showcaseFading, setShowcaseFading] = useState(false);
 
   const inputRef = useRef(null);
   const animRef = useRef(null);
@@ -53,6 +57,17 @@ const SelectGame = (props) => {
     animRef.current = requestAnimationFrame(animate);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [props.scoreStats]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowcaseFading(true);
+      setTimeout(() => {
+        setShowcaseIndex((i) => (i + 1) % SHOWCASE_GAMES.length);
+        setShowcaseFading(false);
+      }, 300);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredGames = useCallback(() => {
     if (!inputValue.trim()) return [];
@@ -131,6 +146,20 @@ const SelectGame = (props) => {
       )}
 
       <div className="search-wrap">
+        <div className="search-headline">
+          How good are you at{' '}
+          <span
+            className={`search-headline-game${showcaseFading ? ' search-headline-game--fading' : ''}`}
+            onClick={() => {
+              const name = SHOWCASE_GAMES[showcaseIndex];
+              const game = props.games.find((g) => g.name?.toLowerCase() === name.toLowerCase());
+              if (game) navigate(`/${game.id}/${getGameSlug(game)}`);
+            }}
+          >
+            {SHOWCASE_GAMES[showcaseIndex]}
+          </span>
+          ?
+        </div>
         <div className="search-input-row">
           <input
             ref={inputRef}
@@ -152,6 +181,8 @@ const SelectGame = (props) => {
             🎲
           </button>
         </div>
+
+        <div className="search-subtitle">Search for a game, enter your score, see how you rank.</div>
 
         {showDropdown && (
           <div className="search-dropdown-paper">

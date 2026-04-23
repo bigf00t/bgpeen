@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import _ from 'lodash';
 import * as actions from '../actions';
 import { addRecentlyViewed } from './RecentlyViewed';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -28,46 +28,37 @@ const ResultV2 = (props) => {
   const [resultLoading, setResultLoading] = useState(false);
   const [percentile, setPercentile] = useState(null);
   const [score, setScore] = useState('');
+  const [showMoreStats, setShowMoreStats] = useState(false);
   const scoreDebounceRef = useRef(null);
   const scoreInputRef = useRef(null);
 
-  const rawParams = useParams();
-  const navigate = useNavigate();
-
-  const params = React.useMemo(() => {
-    const p = { id: rawParams.id, name: rawParams.name };
-    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
-    for (let i = 0; i < parts.length - 1; i += 2) p[parts[i]] = parts[i + 1];
-    return p;
-  }, [rawParams]);
+  const { id, name } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const getResultId = () => {
     if (filters.players) {
-      let id = `count-${filters.players}`;
-      if (filters.start) id += `-start-${filters.start}`;
-      else if (filters.finish) id += `-finish-${filters.finish}`;
-      else if (filters.new) id += `-new`;
-      return id;
+      let rid = `count-${filters.players}`;
+      if (filters.start) rid += `-start-${filters.start}`;
+      else if (filters.finish) rid += `-finish-${filters.finish}`;
+      else if (filters.new) rid += `-new`;
+      return rid;
     }
     if (filters.color) return `color-${filters.color}`;
     if (filters.year) {
-      let id = `year-${filters.year}`;
-      if (filters.month) id += `-month-${filters.month}`;
-      return id;
+      let rid = `year-${filters.year}`;
+      if (filters.month) rid += `-month-${filters.month}`;
+      return rid;
     }
     return 'all';
   };
 
   const updateHistory = (newScore) => {
-    const flatParams = Object.entries(params).flat();
-    flatParams.splice(2, 1);
-    flatParams.splice(0, 1);
-    const paramsToRemove = params.score ? 2 : 0;
-    const paramsToAdd = newScore ? ['score', newScore] : [];
-    const fieldIndex = flatParams.indexOf('score');
-    const startIndex = fieldIndex > -1 ? fieldIndex : flatParams.length;
-    flatParams.splice(startIndex, paramsToRemove, ...paramsToAdd);
-    navigate(`/${flatParams.join('/')}`);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newScore) next.set('score', newScore);
+      else next.delete('score');
+      return next;
+    });
   };
 
   const handleScoreInput = (e) => {
@@ -93,7 +84,7 @@ const ResultV2 = (props) => {
       setResultLoading(false);
     } else {
       setResultLoading(true);
-      props.loadResult(params.id, resultId);
+      props.loadResult(id, resultId);
     }
   };
 
@@ -104,7 +95,7 @@ const ResultV2 = (props) => {
     if (!total) { setPercentile(null); return; }
     const newPct = (_.reduce(
       result.scores,
-      (acc, c, s) => acc + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c / 0.5 : 0),
+      (acc, c, s) => acc + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c * 0.5 : 0),
       0
     ) * 100) / total;
     setPercentile(newPct);
@@ -112,31 +103,31 @@ const ResultV2 = (props) => {
 
   const setFiltersFromUrl = () => {
     setFilters({
-      players: getIntFromParam(params.players),
-      finish:  getIntFromParam(params.finish),
-      start:   getIntFromParam(params.start),
-      new:     getIntFromParam(params.new),
-      color:   params.color || '',
-      year:    getIntFromParam(params.year),
-      month:   getIntFromParam(params.month),
+      players: getIntFromParam(searchParams.get('players')),
+      finish:  getIntFromParam(searchParams.get('finish')),
+      start:   getIntFromParam(searchParams.get('start')),
+      new:     getIntFromParam(searchParams.get('new')),
+      color:   searchParams.get('color') || '',
+      year:    getIntFromParam(searchParams.get('year')),
+      month:   getIntFromParam(searchParams.get('month')),
     });
   };
 
   const findOrLoadGame = () => {
-    const foundGame = props.data.loadedGames[params.id];
+    const foundGame = props.data.loadedGames[id];
     if (foundGame) {
       props.setGame(foundGame);
       addRecentlyViewed(foundGame);
-      fetch(`/api/record-view?id=${params.id}`).catch((e) => console.error('Failed to record game view:', e));
+      fetch(`/api/record-view?id=${id}`).catch((e) => console.error('Failed to record game view:', e));
     } else {
-      props.loadGame(params.id);
+      props.loadGame(id);
     }
   };
 
   // Mount
   useEffect(() => {
-    if (props.data.game === null || props.data.game.id !== params.id) findOrLoadGame();
-    const initialScore = getIntFromParam(params.score);
+    if (props.data.game === null || props.data.game.id !== id) findOrLoadGame();
+    const initialScore = getIntFromParam(searchParams.get('score'));
     setScore(initialScore);
     if (scoreInputRef.current && initialScore) scoreInputRef.current.value = initialScore;
     const isTouch = window.matchMedia('(hover: none)').matches;
@@ -149,11 +140,7 @@ const ResultV2 = (props) => {
       addRecentlyViewed(props.data.game);
       setFiltersFromUrl();
     }
-  }, [
-    props.data.game?.id, params.id, params.score,
-    params.players, params.finish, params.start,
-    params.new, params.color, params.year, params.month,
-  ]);
+  }, [props.data.game?.id, searchParams.toString()]);
 
   // Filters changed → load result
   useEffect(() => {
@@ -178,9 +165,42 @@ const ResultV2 = (props) => {
   // Page title
   useEffect(() => {
     if (props.data.game && result) {
-      document.title = `Good at ${props.data.game.name}${result.id !== 'all' ? ' | ' + result.id : ''}`;
+      document.title = `goodat.${props.data.game.name.toLowerCase()}`;
     }
   }, [props.data.game?.name, result?.id]);
+
+  const derivedStats = useMemo(() => {
+    if (!result?.scores) return null;
+    const entries = Object.entries(result.scores).map(([k, v]) => [parseInt(k), v]).sort((a, b) => a[0] - b[0]);
+    if (!entries.length) return null;
+    const total = entries.reduce((s, [, c]) => s + c, 0);
+    if (!total) return null;
+
+    const min = entries[0][0];
+    const max = entries[entries.length - 1][0];
+    const mode = entries.reduce((best, cur) => cur[1] > best[1] ? cur : best, entries[0])[0];
+
+    const findPct = (pct) => {
+      const target = total * pct / 100;
+      let cum = 0;
+      for (const [s, c] of entries) { cum += c; if (cum >= target) return s; }
+      return max;
+    };
+
+    const median = findPct(50);
+    const p10 = findPct(10);
+    const p25 = findPct(25);
+    const p75 = findPct(75);
+    const p90 = findPct(90);
+
+    const mean = parseFloat(result.mean);
+    const stdDev = parseFloat(result.stdDev);
+    const skewness = stdDev
+      ? Math.round((entries.reduce((sum, [s, c]) => sum + Math.pow(s - mean, 3) * c, 0) / (total * Math.pow(stdDev, 3))) * 100) / 100
+      : null;
+
+    return { min, max, mode, median, p10, p25, p75, p90, skewness };
+  }, [result?.scores, result?.mean, result?.stdDev]);
 
   // ── Loading / error states ──
   if (result === null) {
@@ -262,16 +282,45 @@ const ResultV2 = (props) => {
               {result.stdDev !== undefined && (
                 <span className="rv2-stat-sm">std dev <strong>±{result.stdDev}</strong></span>
               )}
-              {result.trimmedWinPercentage !== undefined && (
-                <span className="rv2-stat-sm">win % <strong>{result.trimmedWinPercentage}%</strong></span>
-              )}
-              {result.expectedMean !== undefined && (
-                <span className="rv2-stat-sm rv2-stat-dim">expected avg <strong>{result.expectedMean}</strong></span>
-              )}
-              {result.expectedWinPercentage !== undefined && (
-                <span className="rv2-stat-sm rv2-stat-dim">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
-              )}
+              {derivedStats && (<>
+                <span className="rv2-stat-sm">median <strong>{derivedStats.median}</strong></span>
+                <span className="rv2-stat-sm">mode <strong>{derivedStats.mode}</strong></span>
+                <span className="rv2-stat-sm">min <strong>{derivedStats.min}</strong> · max <strong>{derivedStats.max}</strong></span>
+                {derivedStats.skewness !== null && (
+                  <span className="rv2-stat-sm">skew <strong>{derivedStats.skewness}</strong></span>
+                )}
+              </>)}
             </div>
+            {showMoreStats && (
+              <div className="rv2-stats-extra">
+                {derivedStats && (
+                  <div className="rv2-stats-extra-row">
+                    <span className="rv2-stat-sm">p10 <strong>{derivedStats.p10}</strong> · p25 <strong>{derivedStats.p25}</strong> · p75 <strong>{derivedStats.p75}</strong> · p90 <strong>{derivedStats.p90}</strong></span>
+                  </div>
+                )}
+                {((filters.players && result.trimmedWinPercentage !== undefined) || result.expectedMean !== undefined) && (
+                  <div className="rv2-stats-extra-row">
+                    {filters.players && result.trimmedWinPercentage !== undefined && (
+                      <span className="rv2-stat-sm">win % <strong>{result.trimmedWinPercentage}%</strong></span>
+                    )}
+                    {result.expectedMean !== undefined && (
+                      <span className="rv2-stat-sm">expected avg <strong>{result.expectedMean}</strong></span>
+                    )}
+                    {filters.players && result.expectedWinPercentage !== undefined && (
+                      <span className="rv2-stat-sm">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {derivedStats && (
+              <button
+                className={`rv2-stddev-toggle rv2-stats-more-toggle${showMoreStats ? ' rv2-stddev-toggle--on' : ''}`}
+                onClick={() => setShowMoreStats((v) => !v)}
+              >
+                {showMoreStats ? 'less ▲' : 'more ▼'}
+              </button>
+            )}
           </div>
         </div>
 

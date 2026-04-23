@@ -31,7 +31,7 @@ const PercentileBar = ({ score, percentile }) => {
   const coverWidth = hasScore ? `${100 - pct}%` : '100%';
   const bubbleText = !hasScore ? '' :
     pct >= 50 ? `better than ${pct}% of players` : `worse than ${100 - pct}% of players`;
-  const quipText = hasScore ? `You're ${getQuip(pct)}` : 'How good are you?';
+  const quipText = hasScore ? `You're ${getQuip(pct)}` : 'How good are you? Enter your score!';
 
   useLayoutEffect(() => {
     if (!hasScore || !trackRef.current || !bubbleRef.current) return;

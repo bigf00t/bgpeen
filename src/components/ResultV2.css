@@ -19,6 +19,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 220px;
 }
 .rv2-game-name {
   font-size: 2.4rem;
@@ -28,13 +29,13 @@
 }
 .rv2-bgg-link { font-size: 0.75rem; color: #888; text-decoration: none; }
 .rv2-bgg-link:hover { color: #bbb; }
-.rv2-header-stats { margin-left: auto; text-align: right; }
+.rv2-header-stats { margin-left: auto; text-align: right; max-width: 420px; }
 
 .rv2-stats-primary {
   display: flex;
   align-items: baseline;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   justify-content: flex-end;
 }
 .rv2-stat-primary-group { display: flex; align-items: baseline; gap: 6px; }
@@ -52,6 +53,20 @@
 .rv2-stat-sm strong { color: #ccc; font-weight: 600; }
 .rv2-stat-dim { color: #666; }
 .rv2-stat-dim strong { color: #888; }
+
+.rv2-stats-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.rv2-stats-extra-row {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+}
 
 .rv2-divider { border: none; border-top: 1px solid #333; margin: 0; }
 
@@ -81,7 +96,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 13px 0 20px;
+  padding: 8px 0 20px;
   flex-wrap: wrap;
 }
 .rv2-score-label {
@@ -191,12 +206,49 @@
 
 /* ── CHART ── */
 .rv2-chart-section { margin-top: 4px; }
+
+.rv2-chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+.rv2-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #888;
+}
+.rv2-chart-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.rv2-stddev-toggle {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #333;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  color: #666;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+.rv2-stddev-toggle:hover { border-color: #555; color: #aaa; }
+.rv2-stddev-toggle--on { border-color: #7986cb; color: #7986cb; }
+.rv2-stats-secondary .rv2-stddev-toggle { margin-left: 0; }
+.rv2-stats-more-toggle { display: block; margin-left: auto; margin-top: 10px; }
 .rv2-chart-scroll { overflow-x: visible; }
 .rv2-chart-wrap {
   background: #1e2028;
   border-radius: 12px;
   overflow: hidden;
-  padding: 20px 20px 0;
+  padding: 20px 20px 0 4px;
   position: relative;
   height: 320px;
 }
@@ -216,16 +268,19 @@
   .rv2-header-name { flex: 1; }
   .rv2-game-name { font-size: 1.4rem; }
   .rv2-header-stats { width: 100%; margin-left: 0; text-align: left; padding-bottom: 4px; }
-  .rv2-stats-primary { justify-content: space-between; align-items: baseline; }
+  .rv2-stats-primary { justify-content: flex-start; align-items: baseline; gap: 20px; }
   .rv2-stat-big { font-size: 1.6rem; }
   .rv2-stats-secondary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 16px;
-    justify-content: unset;
+    justify-content: flex-start;
     margin-bottom: 6px;
   }
-  .rv2-stats-secondary .rv2-stat-sm:nth-child(even) { text-align: right; }
+  .rv2-stats-extra { align-items: flex-start; }
+  .rv2-stats-extra-row { justify-content: flex-start; }
+  .rv2-stats-secondary .rv2-stddev-toggle { margin-left: 0; }
+  .rv2-stats-more-toggle { margin-left: 0; }
 
   .rv2-filters-section { flex-wrap: wrap; gap: 0; padding: 14px 0 0; }
   .rv2-filters-label { display: none; }
