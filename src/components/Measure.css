@@ -32,6 +32,40 @@
   position: relative;
 }
 
+.search-headline {
+  font-size: 1.9rem;
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.search-headline-game {
+  color: #7986cb;
+  display: inline-block;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.search-headline-game:hover {
+  color: #9fa8da;
+  text-decoration: underline;
+}
+
+.search-headline-game--fading {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.search-subtitle {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin-top: 10px;
+}
+
 .search-input-row {
   position: relative;
 }
@@ -54,7 +88,7 @@
 }
 
 .search-input::placeholder {
-  color: #555;
+  color: #888;
 }
 
 .surprise-btn {
@@ -120,7 +154,7 @@
 
 .search-option-count {
   font-size: 0.72rem;
-  color: #666;
+  color: #888;
   white-space: nowrap;
 }
 
@@ -128,13 +162,13 @@
   padding: 14px;
   text-align: center;
   font-size: 0.85rem;
-  color: #666;
+  color: #999;
 }
 
 .search-hint {
   padding: 8px 14px;
   font-size: 0.72rem;
-  color: #555;
+  color: #888;
   border-top: 1px solid #2a2d35;
 }
 
@@ -206,7 +240,7 @@
 
 .recently-viewed-label {
   font-size: 0.72rem;
-  color: #555;
+  color: #888;
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -255,7 +289,7 @@
 
 .recent-empty {
   font-size: 0.78rem;
-  color: #444;
+  color: #888;
   font-style: italic;
 }
 
@@ -302,7 +336,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, 150px);
   justify-content: space-between;
-  gap: 8px;
+  column-gap: 0;
+  row-gap: 27px;
 }
 
 .game-card-skeleton {
@@ -372,13 +407,18 @@
   object-position: top center;
 }
 
-.game-card-info {
+.game-card-badge {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40px 8px 8px;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0.95) 100%);
+  bottom: 7px;
+  left: 7px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
 }
 
 .game-card-name {
@@ -392,27 +432,6 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
-.game-card-stats {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
-
-.game-card-stat {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.game-card-stat--primary {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.game-card-sep {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.3);
-}
 
 .hot-badge {
   position: absolute;
@@ -517,14 +536,25 @@
   }
 
   .game-grid {
-    grid-template-columns: repeat(auto-fill, 150px);
+    grid-template-columns: repeat(2, 150px);
     justify-content: space-evenly;
-    gap: 12px;
+    column-gap: 0;
+    row-gap: 14px;
     padding-top: 4px;
+  }
+
+  .game-card:nth-child(n+9),
+  .game-card-skeleton:nth-child(n+9) {
+    display: none;
   }
 
   .search-wrap {
     width: 100%;
+  }
+
+  .search-headline {
+    font-size: 1.3rem;
+    margin-bottom: 14px;
   }
 
   .search-input {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import _ from 'lodash';
 import ordinal from 'ordinal';
 import PropTypes from 'prop-types';
@@ -13,38 +13,27 @@ const FiltersV2 = ({ data }) => {
   const [colors, setColors] = useState([]);
   const advInnerRef = useRef(null);
 
-  const rawParams = useParams();
-  const params = React.useMemo(() => {
-    const p = { id: rawParams.id, name: rawParams.name };
-    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
-    for (let i = 0; i < parts.length - 1; i += 2) p[parts[i]] = parts[i + 1];
-    return p;
-  }, [rawParams]);
+  const [searchParams] = useSearchParams();
+  const players = searchParams.get('players');
+  const year = searchParams.get('year');
 
-  useEffect(() => { setValidPlayerPlaces(getValidPlayerPlaces()); }, [params.players]);
-  useEffect(() => { setMonths(getMonths()); }, [params.year]);
+  useEffect(() => {
+    setValidPlayerPlaces(players ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
+  }, [players]);
 
-  const getValidPlayerPlaces = () =>
-    params.players ? _.range(1, parseInt(params.players) + 1).map((f) => f.toString()) : [];
-
-  const getYears = () => _.uniq((data.months || []).map((m) => m.split('-')[0]));
-
-  const getMonths = () => {
+  useEffect(() => {
     const ms = (data.months || [])
-      .filter((m) => m.split('-')[0] == params.year)
+      .filter((m) => m.split('-')[0] == year)
       .map((m) => m.split('-')[1]);
     ms.sort((a, b) => parseInt(a) - parseInt(b));
-    return ms;
-  };
-
-  const getColors = () =>
-    (data.colors || []).map((c) => c.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, ''));
+    setMonths(ms);
+  }, [year]);
 
   useEffect(() => {
     if (!data) return;
-    setValidPlayerPlaces(getValidPlayerPlaces());
-    setYears(getYears());
-    setColors(getColors());
+    setValidPlayerPlaces(players ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
+    setYears(_.uniq((data.months || []).map((m) => m.split('-')[0])));
+    setColors((data.colors || []).map((c) => c.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, '')));
   }, []);
 
   useEffect(() => {
@@ -74,7 +63,6 @@ const FiltersV2 = ({ data }) => {
           clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
           label="Player Count"
           options={data.playerCounts || []}
-          paramIndex={2}
         />
         <FilterDropdown
           field="finish"
@@ -83,7 +71,6 @@ const FiltersV2 = ({ data }) => {
           label="Finish Place"
           options={validPlayerPlaces}
           optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
-          paramIndex={4}
         />
       </div>
       <div className="rv2-advanced-filters">
@@ -96,7 +83,6 @@ const FiltersV2 = ({ data }) => {
             label="Start Place"
             options={validPlayerPlaces}
             optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
-            paramIndex={4}
           />
           <FilterDropdown
             field="new"
@@ -105,7 +91,6 @@ const FiltersV2 = ({ data }) => {
             label="New Player"
             options={['1']}
             optionLabelFormat={(o) => (o == '1' ? 'Yes' : 'No')}
-            paramIndex={4}
           />
           <FilterDropdown
             field="color"
@@ -113,7 +98,6 @@ const FiltersV2 = ({ data }) => {
             label="Player Color"
             options={colors}
             optionLabelFormat={(o) => _.startCase(o)}
-            paramIndex={2}
           />
           <FilterDropdown
             field="year"
@@ -121,7 +105,6 @@ const FiltersV2 = ({ data }) => {
             clearsFilters={['month', 'players', 'start', 'finish', 'color']}
             label="Play Year"
             options={years}
-            paramIndex={2}
           />
           <FilterDropdown
             field="month"
@@ -129,7 +112,6 @@ const FiltersV2 = ({ data }) => {
             label="Play Month"
             options={months}
             optionLabelFormat={(o) => toMonthName(o)}
-            paramIndex={4}
           />
         </div>
       </div>

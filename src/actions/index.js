@@ -51,7 +51,7 @@ export const loadGames = () => async (dispatch, getState) => {
 
 export const loadTopGames = (field) => async (dispatch) => {
   try {
-    const q = query(collection(db, 'games'), orderBy(field, 'desc'), limit(15));
+    const q = query(collection(db, 'games'), orderBy(field, 'desc'), limit(30));
     const querySnapshot = await getDocs(q);
 
     const games = [];
@@ -65,6 +65,8 @@ export const loadTopGames = (field) => async (dispatch) => {
           thumbnail: doc.data().thumbnail,
           image: doc.data().image,
           popularity: doc.data().popularity,
+          viewsToday: doc.data().viewsToday,
+          viewsThisMonth: doc.data().viewsThisMonth,
           addedDate: doc.data().addedDate ? new Date(doc.data().addedDate.seconds * 1000) : null,
         });
       }
@@ -72,7 +74,7 @@ export const loadTopGames = (field) => async (dispatch) => {
 
     dispatch({
       type: LOAD_TOP_GAMES,
-      payload: { field, games: games.slice(0, 10) },
+      payload: { field, games: games.slice(0, 24) },
     });
   } catch (e) {
     console.error('loadTopGames failed:', e);

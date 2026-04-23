@@ -7,14 +7,27 @@ import { getGameSlug } from '../utils';
 
 const fmtCount = (n) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n));
 
+const VIEW_FIELDS = { popularity: 'popularity', viewsThisMonth: 'viewsThisMonth', viewsToday: 'viewsToday' };
+
+const getBadge = (game, tabKey) => {
+  if (tabKey === 'addedDate') {
+    if (!game.addedDate) return null;
+    return game.addedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  const count = game[VIEW_FIELDS[tabKey]];
+  return count ? `${fmtCount(count)} views` : null;
+};
+
 const TABS = [
-  { key: 'popularity', label: 'Popular All Time', short: 'Top' },
-  { key: 'addedDate',  label: 'Recently Added',   short: 'New' },
+  { key: 'popularity',     label: 'Popular All Time',   short: 'Top'   },
+  { key: 'viewsThisMonth', label: 'Popular This Month', short: 'Month' },
+  { key: 'viewsToday',     label: 'Popular Today',      short: 'Today' },
+  { key: 'addedDate',      label: 'Recently Added',     short: 'New'   },
 ];
 
 const SkeletonGrid = () => (
   <div className="game-grid">
-    {Array.from({ length: 10 }).map((_, i) => (
+    {Array.from({ length: 24 }).map((_, i) => (
       <div key={i} className="game-card-skeleton">
         <div className="sk-img" />
         <div className="sk-name" />
@@ -86,10 +99,6 @@ const TopGames = (props) => {
             <span className="tab-short">{tab.short}</span>
           </button>
         ))}
-        <button className="home-tab home-tab--disabled" disabled title="Coming soon">
-          <span className="tab-full">Popular This Month</span>
-          <span className="tab-short">Hot</span>
-        </button>
       </div>
 
       {showSkeleton || loading ? (
@@ -104,23 +113,15 @@ const TopGames = (props) => {
               title={game.name}
               onMouseEnter={() => handleMouseEnter(game.id)}
             >
-              {i < 3 && <span className="hot-badge">🔥 #{i + 1}</span>}
               <img
                 className="game-card-img"
                 src={game.thumbnail}
                 alt={game.name}
                 loading="lazy"
               />
-              <div className="game-card-info">
-                <div className="game-card-name">{game.name}</div>
-                <div className="game-card-stats">
-                  <span className="game-card-stat--primary">{fmtCount(game.totalScores)}</span>
-                  <span className="game-card-stat"> scores</span>
-                  <span className="game-card-sep">·</span>
-                  <span className="game-card-stat">avg </span>
-                  <span className="game-card-stat--primary">{typeof game.mean === 'number' ? Math.round(game.mean) : game.mean}</span>
-                </div>
-              </div>
+              {getBadge(game, currentKey) && (
+                <span className="game-card-badge">{getBadge(game, currentKey)}</span>
+              )}
             </Link>
           ))}
         </div>

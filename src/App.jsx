@@ -35,7 +35,7 @@ function App() {
             <Menu />
             <Routes>
               <Route
-                path="/:id/:name/*"
+                path="/:id/:name"
                 element={<React.Suspense fallback={null}><ResultV2 /></React.Suspense>}
               />
               <Route path="/" element={<Measure />} />

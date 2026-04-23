@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
@@ -9,116 +9,59 @@ import Autocomplete from '@mui/material/Autocomplete';
 const FilterDropdown = (props) => {
   const [value, setValue] = useState();
   const [highlightValue, setHighlightValue] = useState('');
-
-  const rawParams = useParams();
-  const navigate = useNavigate();
-
-  const params = useMemo(() => {
-    const p = { id: rawParams.id, name: rawParams.name };
-    const parts = (rawParams['*'] || '').split('/').filter(Boolean);
-    for (let i = 0; i < parts.length - 1; i += 2) {
-      p[parts[i]] = parts[i + 1];
-    }
-    return p;
-  }, [rawParams]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleValueChange = (event, newValue) => {
-    if (!newValue) {
-      setTimeout(() => {
-        document.activeElement.blur();
-      }, 0);
-    }
+    if (!newValue) setTimeout(() => document.activeElement.blur(), 0);
     setValue(newValue);
   };
 
-  const handleHighlightChange = (event, option) => {
-    setHighlightValue(option);
-  };
+  const handleHighlightChange = (event, option) => setHighlightValue(option);
 
-  const updateHistory = useCallback(() => {
-    var flatParams = Object.entries(params).flat();
-
-    // Remove id and name keys
-    flatParams.splice(2, 1);
-    flatParams.splice(0, 1);
-
-    const paramsToRemove = params[props.field] ? 2 : 0;
-    const paramsToAdd = value ? [props.field, value] : [];
-    const fieldIndex = flatParams.indexOf(props.field);
-    const startIndex = fieldIndex > -1 ? fieldIndex : props.paramIndex;
-
-    flatParams.splice(startIndex, paramsToRemove, ...paramsToAdd);
-
-    let fieldsToRemove = [];
-
-    // Remove dependent fields from url params
-    if (paramsToAdd.length == 0) {
-      fieldsToRemove = fieldsToRemove.concat(props.dependentFilters || []);
-    }
-
-    // Remove exclusive fields from url params
-    if (paramsToAdd.length > 0) {
-      fieldsToRemove = fieldsToRemove.concat(props.clearsFilters || []);
-    }
-
-    for (const field of fieldsToRemove) {
-      const fieldIndex = flatParams.indexOf(field);
-      if (fieldIndex > -1) {
-        flatParams.splice(fieldIndex, 2);
+  const updateSearchParams = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(props.field, value);
+        (props.clearsFilters || []).forEach((f) => next.delete(f));
+      } else {
+        next.delete(props.field);
+        (props.dependentFilters || []).forEach((f) => next.delete(f));
       }
-    }
+      return next;
+    });
+  }, [value, props.field, props.dependentFilters, props.clearsFilters, setSearchParams]);
 
-    navigate(`/${flatParams.join('/')}`);
-  }, [params, value, props.field, props.paramIndex, props.dependentFilters, props.clearsFilters, navigate]);
-
-  const updateHistoryRef = useRef(updateHistory);
-  useEffect(() => {
-    updateHistoryRef.current = updateHistory;
-  }, [updateHistory]);
+  const updateSearchParamsRef = useRef(updateSearchParams);
+  useEffect(() => { updateSearchParamsRef.current = updateSearchParams; }, [updateSearchParams]);
 
   const handleKeyDown = (event) => {
-    switch (event.key) {
-      case 'Tab': {
-        if (highlightValue) {
-          handleValueChange(event, highlightValue);
-        }
-        break;
-      }
-      default:
-    }
+    if (event.key === 'Tab' && highlightValue) handleValueChange(event, highlightValue);
   };
 
-  const isDisabled = () => {
-    return (
-      props.enabledByFilter !== undefined && !params[props.enabledByFilter] //||
-      // (props.clearsFilters !== undefined &&
-      //   props.clearsFilters.some((field) => params[field] !== undefined))
-    );
-  };
+  const isDisabled = () => props.enabledByFilter && !searchParams.get(props.enabledByFilter);
 
-  // componentDidMount
+  // Mount
   useEffect(() => {
-    setValue(params[props.field]);
+    setValue(searchParams.get(props.field) || undefined);
   }, []);
 
-  // Param value changed
+  // Param changed externally
   useEffect(() => {
-    if (params[props.field] !== value) {
-      setValue(params[props.field]);
-    }
-  }, [params[props.field]]);
+    const paramVal = searchParams.get(props.field) || undefined;
+    if (paramVal !== value) setValue(paramVal);
+  }, [searchParams.get(props.field)]);
 
-  // Dropdown value changed
+  // Value changed by user
   useEffect(() => {
-    if (value !== undefined && (value || '').toString() !== (params[props.field] || '')) {
-      updateHistoryRef.current();
+    if (value !== undefined && (value || '') !== (searchParams.get(props.field) || '')) {
+      updateSearchParamsRef.current();
     }
   }, [value]);
 
   return (
     <FormControl
       sx={{ m: 1, minWidth: 180, height: 60, flex: 3 }}
-      // To prevent accordion toggling
       onClick={(event) => event.stopPropagation()}
     >
       <Autocomplete
@@ -161,7 +104,6 @@ FilterDropdown.propTypes = {
   label: PropTypes.string,
   options: PropTypes.array,
   optionLabelFormat: PropTypes.func,
-  paramIndex: PropTypes.number,
 };
 
 export default FilterDropdown;

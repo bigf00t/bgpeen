@@ -1,0 +1,5 @@
+.menu-icon { width: 36px; height: 36px; transform: translateY(-4px); }
+
+@media (max-width: 640px) {
+  .menu-icon { width: 26px; height: 26px; transform: translateY(-1px); }
+}

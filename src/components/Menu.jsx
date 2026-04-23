@@ -1,4 +1,5 @@
 import React from 'react';
+import '../App.css';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -32,12 +33,19 @@ const Menu = () => {
           <Link
             component={RouterLink}
             to="/"
-            sx={{ textDecoration: 'none', color: 'text.primary', '&:hover': { opacity: 0.75 }, '& span': { verticalAlign: 'top' } }}
+            sx={{ textDecoration: 'none', color: 'text.primary', '&:hover': { opacity: 0.75 }, display: 'flex', alignItems: 'center', gap: '8px' }}
           >
+            <svg className="menu-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4"  y="40" width="9" height="18" rx="2" fill="#7986cb" opacity="0.4"/>
+              <rect x="16" y="28" width="9" height="30" rx="2" fill="#7986cb" opacity="0.65"/>
+              <rect x="28" y="14" width="9" height="44" rx="2" fill="#7986cb"/>
+              <rect x="40" y="28" width="9" height="30" rx="2" fill="#7986cb" opacity="0.65"/>
+              <rect x="52" y="40" width="9" height="18" rx="2" fill="#7986cb" opacity="0.4"/>
+            </svg>
             <Typography
               component="span"
               color="textPrimary"
-              sx={{ fontSize: { xs: '1.2rem', sm: '1.45rem' }, fontWeight: 600, letterSpacing: '-0.5px' }}
+              sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' }, fontWeight: 600, letterSpacing: '-0.5px' }}
             >
               {window.location.toString().includes('bgpeen') ? 'bgpeen' : 'goodat.games'}
             </Typography>
@@ -54,14 +62,14 @@ const Menu = () => {
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid #3a3a3a',
                   borderRadius: '6px',
-                  color: '#888',
+                  color: '#bbb',
                   fontSize: '0.72rem',
                   padding: '5px 12px 5px 10px',
                   textTransform: 'none',
                   fontFamily: 'inherit',
                   letterSpacing: '0.01em',
                   minWidth: 0,
-                  '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: '#555', color: '#bbb' },
+                  '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: '#555', color: '#fff' },
                 }}
               >
                 Find another game

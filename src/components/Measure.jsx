@@ -6,7 +6,7 @@ import './Measure.css';
 
 const Measure = () => {
   useEffect(() => {
-    document.title = 'Good at Games';
+    document.title = 'goodat.games';
   }, []);
 
   return (
