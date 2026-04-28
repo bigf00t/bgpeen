@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import SelectGame from './SelectGame';
+import GameSearch from './GameSearch';
 import TopGames from './TopGames';
 import RecentlyViewed from './RecentlyViewed';
-import './Measure.css';
+import './Home.css';
 
-const Measure = () => {
+const Home = () => {
   useEffect(() => {
     document.title = 'goodat.games';
   }, []);
@@ -12,7 +12,7 @@ const Measure = () => {
   return (
     <div className="measure-layout">
       <div className="measure-top">
-        <SelectGame />
+        <GameSearch />
       </div>
       <hr className="measure-divider" />
       <RecentlyViewed />
@@ -23,4 +23,4 @@ const Measure = () => {
   );
 };
 
-export default Measure;
+export default Home;

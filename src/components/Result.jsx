@@ -16,7 +16,7 @@ import Image from 'mui-image';
 
 import Filters from './Filters';
 import PercentileBar from './PercentileBar';
-const BarGraph = React.lazy(() => import('./BarGraph'));
+const ScoreChart = React.lazy(() => import('./ScoreChart'));
 
 import './Result.css';
 
@@ -344,7 +344,7 @@ const Result = (props) => {
 
         <div className={resultLoading ? 'rv-result-loading' : ''}>
           <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
-            <BarGraph result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
+            <ScoreChart result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
           </React.Suspense>
         </div>
 

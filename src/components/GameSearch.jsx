@@ -14,7 +14,7 @@ const MAX_OPTIONS = 8;
 
 const SHOWCASE_GAMES = ['Catan', 'Wingspan', 'Ticket to Ride', 'Pandemic', 'Azul', 'Carcassonne', 'Gaia Project', 'Agricola'];
 
-const SelectGame = (props) => {
+const GameSearch = (props) => {
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
   const [placeholder, setPlaceholder] = useState('Search games and scores...');
@@ -220,7 +220,7 @@ const SelectGame = (props) => {
   );
 };
 
-SelectGame.propTypes = {
+GameSearch.propTypes = {
   games: PropTypes.array,
   scoreStats: PropTypes.object,
   loadGames: PropTypes.func,
@@ -232,4 +232,4 @@ const mapStateToProps = ({ data }) => ({
   scoreStats: data.scoreStats,
 });
 
-export default connect(mapStateToProps, actions)(SelectGame);
+export default connect(mapStateToProps, actions)(GameSearch);

@@ -5,8 +5,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import { StyledEngineProvider } from '@mui/styled-engine';
 import CssBaseline from '@mui/material/CssBaseline';
 
-import Menu from './components/Menu';
-import Measure from './components/Measure';
+import Header from './components/Header';
+import Home from './components/Home';
 const Result = React.lazy(() => import('./components/Result'));
 const Contact = React.lazy(() => import('./components/Contact'));
 
@@ -33,14 +33,14 @@ function App() {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <div className="App">
-            <Menu />
+            <Header />
             <Routes>
               <Route
                 path="/:id/:name"
                 element={<React.Suspense fallback={null}><Result /></React.Suspense>}
               />
-              <Route path="/" element={<Measure />} />
-              <Route path="/dev" element={<Measure />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/dev" element={<Home />} />
               <Route path="/contact" element={<React.Suspense fallback={null}><Contact /></React.Suspense>} />
             </Routes>
           </div>

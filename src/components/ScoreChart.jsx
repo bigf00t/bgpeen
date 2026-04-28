@@ -101,7 +101,7 @@ ChartJS.register(stdDevPlugin);
 
 const STD_DEV_FALLBACK = 12;
 
-const BarGraph = ({ result, score, percentile, onScoreClick }) => {
+const ScoreChart = ({ result, score, percentile, onScoreClick }) => {
   const [showStdDev, setShowStdDev] = useState(false);
   const scrollRef = useRef(null);
 
@@ -294,11 +294,11 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
   );
 };
 
-BarGraph.propTypes = {
+ScoreChart.propTypes = {
   result: PropTypes.object.isRequired,
   score: PropTypes.any,
   percentile: PropTypes.number,
   onScoreClick: PropTypes.func.isRequired,
 };
 
-export default BarGraph;
+export default ScoreChart;

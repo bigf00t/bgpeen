@@ -10,7 +10,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import Link from '@mui/material/Link';
 
-const Menu = () => {
+const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isGamePage = location.pathname.length > 1;
@@ -103,4 +103,4 @@ const Menu = () => {
   );
 };
 
-export default Menu;
+export default Header;
