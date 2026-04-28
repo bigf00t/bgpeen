@@ -7,7 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import Header from './components/Header';
 import Home from './components/Home';
-const Result = React.lazy(() => import('./components/Result'));
+const GamePage = React.lazy(() => import('./components/GamePage'));
 const Contact = React.lazy(() => import('./components/Contact'));
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
             <Routes>
               <Route
                 path="/:id/:name"
-                element={<React.Suspense fallback={null}><Result /></React.Suspense>}
+                element={<React.Suspense fallback={null}><GamePage /></React.Suspense>}
               />
               <Route path="/" element={<Home />} />
               <Route path="/dev" element={<Home />} />

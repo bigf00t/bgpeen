@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import * as actions from '../actions';
-import { db } from '../fire';
+import { db } from '../firebase';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getGameSlug } from '../utils';

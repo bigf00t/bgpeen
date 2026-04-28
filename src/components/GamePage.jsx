@@ -18,11 +18,11 @@ import Filters from './Filters';
 import PercentileBar from './PercentileBar';
 const ScoreChart = React.lazy(() => import('./ScoreChart'));
 
-import './Result.css';
+import './GamePage.css';
 
 const getIntFromParam = (param) => (param && !isNaN(param) ? parseInt(param) : '');
 
-const Result = (props) => {
+const GamePage = (props) => {
   const [filters, setFilters] = useState({});
   const [result, setResult] = useState();
   const [resultLoading, setResultLoading] = useState(false);
@@ -358,7 +358,7 @@ const Result = (props) => {
   );
 };
 
-Result.propTypes = {
+GamePage.propTypes = {
   data: PropTypes.object,
   setGame: PropTypes.func,
   loadGame: PropTypes.func,
@@ -373,4 +373,4 @@ const selectData = createSelector(
 
 const mapStateToProps = (state) => ({ data: selectData(state) });
 
-export default connect(mapStateToProps, actions)(Result);
+export default connect(mapStateToProps, actions)(GamePage);

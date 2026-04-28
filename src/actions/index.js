@@ -14,7 +14,7 @@ import {
 
 import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from '../actions/types';
 import _ from 'lodash';
-import { db } from '../fire';
+import { db } from '../firebase';
 
 export const setGame = (game) => ({ type: SET_GAME, payload: game });
 

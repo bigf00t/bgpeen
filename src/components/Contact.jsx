@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../fire';
+import { db } from '../firebase';
 import './Contact.css';
 
 const Contact = () => {
