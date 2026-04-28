@@ -6,9 +6,9 @@ import { StyledEngineProvider } from '@mui/styled-engine';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import Header from './components/Header';
-import Home from './components/Home';
-const GamePage = React.lazy(() => import('./components/GamePage'));
-const Contact = React.lazy(() => import('./components/Contact'));
+import Home from './pages/Home';
+const GamePage = React.lazy(() => import('./pages/GamePage'));
+const Contact = React.lazy(() => import('./pages/Contact'));
 
 function App() {
   const theme = React.useMemo(

@@ -1,7 +1,7 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const fs = require('fs');
 const path = require('path');
-const { getResultId, calcPercentile, getPercentileQuip, getFromCache, setToCache } = require('./shared');
+const { getResultId, calcPercentile, getPercentileQuip, getFromCache, setToCache } = require('./scoring');
 
 const loadIndexHtml = () => {
   try {

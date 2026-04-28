@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
-const util = require('./util');
+const util = require('../util');
 
 exports.manualGamesUpdate = async (gameIds) => {
   let query = firestore.collection('games');

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import * as actions from '../actions';
+import * as actions from '../store/actions';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';

@@ -1,4 +1,5 @@
-import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from '../actions/types';
+import { combineReducers } from 'redux';
+import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from './types';
 
 const dataState = {
   game: null,
@@ -8,7 +9,7 @@ const dataState = {
   scoreStats: null,
 };
 
-export default (state = dataState, action) => {
+const data = (state = dataState, action) => {
   switch (action.type) {
     case LOAD_GAMES:
       return {
@@ -53,3 +54,5 @@ export default (state = dataState, action) => {
       return state;
   }
 };
+
+export default combineReducers({ data });

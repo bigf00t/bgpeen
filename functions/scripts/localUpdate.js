@@ -11,11 +11,11 @@ if (!argv.prod) {
 const { initializeApp } = require('firebase-admin/app');
 initializeApp({ projectId: 'bgpeen-1fc16' });
 
-const manual_games = require('./manual_games_update');
-const manual_results = require('./manual_results_update');
-const automatic = require('./automatic_game_updates');
-const manual_plays = require('./manual_plays_update');
-const add_game = require('./add_game');
+const manual_games = require('./manualGamesUpdate');
+const manual_results = require('./manualResultsUpdate');
+const automatic = require('../automaticUpdates');
+const manual_plays = require('./manualPlaysUpdate');
+const add_game = require('../addGame');
 // console.log(argv);
 // console.log(process.env.FIRESTORE_EMULATOR_HOST);
 

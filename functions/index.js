@@ -5,14 +5,14 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 initializeApp();
 
-const automatic = require('./automatic_game_updates');
+const automatic = require('./automaticUpdates');
 
 exports.serveOgTags = onRequest({ memory: '256MiB' }, (req, res) => {
-  return require('./og_tags').serveOgTags(req, res);
+  return require('./ogTags').serveOgTags(req, res);
 });
 
 exports.servePreviewImage = onRequest({ memory: '512MiB' }, (req, res) => {
-  return require('./preview_image').servePreviewImage(req, res);
+  return require('./previewImage').servePreviewImage(req, res);
 });
 
 exports.recordGameView = onRequest({ memory: '256MiB' }, async (req, res) => {

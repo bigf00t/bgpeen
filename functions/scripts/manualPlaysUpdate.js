@@ -1,9 +1,9 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
-const util = require('./util');
-const update_plays = require('./update_plays');
-const update_results = require('./update_results');
+const util = require('../util');
+const update_plays = require('../updatePlays');
+const update_results = require('../updateResults');
 
 exports.manualPlaysUpdate = async (gameIds, maxPages) => {
   const gamesSnapshot = await firestore.collection('games').where('id', 'in', gameIds).get();

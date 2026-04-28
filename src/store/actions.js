@@ -12,7 +12,7 @@ import {
   count,
 } from 'firebase/firestore';
 
-import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from '../actions/types';
+import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from './types';
 import _ from 'lodash';
 import { db } from '../firebase';
 

@@ -26,7 +26,7 @@ const {
   getKeyedResultsFromPlayerResults,
   getPlayerResultsFromPlays,
   getCombinedResults,
-} = require('../update_results')._test;
+} = require('../updateResults')._test;
 
 // ---------------------------------------------------------------------------
 // Helpers

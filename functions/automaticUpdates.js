@@ -2,9 +2,9 @@ const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
 const util = require('./util');
-const add_game = require('./add_game');
-const update_plays = require('./update_plays');
-const update_results = require('./update_results');
+const add_game = require('./addGame');
+const update_plays = require('./updatePlays');
+const update_results = require('./updateResults');
 
 const dayjs = require('dayjs');
 const duration = require('dayjs/plugin/duration');

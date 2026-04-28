@@ -16,7 +16,7 @@ mockGoogleCloudFirestore({
 initializeApp();
 
 const { Firestore } = require('@google-cloud/firestore');
-const update = require('../update_results');
+const update = require('../updateResults');
 const game = { id: '1', name: 'Test Game', totalScores: 0 };
 
 // ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 const _ = require('lodash');
-const { existsInCache, setToCache } = require('./shared');
+const { existsInCache, setToCache } = require('./scoring');
 
 const WIDTH = 1200;
 const HEIGHT = 600;

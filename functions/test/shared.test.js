@@ -1,4 +1,4 @@
-const { calcPercentile, getResultId, getPercentileQuip } = require('../shared');
+const { calcPercentile, getResultId, getPercentileQuip } = require('../scoring');
 
 // ---------------------------------------------------------------------------
 // calcPercentile

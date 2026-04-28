@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import _ from 'lodash';
-import * as actions from '../actions';
-import { addRecentlyViewed } from './RecentlyViewed';
+import * as actions from '../store/actions';
+import { addRecentlyViewed } from '../components/RecentlyViewed';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -14,9 +14,9 @@ import Fade from '@mui/material/Fade';
 import Typography from '@mui/material/Typography';
 import Image from 'mui-image';
 
-import Filters from './Filters';
-import PercentileBar from './PercentileBar';
-const ScoreChart = React.lazy(() => import('./ScoreChart'));
+import Filters from '../components/Filters';
+import PercentileBar from '../components/PercentileBar';
+const ScoreChart = React.lazy(() => import('../components/ScoreChart'));
 
 import './GamePage.css';
 

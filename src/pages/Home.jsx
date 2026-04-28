@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import GameSearch from './GameSearch';
-import TopGames from './TopGames';
-import RecentlyViewed from './RecentlyViewed';
+import GameSearch from '../components/GameSearch';
+import TopGames from '../components/TopGames';
+import RecentlyViewed from '../components/RecentlyViewed';
 import './Home.css';
 
 const Home = () => {

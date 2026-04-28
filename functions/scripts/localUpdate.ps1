@@ -7,7 +7,7 @@ if ($prod) {
     }
 }
 
-$logfile = "./logs/local-update-$((get-date).ToString("MMddyyyyhhmmss")).log"
+$logfile = "../logs/local-update-$((get-date).ToString("MMddyyyyhhmmss")).log"
 
 $cmdName = $MyInvocation.InvocationName
 $paramList = (Get-Command -Name $cmdName).Parameters
@@ -19,6 +19,6 @@ foreach ( $key in $paramList.Keys ) {
 
 $paramString = $paramArray -join ", "
 
-"Running local_update.js with params: $paramString" | Out-File $logfile
+"Running localUpdate.js with params: $paramString" | Out-File $logfile
 
-Invoke-Expression "./node_modules/.bin/env-cmd -f .env.dev node local_update.js --function $function --maxGames $maxgames --maxPages $maxpages $(If ($id) {'--id ' + $id} Else {''}) $(If ($name) {'--name "' + $name + '"'} Else {''}) $(If ($prod) {'--prod'} Else {''}) 2>&1 | Tee-Object -a $logfile"
+Invoke-Expression "../node_modules/.bin/env-cmd -f ../.env.dev node localUpdate.js --function $function --maxGames $maxgames --maxPages $maxpages $(If ($id) {'--id ' + $id} Else {''}) $(If ($name) {'--name "' + $name + '"'} Else {''}) $(If ($prod) {'--prod'} Else {''}) 2>&1 | Tee-Object -a $logfile"
