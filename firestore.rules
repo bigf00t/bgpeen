@@ -8,6 +8,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Allow users to submit contact messages
+    match /contacts/{contactId} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'message', 'date'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000;
+    }
+
     // Allow users to submit game search requests ("Add this game")
     match /searches/{searchId} {
       allow create: if request.resource.data.keys().hasOnly(['term', 'completed', 'date'])

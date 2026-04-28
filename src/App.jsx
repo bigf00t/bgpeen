@@ -8,6 +8,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Menu from './components/Menu';
 import Measure from './components/Measure';
 const ResultV2 = React.lazy(() => import('./components/ResultV2'));
+const Contact = React.lazy(() => import('./components/Contact'));
 
 function App() {
   const theme = React.useMemo(
@@ -40,6 +41,7 @@ function App() {
               />
               <Route path="/" element={<Measure />} />
               <Route path="/dev" element={<Measure />} />
+              <Route path="/contact" element={<React.Suspense fallback={null}><Contact /></React.Suspense>} />
             </Routes>
           </div>
         </ThemeProvider>
