@@ -7,7 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import Menu from './components/Menu';
 import Measure from './components/Measure';
-const ResultV2 = React.lazy(() => import('./components/ResultV2'));
+const Result = React.lazy(() => import('./components/Result'));
 const Contact = React.lazy(() => import('./components/Contact'));
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
             <Routes>
               <Route
                 path="/:id/:name"
-                element={<React.Suspense fallback={null}><ResultV2 /></React.Suspense>}
+                element={<React.Suspense fallback={null}><Result /></React.Suspense>}
               />
               <Route path="/" element={<Measure />} />
               <Route path="/dev" element={<Measure />} />

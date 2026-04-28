@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goodat.games mockup 2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #2a2d35; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  /* NAV */
+  nav { background: #1e2028; height: 56px; display: flex; align-items: center; padding: 0 24px; position: fixed; top: 0; width: 100%; z-index: 10; }
+  nav .logo { font-size: 1.45rem; font-weight: 600; letter-spacing: -0.5px; }
+  nav .logo sup { font-size: 0.6rem; color: #aaa; font-weight: 400; }
+
+  /* PAGE LAYOUT */
+  .page-layout { padding-top: 56px; }
+
+  /* HERO */
+  .hero { padding: 28px 24px 16px; text-align: center; }
+
+  /* SEARCH */
+  .search-wrap { max-width: 680px; margin: 0 auto; position: relative; }
+  .search-input-row { display: flex; gap: 10px; position: relative; }
+  .search-wrap input {
+    flex: 1; padding: 14px 52px 14px 20px; font-size: 1rem;
+    background: #1e2028; border: 1px solid #444; border-radius: 8px;
+    color: #fff; outline: none; transition: border-color 0.15s; width: 100%;
+  }
+  .search-wrap input:focus { border-color: #7986cb; }
+  .search-wrap input::placeholder { color: #555; }
+  .surprise-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    padding: 6px 12px; background: #2e3248; border: 1px solid #555; border-radius: 6px;
+    color: #aaa; font-size: 1rem; cursor: pointer; white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+  }
+  .surprise-btn:hover { color: #ccc; background: #2e3248; }
+  .surprise-btn .btn-label { display: none; }
+
+  /* SEARCH DROPDOWN */
+  .search-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #1e2028; border: 1px solid #444; border-radius: 8px;
+    overflow: hidden; z-index: 100; display: none;
+  }
+  .search-dropdown.open { display: block; }
+  .search-result {
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+    cursor: pointer; transition: background 0.1s;
+  }
+  .search-result:hover { background: #2a2d35; }
+  .search-result .r-name { font-size: 0.9rem; flex: 1; }
+  .search-result .r-scores { font-size: 0.72rem; color: #666; white-space: nowrap; }
+  .search-no-results { padding: 14px; text-align: center; font-size: 0.85rem; color: #666; }
+  .search-no-results .add-link { color: #7986cb; cursor: pointer; text-decoration: underline; margin-left: 4px; }
+  .search-hint { padding: 8px 14px; font-size: 0.72rem; color: #444; border-top: 1px solid #2a2d35; }
+
+  /* DIVIDER */
+  .section-divider { max-width: 1100px; margin: 16px auto 0; padding: 0 32px; }
+  .section-divider hr { border: none; border-top: 1px solid #333; }
+
+  /* RECENTLY VIEWED */
+  .recently-viewed { max-width: 1100px; margin: 16px auto 0; padding: 0 32px; }
+  .recently-viewed h3 { display: none; }
+  .recent-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .recent-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: #22252e; border: 1px solid #333; border-radius: 20px;
+    padding: 5px 12px 5px 6px; font-size: 0.78rem; color: #bbb;
+    cursor: pointer; transition: background 0.15s; white-space: nowrap;
+  }
+  .recent-chip:hover { background: #2e3248; color: #fff; }
+  .recent-chip .chip-dot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
+  .recent-chip .chip-percentile { color: #7986cb; font-size: 0.7rem; margin-left: 2px; }
+  .recent-empty { font-size: 0.78rem; color: #444; font-style: italic; }
+
+  /* SECTION */
+  .section { padding: 24px 32px 48px; max-width: 1100px; margin: 0 auto; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid #3a3a3a; margin-bottom: 16px; }
+  .tab { padding: 10px 18px; font-size: 0.88rem; color: #666; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
+  .tab.active { color: #fff; border-bottom-color: #7986cb; }
+  .tab:hover:not(.active) { color: #aaa; }
+  .tab-short { display: none; }
+
+  /* GAME GRID */
+  .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+
+
+  /* GRID PEEK FADE */
+  .grid-wrap { position: relative; }
+  .grid-fade { display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 72px; background: linear-gradient(to bottom, transparent, #2a2d35); pointer-events: none; }
+
+  /* SKELETON */
+  .skeleton { border-radius: 6px; overflow: hidden; background: #22252e; }
+  .skeleton .sk-img { width: 100%; aspect-ratio: 1; background: linear-gradient(90deg, #22252e 25%, #2a2d35 50%, #22252e 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+  .skeleton .sk-name { height: 10px; margin: 8px; border-radius: 4px; background: linear-gradient(90deg, #22252e 25%, #2a2d35 50%, #22252e 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+  .skeleton .sk-count { height: 8px; margin: 5px 8px 8px; width: 60%; border-radius: 4px; background: linear-gradient(90deg, #22252e 25%, #2a2d35 50%, #22252e 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* GAME CARD */
+  .game-card { border-radius: 6px; overflow: hidden; background: #22252e; cursor: pointer; transition: transform 0.15s; position: relative; }
+  .game-card:hover { transform: translateY(-3px); }
+  .game-card:active { transform: scale(0.97); transition: transform 0.08s; }
+  .ph { width: 100%; aspect-ratio: 1; position: relative; display: block; }
+  .card-info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 28px 8px 8px;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.88));
+  }
+  .card-name { font-size: 0.82rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+  .card-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card-stat { font-size: 0.7rem; color: rgba(255,255,255,0.45); }
+  .card-stat span { color: rgba(255,255,255,0.9); font-weight: 600; }
+  .card-stat.primary span { font-size: 0.78rem; color: #fff; }
+  .hot-badge {
+    position: absolute; top: 6px; right: 6px; z-index: 1;
+    font-size: 0.65rem; background: rgba(0,0,0,0.6);
+    border-radius: 4px; padding: 2px 5px;
+  }
+
+  /* ADD BANNER */
+  .add-banner {
+    position: fixed; top: 56px; left: 0; right: 0; z-index: 9;
+    background: #2e3248; border-bottom: 1px solid #4a5080;
+    display: flex; align-items: center; gap: 12px; padding: 10px 20px;
+    transform: translateY(-100%); opacity: 0;
+    transition: transform 0.2s, opacity 0.2s; pointer-events: none;
+  }
+  .add-banner.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .add-banner-text { flex: 1; }
+  .add-banner-title { font-size: 0.88rem; font-weight: 600; }
+  .add-banner-body { font-size: 0.78rem; color: #aaa; margin-top: 2px; line-height: 1.4; }
+  .add-banner-close { font-size: 1.1rem; color: #666; cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1; }
+  .add-banner-close:hover { color: #ccc; }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    nav .logo { font-size: 1.2rem; }
+
+    /* Flex layout: top fixed, section scrolls */
+    .page-layout {
+      display: flex; flex-direction: column;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+    .page-top { flex-shrink: 0; background: #2a2d35; }
+
+    .hero { padding: 20px 16px 8px; }
+    .surprise-btn .btn-label { display: none; }
+    .surprise-btn { font-size: 1rem; padding: 5px 8px; }
+    .search-wrap input { font-size: 0.78rem; padding-right: 44px; }
+
+    .section-divider { padding: 0 16px; margin-top: 8px; }
+
+    .recently-viewed { padding: 0 16px; margin-top: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+    .recent-chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+    .recent-chips::-webkit-scrollbar { display: none; }
+    .recent-chip .chip-dot { display: none; }
+    .recent-chip { padding: 5px 12px; }
+
+    .section {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 0 16px 8px; max-width: none; margin: 0;
+    }
+
+    .tabs {
+      position: sticky; top: 0; z-index: 5;
+      background: #2a2d35; padding: 8px 0 0;
+      margin-bottom: 0; border-bottom: none; gap: 6px;
+    }
+    .tab {
+      padding: 6px 16px; font-size: 0.82rem;
+      border: 1px solid #3a3a3a; border-radius: 20px;
+      margin-bottom: 8px; border-bottom-color: #3a3a3a;
+    }
+    .tab.active {
+      background: #7986cb; color: #fff;
+      border-color: #7986cb; border-bottom-color: #7986cb;
+    }
+    .tab-full { display: none; }
+    .tab-short { display: inline; }
+    .grid-wrap { padding-top: 4px; }
+
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .grid-fade { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">goodat.games <sup>beta</sup></span>
+</nav>
+
+<!-- ADD BANNER -->
+<div class="add-banner" id="add-banner">
+  <div class="add-banner-text">
+    <div class="add-banner-title" id="banner-title">Adding a game</div>
+    <div class="add-banner-body">If this game exists on BoardGameGeek, we'll pull its scores, crunch some numbers, and make it searchable here. This usually takes a few minutes — check back soon.</div>
+  </div>
+  <div class="add-banner-close" id="banner-close">✕</div>
+</div>
+
+<div class="page-layout">
+
+  <!-- FIXED TOP: search + recently viewed -->
+  <div class="page-top">
+    <div class="hero">
+      <div class="search-wrap">
+        <div class="search-input-row">
+          <input type="text" id="search" autocomplete="off" />
+          <button class="surprise-btn">🎲 <span class="btn-label">Surprise me</span></button>
+        </div>
+        <div class="search-dropdown" id="dropdown-results">
+          <div class="search-result">
+            <div style="width:36px;height:36px;border-radius:4px;background:#3a4a6b;flex-shrink:0;"></div>
+            <span class="r-name">Gaia Project</span>
+            <span class="r-scores">14,203 scores</span>
+          </div>
+          <div class="search-result">
+            <div style="width:36px;height:36px;border-radius:4px;background:#2a5f6b;flex-shrink:0;"></div>
+            <span class="r-name">Galaxy Trucker</span>
+            <span class="r-scores">2,108 scores</span>
+          </div>
+          <div class="search-result">
+            <div style="width:36px;height:36px;border-radius:4px;background:#4b6b3a;flex-shrink:0;"></div>
+            <span class="r-name">Galactic Renaissance</span>
+            <span class="r-scores">341 scores</span>
+          </div>
+          <div class="search-hint">Tip: you can also search by BGG game ID</div>
+        </div>
+        <div class="search-dropdown" id="dropdown-empty">
+          <div class="search-no-results">
+            No results for "<span id="no-results-term"></span>"
+            — <span class="add-link">Add this game?</span>
+          </div>
+          <div class="search-hint">Tip: you can also search by BGG game ID</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"><hr></div>
+
+    <div class="recently-viewed">
+      <h3>Recently Viewed</h3>
+      <div class="recent-chips" id="recent-chips">
+        <div class="recent-chip"><div class="chip-dot" style="background:#3a4a6b;"></div>Gaia Project <span class="chip-percentile">42nd %ile</span></div>
+        <div class="recent-chip"><div class="chip-dot" style="background:#4b6b3a;"></div>Terraforming Mars <span class="chip-percentile">71st %ile</span></div>
+        <div class="recent-chip"><div class="chip-dot" style="background:#6b5a2a;"></div>Azul <span class="chip-percentile">88th %ile</span></div>
+        <div class="recent-chip"><div class="chip-dot" style="background:#4a3a6b;"></div>Wingspan <span class="chip-percentile">55th %ile</span></div>
+        <div class="recent-chip"><div class="chip-dot" style="background:#6b3a3a;"></div>Ark Nova</div>
+      </div>
+      <div class="recent-empty" id="recent-empty" style="display:none;">Games you look up will appear here</div>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE SECTION: tabs + grid -->
+  <div class="section">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'popular')"><span class="tab-full">Popular This Month</span><span class="tab-short">Hot</span></div>
+      <div class="tab" onclick="switchTab(this, 'scores')"><span class="tab-full">Popular All Time</span><span class="tab-short">Top</span></div>
+      <div class="tab" onclick="switchTab(this, 'recent')"><span class="tab-full">Recently Added</span><span class="tab-short">New</span></div>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="grid-fade"></div>
+
+      <!-- SKELETON -->
+      <div class="game-grid" id="skeleton-grid">
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+        <div class="skeleton"><div class="sk-img"></div><div class="sk-name"></div><div class="sk-count"></div></div>
+      </div>
+
+      <!-- POPULAR GRID -->
+      <div class="game-grid" id="grid-popular" style="display:none;">
+        <div class="game-card" title="Gaia Project"><span class="hot-badge">🔥 #1</span><div class="ph" style="background:#3a4a6b"><div class="card-info"><div class="card-name">Gaia Project</div><div class="card-stats"><span class="card-stat"><span>14,203</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>119.4</span></span></div></div></div></div>
+        <div class="game-card" title="SETI"><span class="hot-badge">🔥 #2</span><div class="ph" style="background:#2a5f6b"><div class="card-info"><div class="card-name">SETI</div><div class="card-stats"><span class="card-stat"><span>8,901</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>67.2</span></span></div></div></div></div>
+        <div class="game-card" title="Castle Combo"><span class="hot-badge">🔥 #3</span><div class="ph" style="background:#6b3a5f"><div class="card-info"><div class="card-name">Castle Combo</div><div class="card-stats"><span class="card-stat"><span>5,412</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>32.1</span></span></div></div></div></div>
+        <div class="game-card" title="Lost Ruins of Arnak"><div class="ph" style="background:#4b6b3a"><div class="card-info"><div class="card-name">Lost Ruins of Arnak</div><div class="card-stats"><span class="card-stat"><span>22,100</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>55.8</span></span></div></div></div></div>
+        <div class="game-card" title="Azul"><div class="ph" style="background:#6b5a2a"><div class="card-info"><div class="card-name">Azul</div><div class="card-stats"><span class="card-stat"><span>31,440</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>83.4</span></span></div></div></div></div>
+        <div class="game-card" title="Terraforming Mars"><div class="ph" style="background:#3a6b4a"><div class="card-info"><div class="card-name">Terraforming Mars</div><div class="card-stats"><span class="card-stat"><span>44,820</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>42.8</span></span></div></div></div></div>
+        <div class="game-card" title="Ark Nova"><div class="ph" style="background:#6b3a3a"><div class="card-info"><div class="card-name">Ark Nova</div><div class="card-stats"><span class="card-stat"><span>18,905</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>67.1</span></span></div></div></div></div>
+        <div class="game-card" title="Wingspan"><div class="ph" style="background:#4a3a6b"><div class="card-info"><div class="card-name">Wingspan</div><div class="card-stats"><span class="card-stat"><span>29,330</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>74.6</span></span></div></div></div></div>
+        <div class="game-card" title="Evolution"><div class="ph" style="background:#5a6b3a"><div class="card-info"><div class="card-name">Evolution</div><div class="card-stats"><span class="card-stat"><span>87</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>28.3</span></span></div></div></div></div>
+        <div class="game-card" title="7 Wonders"><div class="ph" style="background:#6b6b3a"><div class="card-info"><div class="card-name">7 Wonders</div><div class="card-stats"><span class="card-stat"><span>43</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>55.0</span></span></div></div></div></div>
+      </div>
+
+      <!-- RECENT GRID -->
+      <div class="game-grid" id="grid-recent" style="display:none;">
+        <div class="game-card"><div class="ph" style="background:#4b3a6b"><div class="card-info"><div class="card-name">Perseverance</div><div class="card-stats"><span class="card-stat"><span>1,204</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>88.1</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#3a5a6b"><div class="card-info"><div class="card-name">Millennia</div><div class="card-stats"><span class="card-stat"><span>892</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>44.2</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#6b4a3a"><div class="card-info"><div class="card-name">Eclipse</div><div class="card-stats"><span class="card-stat"><span>530</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>31.7</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#3a6b5a"><div class="card-info"><div class="card-name">Leylines</div><div class="card-stats"><span class="card-stat"><span>62</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>19.4</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#5a3a6b"><div class="card-info"><div class="card-name">Old King's Crown</div><div class="card-stats"><span class="card-stat"><span>38</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>12.0</span></span></div></div></div></div>
+      </div>
+
+      <!-- SCORES GRID -->
+      <div class="game-grid" id="grid-scores" style="display:none;">
+        <div class="game-card"><div class="ph" style="background:#3a6b4a"><div class="card-info"><div class="card-name">Terraforming Mars</div><div class="card-stats"><span class="card-stat"><span>44,820</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>42.8</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#6b5a2a"><div class="card-info"><div class="card-name">Azul</div><div class="card-stats"><span class="card-stat"><span>31,440</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>83.4</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#4a3a6b"><div class="card-info"><div class="card-name">Wingspan</div><div class="card-stats"><span class="card-stat"><span>29,330</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>74.6</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#4b6b3a"><div class="card-info"><div class="card-name">Lost Ruins of Arnak</div><div class="card-stats"><span class="card-stat"><span>22,100</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>55.8</span></span></div></div></div></div>
+        <div class="game-card"><div class="ph" style="background:#6b3a3a"><div class="card-info"><div class="card-name">Ark Nova</div><div class="card-stats"><span class="card-stat"><span>18,905</span> scores</span><span class="card-stat">·</span><span class="card-stat">avg <span>67.1</span></span></div></div></div></div>
+      </div>
+    </div><!-- /grid-wrap -->
+  </div><!-- /section -->
+
+</div><!-- /page-layout -->
+
+<script>
+  // Shorten score counts and mark as primary stat
+  function fmtCount(n) {
+    return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+  }
+  document.querySelectorAll('.card-stat').forEach(el => {
+    if (el.textContent.trim().endsWith('scores')) {
+      const span = el.querySelector('span');
+      if (span) span.textContent = fmtCount(parseInt(span.textContent.replace(/,/g, ''), 10));
+      el.classList.add('primary');
+    }
+  });
+
+  // Animated placeholder count-up
+  const input = document.getElementById('search');
+  const target = 2946583;
+  const gameTarget = 885;
+  let start = null;
+  const duration = 1800;
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function animatePlaceholder(ts) {
+    if (!start) start = ts;
+    const progress = Math.min((ts - start) / duration, 1);
+    const eased = easeOut(progress);
+    const scores = Math.floor(eased * target).toLocaleString();
+    const games = Math.floor(eased * gameTarget).toLocaleString();
+    input.placeholder = `Search ${games} games and ${scores} scores...`;
+    if (progress < 1) requestAnimationFrame(animatePlaceholder);
+  }
+  requestAnimationFrame(animatePlaceholder);
+
+  // Skeleton → loaded
+  setTimeout(() => {
+    document.getElementById('skeleton-grid').style.display = 'none';
+    document.getElementById('grid-popular').style.display = 'grid';
+  }, 1800);
+
+  // Dropdown
+  const dropdownResults = document.getElementById('dropdown-results');
+  const dropdownEmpty = document.getElementById('dropdown-empty');
+  const noResultsTerm = document.getElementById('no-results-term');
+
+  input.addEventListener('focus', () => {
+    if (input.value.length > 0) dropdownResults.classList.add('open');
+  });
+  input.addEventListener('blur', () => setTimeout(() => {
+    dropdownResults.classList.remove('open');
+    dropdownEmpty.classList.remove('open');
+  }, 150));
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (val.length === 0) {
+      dropdownResults.classList.remove('open');
+      dropdownEmpty.classList.remove('open');
+    } else if (val.toLowerCase().startsWith('ga')) {
+      dropdownResults.classList.add('open');
+      dropdownEmpty.classList.remove('open');
+    } else {
+      dropdownResults.classList.remove('open');
+      noResultsTerm.textContent = val;
+      dropdownEmpty.classList.add('open');
+    }
+  });
+
+  // Add game banner
+  const banner = document.getElementById('add-banner');
+  const bannerTitle = document.getElementById('banner-title');
+  document.querySelectorAll('.add-link').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const term = noResultsTerm.textContent.trim();
+      bannerTitle.textContent = term ? `Adding "${term}"` : 'Adding a game';
+      banner.classList.add('show');
+    });
+  });
+  document.getElementById('banner-close').addEventListener('click', () => {
+    banner.classList.remove('show');
+  });
+
+  // Recently viewed empty state
+  const recentChips = document.getElementById('recent-chips');
+  const recentEmpty = document.getElementById('recent-empty');
+  if (!recentChips.querySelector('.recent-chip')) {
+    recentChips.style.display = 'none';
+    recentEmpty.style.display = 'block';
+  }
+
+  // Escape clears search
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      input.value = '';
+      input.blur();
+      dropdownResults.classList.remove('open');
+      dropdownEmpty.classList.remove('open');
+    }
+  });
+
+  // Tabs
+  const tabKeys = ['popular', 'scores', 'recent'];
+  const grids = { popular: 'grid-popular', recent: 'grid-recent', scores: 'grid-scores' };
+  let activeTabIndex = 0;
+  const skeletonGrid = document.getElementById('skeleton-grid');
+
+  function switchTab(el, key) {
+    activeTabIndex = tabKeys.indexOf(key);
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    Object.values(grids).forEach(id => document.getElementById(id).style.display = 'none');
+    section.scrollTop = 0;
+    // Brief skeleton flash
+    skeletonGrid.style.display = 'grid';
+    setTimeout(() => {
+      skeletonGrid.style.display = 'none';
+      document.getElementById(grids[key]).style.display = 'grid';
+    }, 350);
+  }
+
+  function switchToIndex(i) {
+    const key = tabKeys[i];
+    const tabEl = document.querySelectorAll('.tab')[i];
+    switchTab(tabEl, key);
+  }
+
+  // Swipe grid to change tabs
+  const section = document.querySelector('.section');
+  let touchStartX = 0, touchStartY = 0;
+  section.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  section.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && activeTabIndex < tabKeys.length - 1) switchToIndex(activeTabIndex + 1);
+      if (dx > 0 && activeTabIndex > 0) switchToIndex(activeTabIndex - 1);
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>

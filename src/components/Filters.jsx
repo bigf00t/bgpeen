@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import FilterDropdown from './FilterDropdown';
 
-const FiltersV2 = ({ data }) => {
+const Filters = ({ data }) => {
   const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
   const [years, setYears] = useState([]);
   const [months, setMonths] = useState([]);
@@ -54,9 +54,9 @@ const FiltersV2 = ({ data }) => {
   };
 
   return (
-    <div className="rv2-filters-section">
-      <div className="rv2-primary-filters">
-        <span className="rv2-filters-label">Filter by</span>
+    <div className="rv-filters-section">
+      <div className="rv-primary-filters">
+        <span className="rv-filters-label">Filter by</span>
         <FilterDropdown
           field="players"
           dependentFilters={['start', 'finish', 'new']}
@@ -73,9 +73,9 @@ const FiltersV2 = ({ data }) => {
           optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
         />
       </div>
-      <div className="rv2-advanced-filters">
-        <span className="rv2-filters-label">Advanced</span>
-        <div className="rv2-advanced-filters-inner" ref={advInnerRef}>
+      <div className="rv-advanced-filters">
+        <span className="rv-filters-label">Advanced</span>
+        <div className="rv-advanced-filters-inner" ref={advInnerRef}>
           <FilterDropdown
             field="start"
             enabledByFilter="players"
@@ -119,8 +119,8 @@ const FiltersV2 = ({ data }) => {
   );
 };
 
-FiltersV2.propTypes = { data: PropTypes.object };
+Filters.propTypes = { data: PropTypes.object };
 
 const mapStateToProps = ({ data }) => ({ data: data.game });
 
-export default connect(mapStateToProps)(FiltersV2);
+export default connect(mapStateToProps)(Filters);

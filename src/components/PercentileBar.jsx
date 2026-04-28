@@ -61,14 +61,14 @@ const PercentileBar = ({ score, percentile }) => {
   }, [hasScore, pct]);
 
   return (
-    <div className={`rv2-pct-result${hasScore ? ' has-score' : ''}`} ref={containerRef}>
-      <div className="rv2-pct-bubble"    ref={bubbleRef}>{bubbleText}</div>
-      <div className="rv2-pct-line"      ref={lineRef} />
-      <div className="rv2-pct-track"     ref={trackRef}>
-        <div className="rv2-pct-cover" style={{ width: coverWidth }} />
+    <div className={`rv-pct-result${hasScore ? ' has-score' : ''}`} ref={containerRef}>
+      <div className="rv-pct-bubble"    ref={bubbleRef}>{bubbleText}</div>
+      <div className="rv-pct-line"      ref={lineRef} />
+      <div className="rv-pct-track"     ref={trackRef}>
+        <div className="rv-pct-cover" style={{ width: coverWidth }} />
       </div>
-      <div className="rv2-pct-indicator" ref={indicatorRef} />
-      <div className="rv2-pct-quip">{quipText}</div>
+      <div className="rv-pct-indicator" ref={indicatorRef} />
+      <div className="rv-pct-quip">{quipText}</div>
     </div>
   );
 };

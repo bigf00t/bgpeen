@@ -266,27 +266,27 @@ const BarGraph = ({ result, score, percentile, onScoreClick }) => {
   }, []);
 
   return (
-    <div className="rv2-chart-section">
-      <div className="rv2-chart-legend">
-        <span className="rv2-chart-legend-item">
-          <span className="rv2-chart-legend-swatch" style={{ background: avgColor }} />
+    <div className="rv-chart-section">
+      <div className="rv-chart-legend">
+        <span className="rv-chart-legend-item">
+          <span className="rv-chart-legend-swatch" style={{ background: avgColor }} />
           Average: <strong>{Math.round(mean)}</strong>
         </span>
         {userBin !== null && (
-          <span className="rv2-chart-legend-item">
-            <span className="rv2-chart-legend-swatch" style={{ background: scoreColor }} />
+          <span className="rv-chart-legend-item">
+            <span className="rv-chart-legend-swatch" style={{ background: scoreColor }} />
             Your score: <strong>{userBin}</strong>
           </span>
         )}
         <button
-          className={`rv2-stddev-toggle${showStdDev ? ' rv2-stddev-toggle--on' : ''}`}
+          className={`rv-stddev-toggle${showStdDev ? ' rv-stddev-toggle--on' : ''}`}
           onClick={() => setShowStdDev((v) => !v)}
         >
           ±3 std devs {showStdDev ? 'on' : 'off'}
         </button>
       </div>
-      <div className="rv2-chart-scroll" ref={scrollRef}>
-        <div className="rv2-chart-wrap">
+      <div className="rv-chart-scroll" ref={scrollRef}>
+        <div className="rv-chart-wrap">
           <Bar data={data} options={options} />
         </div>
       </div>

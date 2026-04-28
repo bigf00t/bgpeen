@@ -14,15 +14,15 @@ import Fade from '@mui/material/Fade';
 import Typography from '@mui/material/Typography';
 import Image from 'mui-image';
 
-import FiltersV2 from './FiltersV2';
+import Filters from './Filters';
 import PercentileBar from './PercentileBar';
 const BarGraph = React.lazy(() => import('./BarGraph'));
 
-import './ResultV2.css';
+import './Result.css';
 
 const getIntFromParam = (param) => (param && !isNaN(param) ? parseInt(param) : '');
 
-const ResultV2 = (props) => {
+const Result = (props) => {
   const [filters, setFilters] = useState({});
   const [result, setResult] = useState();
   const [resultLoading, setResultLoading] = useState(false);
@@ -245,10 +245,10 @@ const ResultV2 = (props) => {
 
   return (
     <Fade in timeout={500}>
-      <div className="rv2-page">
+      <div className="rv-page">
 
-        <div className="rv2-header">
-          <div className="rv2-thumb-wrap">
+        <div className="rv-header">
+          <div className="rv-thumb-wrap">
             <Image
               src={game.thumbnail}
               duration={0}
@@ -256,10 +256,10 @@ const ResultV2 = (props) => {
               style={{ width: '100%', height: '100%', objectFit: 'scale-down', borderRadius: 8 }}
             />
           </div>
-          <div className="rv2-header-name">
-            <div className="rv2-game-name">{game.name}</div>
+          <div className="rv-header-name">
+            <div className="rv-game-name">{game.name}</div>
             <a
-              className="rv2-bgg-link"
+              className="rv-bgg-link"
               href={`https://boardgamegeek.com/boardgame/${game.id}`}
               target="_blank"
               rel="noreferrer"
@@ -267,47 +267,47 @@ const ResultV2 = (props) => {
               View on boardgamegeek.com ↗
             </a>
           </div>
-          <div className="rv2-header-stats">
-            <div className="rv2-stats-primary">
-              <div className="rv2-stat-primary-group">
-                <span className="rv2-stat-big">{totalScores.toLocaleString()}</span>
-                <span className="rv2-stat-big-label">{scoreLabel}</span>
+          <div className="rv-header-stats">
+            <div className="rv-stats-primary">
+              <div className="rv-stat-primary-group">
+                <span className="rv-stat-big">{totalScores.toLocaleString()}</span>
+                <span className="rv-stat-big-label">{scoreLabel}</span>
               </div>
-              <div className="rv2-stat-primary-group">
-                <span className="rv2-stat-big">{result.mean}</span>
-                <span className="rv2-stat-big-label">avg</span>
+              <div className="rv-stat-primary-group">
+                <span className="rv-stat-big">{result.mean}</span>
+                <span className="rv-stat-big-label">avg</span>
               </div>
             </div>
-            <div className="rv2-stats-secondary">
+            <div className="rv-stats-secondary">
               {result.stdDev !== undefined && (
-                <span className="rv2-stat-sm">std dev <strong>±{result.stdDev}</strong></span>
+                <span className="rv-stat-sm">std dev <strong>±{result.stdDev}</strong></span>
               )}
               {derivedStats && (<>
-                <span className="rv2-stat-sm">median <strong>{derivedStats.median}</strong></span>
-                <span className="rv2-stat-sm">mode <strong>{derivedStats.mode}</strong></span>
-                <span className="rv2-stat-sm">min <strong>{derivedStats.min}</strong> · max <strong>{derivedStats.max}</strong></span>
+                <span className="rv-stat-sm">median <strong>{derivedStats.median}</strong></span>
+                <span className="rv-stat-sm">mode <strong>{derivedStats.mode}</strong></span>
+                <span className="rv-stat-sm">min <strong>{derivedStats.min}</strong> · max <strong>{derivedStats.max}</strong></span>
                 {derivedStats.skewness !== null && (
-                  <span className="rv2-stat-sm">skew <strong>{derivedStats.skewness}</strong></span>
+                  <span className="rv-stat-sm">skew <strong>{derivedStats.skewness}</strong></span>
                 )}
               </>)}
             </div>
             {showMoreStats && (
-              <div className="rv2-stats-extra">
+              <div className="rv-stats-extra">
                 {derivedStats && (
-                  <div className="rv2-stats-extra-row">
-                    <span className="rv2-stat-sm">p10 <strong>{derivedStats.p10}</strong> · p25 <strong>{derivedStats.p25}</strong> · p75 <strong>{derivedStats.p75}</strong> · p90 <strong>{derivedStats.p90}</strong></span>
+                  <div className="rv-stats-extra-row">
+                    <span className="rv-stat-sm">p10 <strong>{derivedStats.p10}</strong> · p25 <strong>{derivedStats.p25}</strong> · p75 <strong>{derivedStats.p75}</strong> · p90 <strong>{derivedStats.p90}</strong></span>
                   </div>
                 )}
                 {((filters.players && result.trimmedWinPercentage !== undefined) || result.expectedMean !== undefined) && (
-                  <div className="rv2-stats-extra-row">
+                  <div className="rv-stats-extra-row">
                     {filters.players && result.trimmedWinPercentage !== undefined && (
-                      <span className="rv2-stat-sm">win % <strong>{result.trimmedWinPercentage}%</strong></span>
+                      <span className="rv-stat-sm">win % <strong>{result.trimmedWinPercentage}%</strong></span>
                     )}
                     {result.expectedMean !== undefined && (
-                      <span className="rv2-stat-sm">expected avg <strong>{result.expectedMean}</strong></span>
+                      <span className="rv-stat-sm">expected avg <strong>{result.expectedMean}</strong></span>
                     )}
                     {filters.players && result.expectedWinPercentage !== undefined && (
-                      <span className="rv2-stat-sm">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
+                      <span className="rv-stat-sm">expected win % <strong>{result.expectedWinPercentage}%</strong></span>
                     )}
                   </div>
                 )}
@@ -315,7 +315,7 @@ const ResultV2 = (props) => {
             )}
             {derivedStats && (
               <button
-                className={`rv2-stddev-toggle rv2-stats-more-toggle${showMoreStats ? ' rv2-stddev-toggle--on' : ''}`}
+                className={`rv-stddev-toggle rv-stats-more-toggle${showMoreStats ? ' rv-stddev-toggle--on' : ''}`}
                 onClick={() => setShowMoreStats((v) => !v)}
               >
                 {showMoreStats ? 'less ▲' : 'more ▼'}
@@ -324,17 +324,17 @@ const ResultV2 = (props) => {
           </div>
         </div>
 
-        <hr className="rv2-divider" />
+        <hr className="rv-divider" />
 
-        <FiltersV2 />
+        <Filters />
 
-        <hr className="rv2-divider" />
+        <hr className="rv-divider" />
 
-        <div className="rv2-score-row">
-          <span className="rv2-score-label">Score</span>
+        <div className="rv-score-row">
+          <span className="rv-score-label">Score</span>
           <input
             ref={scoreInputRef}
-            className="rv2-score-input"
+            className="rv-score-input"
             type="number"
             placeholder="Score"
             onChange={handleScoreInput}
@@ -342,13 +342,13 @@ const ResultV2 = (props) => {
           <PercentileBar score={score} percentile={percentile} />
         </div>
 
-        <div className={resultLoading ? 'rv2-result-loading' : ''}>
+        <div className={resultLoading ? 'rv-result-loading' : ''}>
           <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
             <BarGraph result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
           </React.Suspense>
         </div>
 
-        <div className="rv2-data-source">
+        <div className="rv-data-source">
           data provided by{' '}
           <a href="https://boardgamegeek.com" target="_blank" rel="noreferrer">boardgamegeek.com</a>
         </div>
@@ -358,7 +358,7 @@ const ResultV2 = (props) => {
   );
 };
 
-ResultV2.propTypes = {
+Result.propTypes = {
   data: PropTypes.object,
   setGame: PropTypes.func,
   loadGame: PropTypes.func,
@@ -373,4 +373,4 @@ const selectData = createSelector(
 
 const mapStateToProps = (state) => ({ data: selectData(state) });
 
-export default connect(mapStateToProps, actions)(ResultV2);
+export default connect(mapStateToProps, actions)(Result);

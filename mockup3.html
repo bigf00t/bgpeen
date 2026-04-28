@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goodat.games – Azul</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #2a2d35; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── NAV ── */
+  nav {
+    background: #1e2028; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%;
+  }
+  .nav-inner {
+    display: flex; align-items: center; gap: 16px;
+    width: 100%; max-width: 1100px; padding: 0 32px;
+  }
+  .nav-logo { font-size: 1.45rem; font-weight: 600; letter-spacing: -0.5px; text-decoration: none; color: #fff; white-space: nowrap; }
+  .nav-logo sup { font-size: 0.55rem; color: #aaa; font-weight: 400; vertical-align: super; }
+  .nav-search {
+    margin-left: auto; max-width: 420px; background: #2a2d35;
+    border: 1px solid #444; border-radius: 8px; color: #999;
+    font-size: 0.82rem; padding: 7px 14px; cursor: pointer;
+    text-align: left; font-family: inherit; transition: border-color 0.15s;
+  }
+  .nav-search:hover { border-color: #666; color: #ccc; }
+  .nav-search-icon { display: none; background: none; border: 1px solid #444; border-radius: 8px; color: #999; padding: 7px 9px; cursor: pointer; margin-left: auto; }
+  .nav-search-icon:hover { border-color: #666; color: #ccc; }
+
+  /* ── PAGE ── */
+  .page { max-width: 1100px; margin: 0 auto; padding-left: 32px; padding-right: 32px; padding-bottom: 64px; }
+
+  /* ── GAME HEADER ── */
+  .game-header { display: flex; align-items: center; gap: 20px; padding: 28px 0 20px; }
+  .game-thumb { width: 120px; height: 148px; border-radius: 8px; flex-shrink: 0; background: #2e3248; }
+  .header-stats { margin-left: auto; text-align: right; }
+  .game-name { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 5px; }
+  .game-bgg-link { font-size: 0.75rem; color: #888; text-decoration: none; }
+  .game-bgg-link:hover { color: #bbb; }
+
+  hr { border: none; border-top: 1px solid #333; }
+
+  .filters-section { padding: 20px 0 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .primary-filters { display: flex; align-items: center; gap: 8px; }
+
+  /* LEFT */
+  .stats-primary { display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .stat-primary-group { display: flex; align-items: baseline; gap: 6px; }
+  .stat-big { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; color: #fff; }
+  .stat-big-label { font-size: 0.75rem; color: #777; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .stats-secondary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat-sm { font-size: 0.78rem; color: #999; }
+  .stat-sm strong { color: #ccc; font-weight: 600; }
+
+  /* FILTERS */
+  .filters-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .filter-select {
+    background: #1e2028; border: 1px solid #3a3a3a; border-radius: 8px;
+    color: #ccc; font-size: 0.82rem; padding: 7px 28px 7px 12px;
+    cursor: pointer; outline: none; font-family: inherit; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23555' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center;
+    transition: border-color 0.15s;
+  }
+  .filter-select:hover, .filter-select:focus { border-color: #555; outline: none; }
+  .filter-select.active { border-color: #7986cb; color: #fff; background-color: rgba(121,134,203,0.12); }
+  .filter-select:disabled { opacity: 0.35; cursor: default; }
+
+  .advanced-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .advanced-filters-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* SCORE */
+  .score-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0; margin-top: 6px; }
+  .score-input-wrap { position: relative; margin-top: 6px; }
+  .score-input {
+    width: 105px; background: #1e2028; border: 1px solid #3a3a3a;
+    border-radius: 8px; color: #fff; font-size: 0.9rem;
+    padding: 7px 12px; outline: none; font-family: inherit;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  .score-input::-webkit-outer-spin-button,
+  .score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .score-input:focus { border-color: #7986cb; }
+  .score-input::placeholder { color: #777; font-size: 0.72rem; }
+  .score-clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #555; cursor: pointer;
+    font-size: 0.8rem; padding: 4px; opacity: 0; pointer-events: none; transition: opacity 0.1s;
+  }
+  .score-clear.visible { opacity: 1; pointer-events: auto; }
+  .score-clear:hover { color: #aaa; }
+
+  /* PERCENTILE RESULT */
+  .score-bar-row { display: flex; align-items: center; gap: 6px; padding: 8px 0 20px; flex-wrap: wrap; }
+  .percentile-result { display: block; flex: 1; position: relative; transform: translateY(1px); margin-left: 18px; }
+  .pct-bar-bubble { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .percentile-result.has-score .pct-bar-bubble { opacity: 1; pointer-events: auto; }
+  .pct-bar-bubble {
+    position: absolute;
+    background: none; color: #fff; font-size: 0.72rem; font-weight: 700;
+    padding: 2px 0 4px; white-space: nowrap; cursor: default;
+    border-bottom: 1px solid rgba(255,255,255,0.6);
+  }
+  .pct-connect-line {
+    position: absolute; width: 1px; background: rgba(255,255,255,0.6);
+    pointer-events: none; opacity: 0;
+  }
+  .percentile-result.has-score .pct-connect-line { opacity: 1; }
+  .pct-bar-indicator {
+    position: absolute; width: 2px; background: rgba(255,255,255,0.75);
+    pointer-events: none; opacity: 0;
+  }
+  .percentile-result.has-score .pct-bar-indicator { opacity: 1; }
+  .percentile-quip {
+    display: block; text-align: center;
+    font-size: 0.78rem; font-weight: 400; color: #aaa;
+    margin-top: 10px; pointer-events: none;
+  }
+
+  .pct-bar-track { height: 12px; background: linear-gradient(to right, #ef5350, #ffc107, #66bb6a); border-radius: 6px; position: relative; margin-top: 36px; margin-bottom: 6px; overflow: hidden; }
+  .pct-bar-cover {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    background: rgba(20,22,28,0.75); border-radius: 0 6px 6px 0;
+    transition: width 0.5s ease;
+  }
+  .pct-bar-fill {
+    height: 100%; border-radius: 6px; position: relative; overflow: visible;
+    background: transparent;
+    transition: width 0.5s ease;
+  }
+
+
+.chart-empty {
+    display: none; position: absolute; inset: 0; align-items: center; justify-content: center;
+    font-size: 0.88rem; color: #666; background: #1e2028;
+  }
+  .chart-empty.visible { display: flex; }
+  @keyframes chartFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .chart-canvas.animating { animation: chartFadeIn 0.3s ease; }
+
+  /* ── CHART ── */
+  .chart-tooltip {
+    position: absolute; background: #2a2d35; border: 1px solid #444;
+    border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; color: #fff;
+    pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap;
+    transform: translateX(-50%);
+  }
+  .chart-section { margin-top: 4px; }
+  .chart-wrap { background: #1e2028; border-radius: 12px; overflow: hidden; padding: 20px 20px 0; }
+  .chart-canvas { width: 100%; display: block; }
+  .chart-x-axis { display: flex; justify-content: space-between; padding: 8px 4px 14px; font-size: 0.68rem; color: #777; }
+
+  .data-source { font-size: 0.68rem; color: #666; text-align: center; margin-top: 28px; }
+  .data-source a { color: #777; text-decoration: none; }
+  .data-source a:hover { color: #aaa; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 700px) {
+    .chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .chart-scroll::-webkit-scrollbar { display: none; }
+    .chart-wrap { min-width: 700px; }
+    .nav-inner { padding: 0 16px; }
+    .nav-logo { font-size: 1.2rem; }
+    .nav-search { display: none; }
+    .nav-search-icon { display: flex; align-items: center; }
+    .page { padding-left: 16px; padding-right: 16px; }
+
+    /* Header: image+name row, then stats full-width below */
+    .game-header { flex-wrap: wrap; padding: 16px 0 8px; gap: 12px; }
+    .game-thumb { width: 64px; height: 78px; }
+    .game-header > div:nth-child(2) { flex: 1; }
+    .game-name { font-size: 1.4rem; }
+    .header-stats {
+      width: 100%; margin-left: 0; text-align: left; padding-bottom: 4px;
+    }
+    .stats-primary { justify-content: space-between; align-items: baseline; }
+    .stat-big { font-size: 1.6rem; }
+    .stats-secondary {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;
+    }
+    .stats-secondary .stat-sm:nth-child(even) { text-align: right; }
+
+    /* Filters: primary scrolls, advanced on own line */
+    .filters-section { flex-wrap: wrap; gap: 0; padding: 12px 0 0; }
+    .primary-filters { overflow-x: auto; flex-wrap: nowrap; width: 100%; padding-bottom: 6px; }
+    .primary-filters::-webkit-scrollbar { display: none; }
+    .advanced-filters { flex-wrap: nowrap; margin-left: 0; flex-basis: 100%; padding: 6px 0 14px; border-bottom: 1px solid #333; gap: 8px; overflow: hidden; }
+    .advanced-filters-inner { flex-wrap: nowrap; overflow-x: auto; flex: 1; -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%); mask-image: linear-gradient(to right, black 80%, transparent 100%); }
+    .advanced-filters-inner.scrolled-end { -webkit-mask-image: none; mask-image: none; }
+    .advanced-filters-inner::-webkit-scrollbar { display: none; }
+
+    /* Score row: all on one line on mobile */
+    .score-bar-row { flex-wrap: nowrap; align-items: center; padding-top: 8px; padding-bottom: 14px; }
+    .stats-secondary { margin-bottom: 6px; }
+    .score-label { display: none; }
+    .filters-label { display: none; }
+    .score-input { width: 72px; font-size: 1rem; }
+    .score-input::placeholder { font-size: 0.82rem; }
+    .percentile-result { flex-basis: auto; flex: 1; margin-left: 8px; transform: translateY(1px); min-width: 0; }
+
+    /* Hide tooltip on mobile */
+    .chart-tooltip { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">goodat.games <sup>beta</sup></a>
+    <button class="nav-search" onclick="window.location='/'">Search games and scores...</button>
+    <button class="nav-search-icon" onclick="window.location='/'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="game-header">
+    <div class="game-thumb"></div>
+    <div>
+      <div class="game-name">Azul</div>
+      <a class="game-bgg-link" href="https://boardgamegeek.com/boardgame/230802" target="_blank">View on boardgamegeek.com ↗</a>
+    </div>
+    <div class="header-stats">
+      <div class="stats-primary">
+        <div class="stat-primary-group">
+          <span class="stat-big" id="stat-scores">16,192</span>
+          <span class="stat-big-label" id="stat-scores-label">of 29,440 scores</span>
+        </div>
+        <div class="stat-primary-group">
+          <span class="stat-big">77.64</span>
+          <span class="stat-big-label">avg</span>
+        </div>
+      </div>
+      <div class="stats-secondary">
+        <span class="stat-sm">std dev <strong>±12</strong></span>
+        <span class="stat-sm">win % <strong>28%</strong></span>
+        <span class="stat-sm">expected avg <strong>76.4</strong></span>
+        <span class="stat-sm">expected win % <strong>25%</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- FILTERS -->
+  <div class="filters-section">
+    <div class="primary-filters">
+      <span class="filters-label">Filter by</span>
+      <select class="filter-select" id="players-filter" onchange="onPlayersChange(this)">
+        <option value="">Player Count</option>
+        <option value="2">2 players</option>
+        <option value="3">3 players</option>
+        <option value="4" selected>4 players</option>
+      </select>
+      <select class="filter-select" id="finish-filter">
+        <option value="">Finish Place</option>
+        <option value="1" selected>1st</option>
+        <option value="2">2nd</option>
+        <option value="3">3rd</option>
+        <option value="4">4th</option>
+      </select>
+    </div>
+    <div class="advanced-filters" id="advanced-filters">
+      <span class="filters-label">Advanced</span>
+      <div class="advanced-filters-inner" id="advanced-filters-inner">
+        <select class="filter-select">
+          <option value="">Start Place</option>
+          <option>1st</option><option>2nd</option><option>3rd</option><option>4th</option>
+        </select>
+        <select class="filter-select">
+          <option value="">New Player</option>
+          <option>Yes</option>
+        </select>
+        <select class="filter-select">
+          <option value="">Player Color</option>
+          <option>Red</option><option>Blue</option><option>Yellow</option><option>Black</option>
+        </select>
+        <select class="filter-select" id="year-filter" onchange="onYearChange(this)">
+          <option value="">Play Year</option>
+          <option>2021</option><option>2022</option><option>2023</option><option>2024</option>
+        </select>
+        <select class="filter-select" id="month-filter" disabled>
+          <option value="">Play Month</option>
+          <option>January</option><option>February</option><option>March</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="score-bar-row">
+    <span class="score-label">Score</span>
+    <div class="score-input-wrap">
+      <input class="score-input" type="number" placeholder="Score" oninput="debouncedScore(this)" autofocus>
+    </div>
+    <div class="percentile-result" id="percentile-result">
+      <div class="pct-bar-bubble" id="pct-bar-bubble">better than 92% of players</div>
+      <div class="pct-connect-line" id="pct-connect-line"></div>
+      <div class="pct-bar-track">
+        <div class="pct-bar-cover" id="pct-bar-cover" style="width: 100%"></div>
+        <div class="pct-bar-fill" id="pct-bar" style="width: 0%"></div>
+      </div>
+      <div class="pct-bar-indicator" id="pct-bar-indicator"></div>
+<div class="percentile-quip" id="percentile-quip">How good are you?</div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-section">
+    <div class="chart-scroll">
+      <div class="chart-wrap" style="position:relative">
+        <canvas class="chart-canvas" id="chart" height="280"></canvas>
+        <div class="chart-tooltip" id="chart-tooltip"></div>
+        <div class="chart-empty" id="chart-empty">No scores match your current filters</div>
+        <div class="chart-x-axis" id="x-axis"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="data-source">data provided by <a href="https://boardgamegeek.com" target="_blank">boardgamegeek.com</a></div>
+
+</div>
+
+<script>
+  // ── Filter interactions ──
+  const TOTAL_SCORES = 29440;
+  function updateFilteredCount() {
+    const activeFilters = document.querySelectorAll('.filter-select.active').length;
+    const fakeCount = Math.max(0, Math.round(TOTAL_SCORES * Math.pow(0.55, activeFilters)));
+    const isEmpty = fakeCount === 0;
+    document.getElementById('stat-scores').textContent = fakeCount.toLocaleString();
+    document.getElementById('stat-scores-label').textContent = fakeCount === TOTAL_SCORES ? 'scores' : `of ${TOTAL_SCORES.toLocaleString()} scores`;
+    document.getElementById('chart-empty').classList.toggle('visible', isEmpty);
+    animateChart();
+  }
+
+  function animateChart() {
+    const c = document.getElementById('chart');
+    c.classList.remove('animating');
+    void c.offsetWidth;
+    c.classList.add('animating');
+    setTimeout(() => c.classList.remove('animating'), 300);
+  }
+
+  function onPlayersChange(sel) {
+    const finish = document.getElementById('finish-filter');
+    finish.disabled = sel.value === '';
+    sel.classList.toggle('active', sel.value !== '');
+    updateFilteredCount();
+  }
+  function onYearChange(sel) {
+    const month = document.getElementById('month-filter');
+    month.disabled = sel.value === '';
+    sel.classList.toggle('active', sel.value !== '');
+    updateFilteredCount();
+  }
+  document.querySelectorAll('.filter-select').forEach(sel => {
+    if (!sel.onchange) sel.addEventListener('change', () => {
+      sel.classList.toggle('active', sel.value !== '');
+      updateFilteredCount();
+    });
+  });
+
+  // ── Advanced filter scroll fade ──
+  const advFiltersInner = document.getElementById('advanced-filters-inner');
+  advFiltersInner.addEventListener('scroll', () => {
+    const atEnd = advFiltersInner.scrollLeft + advFiltersInner.offsetWidth >= advFiltersInner.scrollWidth - 2;
+    advFiltersInner.classList.toggle('scrolled-end', atEnd);
+  });
+
+  // ── Chart scroll fade ──
+  const chartScroll = document.querySelector('.chart-scroll');
+  function updateChartScrollFade() {
+    if (!chartScroll || chartScroll.offsetWidth >= chartScroll.scrollWidth) return;
+    const atStart = chartScroll.scrollLeft <= 2;
+    const atEnd = chartScroll.scrollLeft + chartScroll.offsetWidth >= chartScroll.scrollWidth - 2;
+    let mask = 'none';
+    if (!atStart && !atEnd) mask = 'linear-gradient(to right, transparent 0%, black 8%, black 85%, transparent 100%)';
+    else if (!atStart) mask = 'linear-gradient(to right, transparent 0%, black 8%)';
+    else if (!atEnd) mask = 'linear-gradient(to right, black 85%, transparent 100%)';
+    chartScroll.style.webkitMaskImage = mask;
+    chartScroll.style.maskImage = mask;
+  }
+  if (chartScroll) {
+    chartScroll.addEventListener('scroll', updateChartScrollFade);
+    updateChartScrollFade();
+  }
+
+  const bubble = document.getElementById('pct-bar-bubble');
+
+  // ── Arrow key nudge ──
+  document.querySelector('.score-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const input = e.target;
+      const val = parseInt(input.value) || 0;
+      input.value = Math.max(0, Math.min(140, val + (e.key === 'ArrowUp' ? 1 : -1)));
+      handleScore(input);
+    }
+  });
+
+  // ── Score input ──
+  let scoreDebounceTimer;
+  function debouncedScore(input) {
+    clearTimeout(scoreDebounceTimer);
+    if (!input.value.length) { handleScore(input); return; }
+    scoreDebounceTimer = setTimeout(() => handleScore(input), 400);
+  }
+  function ordinal(n) {
+    const s = ['th','st','nd','rd'], v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function handleScore(input) {
+    const hasVal = input.value.length > 0;
+    document.getElementById('percentile-result').classList.toggle('has-score', hasVal);
+    if (!hasVal) {
+      document.getElementById('percentile-quip').textContent = 'How good are you?';
+      document.getElementById('pct-bar').style.width = '0%';
+      document.getElementById('pct-bar-cover').style.width = '100%';
+      userScore = null;
+      drawChart();
+      return;
+    }
+    if (hasVal) {
+      const score = parseInt(input.value);
+      // Fake percentile calculation
+      const pct = Math.min(99, Math.max(1, Math.round((score / 140) * 100)));
+      userScore = score;
+      const barColor = pct < 33 ? '#ef5350' : pct < 66 ? '#ffc107' : '#66bb6a';
+      userBarColor = barColor;
+      document.getElementById('pct-bar').style.width = pct + '%';
+      document.getElementById('pct-bar-cover').style.width = (100 - pct) + '%';
+      const bubbleEl = document.getElementById('pct-bar-bubble');
+      bubbleEl.textContent = pct >= 50 ? `better than ${pct}% of players` : `worse than ${100 - pct}% of players`;
+      requestAnimationFrame(() => {
+        const track = document.querySelector('.pct-bar-track');
+        const trackRect = track.getBoundingClientRect();
+        const resultRect = document.getElementById('percentile-result').getBoundingClientRect();
+        const trackW = track.offsetWidth;
+        const trackLeft = trackRect.left - resultRect.left;
+        const trackTop = trackRect.top - resultRect.top;
+        const scoreX = (pct / 100) * trackW;
+        // Position bubble
+        const bw = bubbleEl.offsetWidth;
+        const bh = bubbleEl.offsetHeight;
+        const bubbleLeft = Math.min(Math.max(trackLeft + scoreX - bw / 2, 0), trackLeft + trackW - bw);
+        const bubbleTop = trackTop - bh - 10;
+        bubbleEl.style.left = bubbleLeft + 'px';
+        bubbleEl.style.top = bubbleTop + 'px';
+        bubbleEl.style.transform = 'none';
+        // Connecting line from bubble bottom border to track top
+        const line = document.getElementById('pct-connect-line');
+        line.style.left = (trackLeft + scoreX) + 'px';
+        line.style.top = (bubbleTop + bh) + 'px';
+        line.style.height = (trackTop - bubbleTop - bh) + 'px';
+        // Indicator on track
+        const ind = document.getElementById('pct-bar-indicator');
+        ind.style.left = (trackLeft + scoreX - 1) + 'px';
+        ind.style.top = trackTop + 'px';
+        ind.style.height = trackRect.height + 'px';
+      });
+      drawChart();
+      scrollChartTo(score);
+      const quips = [[1,'quite possibly one of the worst in the world!'],[10,'just terrible.'],[40,'not very good.'],[60,'boringly average.'],[90,'actually pretty decent...'],[99,'legit amazing!'],[100,'probably cheating :(']];
+      const quip = quips.find(([t]) => pct < t);
+      document.getElementById('percentile-quip').textContent = `You're ${quip ? quip[1] : 'probably cheating :('}`;
+
+    }
+  }
+  function clearScore() {
+    document.querySelector('.score-input').value = '';
+    document.getElementById('percentile-result').classList.remove('has-score');
+    document.getElementById('pct-bar').style.width = '0%';
+    document.getElementById('pct-bar-cover').style.width = '100%';
+    userScore = null;
+    document.getElementById('percentile-quip').textContent = 'How good are you?';
+    drawChart();
+    scrollChartTo(AVG_SCORE);
+  }
+
+  // ── Bar chart ──
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const AVG_SCORE = 75;
+  const BIN_SIZE = 1;
+  let userScore = null;
+  let userBarColor = '#66bb6a';
+  let hoverBin = null;
+
+  // Fake Azul score distribution
+  const rawData = [];
+  for (let i = 0; i <= 140; i++) {
+    rawData.push(Math.max(0,
+      900 * Math.exp(-0.5 * ((i-70)/18)**2) +
+      200 * Math.exp(-0.5 * ((i-55)/10)**2) +
+      150 * Math.exp(-0.5 * ((i-80)/8)**2)
+    ));
+  }
+  const numBins = Math.ceil(141 / BIN_SIZE);
+  const bins = Array(numBins).fill(0);
+  rawData.forEach((v, i) => { bins[Math.floor(i / BIN_SIZE)] += v; });
+
+  function drawChart() {
+    const W = canvas.offsetWidth;
+    const H = 320;
+    canvas.width = W * devicePixelRatio;
+    canvas.height = H * devicePixelRatio;
+    canvas.style.height = H + 'px';
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+
+    const maxV = Math.max(...bins);
+    const pad = { top: 56, right: 10, bottom: 0, left: 44 };
+    const cw = W - pad.left - pad.right;
+    const ch = H - pad.top - pad.bottom;
+    const barW = cw / numBins;
+    const gap = Math.max(1, barW * 0.12);
+
+    // Y-axis grid
+    const yTicks = [0, 500, 1000, 1500, 2000, 2500];
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    yTicks.forEach(t => {
+      const y = pad.top + ch - (t / maxV) * ch;
+      ctx.fillStyle = '#777';
+      ctx.fillText(t, pad.left - 6, y + 4);
+      ctx.beginPath();
+      ctx.strokeStyle = '#2a2d35';
+      ctx.lineWidth = 1;
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(pad.left + cw, y);
+      ctx.stroke();
+    });
+
+    // Bars — shaded by std dev distance, colored bars untouched
+    const STD_DEV = 12;
+    bins.forEach((v, i) => {
+      const isUser = userScore !== null && i === userScore;
+      const isAvg = i === AVG_SCORE;
+      const x = pad.left + i * barW + gap / 2;
+      const bw = barW - gap;
+      const bh = (v / maxV) * ch;
+      const y = pad.top + ch - bh;
+      if (isUser) {
+        ctx.fillStyle = userBarColor;
+      } else if (isAvg) {
+        ctx.fillStyle = 'rgba(180,190,240,0.8)';
+      } else {
+        const sd = Math.abs(i - AVG_SCORE) / STD_DEV;
+        const alpha = sd < 1 ? 0.55 : sd < 2 ? 0.38 : sd < 3 ? 0.22 : 0.1;
+        ctx.fillStyle = `rgba(121,134,203,${alpha})`;
+      }
+      ctx.fillRect(x, y, bw, bh);
+    });
+
+    // Stacked label + line helper
+    function drawBarLabel(binIdx, lines, color) {
+      const bx = pad.left + (binIdx + 0.5) * barW;
+      const barTopY = pad.top + ch - (bins[binIdx] / maxV) * ch;
+      const lineH = 13;
+      const lineLen = 14;
+      const labelGap = -5;
+      const totalTextH = lines.length * lineH;
+      const lineStartY = barTopY - lineLen;
+      const baseY = lineStartY - labelGap - totalTextH;
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      lines.forEach((l, idx) => ctx.fillText(l, bx, baseY + idx * lineH));
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.moveTo(bx, lineStartY);
+      ctx.lineTo(bx, barTopY);
+      ctx.stroke();
+    }
+
+    drawBarLabel(AVG_SCORE, ['avg', String(Math.round(AVG_SCORE))], 'rgba(180,190,240,0.9)');
+    if (userScore !== null && userScore >= 0 && userScore <= 140) {
+      drawBarLabel(userScore, [String(userScore)], userBarColor);
+    }
+
+    // Crosshair (desktop only)
+    if (window.innerWidth > 700 && hoverBin !== null && hoverBin >= 0 && hoverBin < numBins) {
+      const hx = pad.left + (hoverBin + 0.5) * barW;
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.moveTo(hx, pad.top);
+      ctx.lineTo(hx, pad.top + ch);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // X-axis labels with avg + user markers
+    const xAxis = document.getElementById('x-axis');
+    xAxis.innerHTML = '';
+    xAxis.style.position = 'relative';
+    for (let i = 0; i <= 140; i += 20) {
+      const span = document.createElement('span');
+      span.textContent = i;
+      xAxis.appendChild(span);
+    }
+  }
+
+  // ── Chart hover + click ──
+  function getBin(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const W = canvas.offsetWidth;
+    const cw = W - 44 - 10;
+    return Math.floor((mx - 44) / (cw / numBins));
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    const bin = getBin(e);
+    const tip = document.getElementById('chart-tooltip');
+    const W = canvas.offsetWidth;
+    const barW = (W - 54) / numBins;
+    if (bin >= 0 && bin < numBins) {
+      const count = Math.round(bins[bin]);
+      tip.textContent = `Score ${bin}: ${count.toLocaleString()} players`;
+      tip.style.left = (44 + (bin + 0.5) * barW) + 'px';
+      tip.style.top = '8px';
+      tip.style.opacity = '1';
+      if (hoverBin !== bin) { hoverBin = bin; drawChart(); }
+    } else {
+      tip.style.opacity = '0';
+      if (hoverBin !== null) { hoverBin = null; drawChart(); }
+    }
+  });
+  canvas.addEventListener('mouseleave', () => {
+    document.getElementById('chart-tooltip').style.opacity = '0';
+    hoverBin = null; drawChart();
+  });
+  canvas.addEventListener('touchend', () => {
+    hoverBin = null;
+    drawChart();
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const bin = getBin(e);
+    if (bin < 0 || bin >= numBins) return;
+    const input = document.querySelector('.score-input');
+    input.value = bin * BIN_SIZE;
+    handleScore(input);
+  });
+
+  function scrollChartTo(score) {
+    const scrollEl = document.querySelector('.chart-scroll');
+    if (!scrollEl || scrollEl.offsetWidth >= scrollEl.scrollWidth) return;
+    const W = scrollEl.querySelector('.chart-wrap').offsetWidth;
+    const barW = (W - 44 - 10) / numBins;
+    const scoreX = 44 + (score + 0.5) * barW;
+    scrollEl.scrollTo({ left: Math.max(0, scoreX - scrollEl.offsetWidth / 2), behavior: 'smooth' });
+  }
+
+  drawChart();
+  requestAnimationFrame(() => { scrollChartTo(AVG_SCORE); setTimeout(updateChartScrollFade, 400); });
+  window.addEventListener('resize', () => { drawChart(); scrollChartTo(userScore ?? AVG_SCORE); setTimeout(updateChartScrollFade, 400); });
+</script>
+</body>
+</html>

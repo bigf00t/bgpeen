@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goodat.games mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #2a2d35; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  nav { background: #1e2028; height: 56px; display: flex; align-items: center; padding: 0 24px; position: fixed; top: 0; width: 100%; z-index: 10; }
+  nav .logo { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.5px; }
+  nav .logo sup { font-size: 0.6rem; color: #aaa; font-weight: 400; }
+
+  .hero { padding: 100px 24px 48px; text-align: center; }
+  .hero .tagline { font-size: 0.85rem; color: #aaa; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+  .hero h1 { font-size: 2.4rem; font-weight: 700; }
+  .search-wrap { max-width: 520px; margin: 24px auto 0; }
+  .search-wrap input {
+    width: 100%; padding: 14px 20px; font-size: 1rem;
+    background: #1e2028; border: 1px solid #444; border-radius: 8px;
+    color: #fff; outline: none;
+  }
+  .search-wrap input::placeholder { color: #666; }
+  .stats { margin-top: 18px; font-size: 0.82rem; color: #777; }
+  .stats strong { color: #bbb; }
+
+  .section { padding: 0 32px 48px; max-width: 1100px; margin: 0 auto; }
+
+  .tabs { display: flex; border-bottom: 1px solid #3a3a3a; margin-bottom: 20px; }
+  .tab { padding: 10px 18px; font-size: 0.88rem; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
+  .tab.active { color: #fff; border-bottom-color: #7986cb; }
+
+  .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+
+  .game-card { border-radius: 6px; overflow: hidden; background: #22252e; cursor: pointer; transition: transform 0.15s; position: relative; }
+  .game-card:hover { transform: translateY(-3px); }
+  .game-card:hover .card-overlay { opacity: 1; }
+  .thumb { width: 100%; aspect-ratio: 1; display: block; }
+  .card-name { padding: 5px 7px; font-size: 0.68rem; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-overlay {
+    position: absolute; inset: 0 0 28px 0;
+    background: rgba(0,0,0,0.82);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; padding: 8px; text-align: center; gap: 2px;
+  }
+  .stat-label { font-size: 0.6rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-val { font-size: 1rem; font-weight: 600; }
+  .divider { width: 24px; height: 1px; background: #555; margin: 5px 0; }
+
+  .ph { width: 100%; aspect-ratio: 1; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">goodat.games <sup>beta</sup></span>
+</nav>
+
+<div class="hero">
+<h1>Find a Game</h1>
+  <div class="search-wrap">
+    <input type="text" placeholder="Search 885 games and 2,946,583 scores..." />
+  </div>
+</div>
+
+<div class="section">
+  <div class="tabs">
+    <div class="tab active">Most Popular</div>
+    <div class="tab">Recently Added</div>
+  </div>
+  <div class="game-grid">
+    <div class="game-card">
+      <div class="ph" style="background:#3a4a6b"></div>
+      <div class="card-name">Gaia Project</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">14,203</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">119.4</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#2a5f6b"></div>
+      <div class="card-name">SETI</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">8,901</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">67.2</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#6b3a5f"></div>
+      <div class="card-name">Castle Combo</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">5,412</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">32.1</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#4b6b3a"></div>
+      <div class="card-name">Lost Ruins of Arnak</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">22,100</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">55.8</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#6b5a2a"></div>
+      <div class="card-name">Azul</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">31,440</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">83.4</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#3a6b4a"></div>
+      <div class="card-name">Terraforming Mars</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">44,820</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">42.8</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#6b3a3a"></div>
+      <div class="card-name">Ark Nova</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">18,905</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">67.1</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#4a3a6b"></div>
+      <div class="card-name">Wingspan</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">29,330</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">74.6</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#5a6b3a"></div>
+      <div class="card-name">Evolution</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">7,210</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">28.3</div>
+      </div>
+    </div>
+    <div class="game-card">
+      <div class="ph" style="background:#6b6b3a"></div>
+      <div class="card-name">7 Wonders</div>
+      <div class="card-overlay">
+        <div class="stat-label">Scores</div><div class="stat-val">11,083</div>
+        <div class="divider"></div>
+        <div class="stat-label">Average</div><div class="stat-val">55.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</body>
+</html>
