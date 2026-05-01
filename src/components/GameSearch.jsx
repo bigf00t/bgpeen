@@ -130,11 +130,13 @@ const GameSearch = (props) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ term }),
       });
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         navigate(`/${data.id}/${getGameSlug({ name: data.name })}`);
       } else {
-        setAddError(data.error || 'Game not found on BoardGameGeek.');
+        let msg = 'Game not found on BoardGameGeek.';
+        try { const data = await res.json(); msg = data.error || msg; } catch { /* non-JSON proxy error */ }
+        setAddError(msg);
       }
     } catch {
       setAddError('Network error — please try again.');
