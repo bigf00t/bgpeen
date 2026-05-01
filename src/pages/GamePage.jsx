@@ -169,6 +169,15 @@ const GamePage = (props) => {
     }
   }, [props.data.game?.name, result?.id]);
 
+  // Auto-refresh while scores are still being crunched
+  useEffect(() => {
+    if (props.data.game?.totalScores !== 0) return;
+    const interval = setInterval(() => {
+      props.loadGame(id);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [props.data.game?.totalScores, id]);
+
   const derivedStats = useMemo(() => {
     if (!result?.scores) return null;
     const entries = Object.entries(result.scores).map(([k, v]) => [parseInt(k), v]).sort((a, b) => a[0] - b[0]);
@@ -219,7 +228,8 @@ const GamePage = (props) => {
             </Typography>
           </Box>
           <Alert severity="info" sx={{ maxWidth: 500, mx: 3 }}>
-            No plays recorded yet. Data is usually available within a few minutes of searching for a game.
+            We&apos;re crunching the numbers — this usually takes 5–10 minutes.
+            This page will refresh automatically.
           </Alert>
         </Box>
       );
