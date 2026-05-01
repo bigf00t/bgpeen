@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import * as actions from '../store/actions';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -16,8 +16,6 @@ const GameSearch = (props) => {
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
   const [placeholder, setPlaceholder] = useState('Search games and scores...');
-  const [bannerGame, setBannerGame] = useState('');
-  const [showBanner, setShowBanner] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -27,16 +25,11 @@ const GameSearch = (props) => {
   const inputRef = useRef(null);
   const animRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     if (props.games.length === 0) props.loadGames();
     if (!props.scoreStats) props.loadScoreStats();
   }, []);
-
-  useEffect(() => {
-    setShowBanner(false);
-  }, [location]);
 
   // Animated placeholder count-up
   useEffect(() => {
@@ -164,19 +157,6 @@ const GameSearch = (props) => {
             <div className="add-banner-body">{addError}</div>
           </div>
           <button className="add-banner-close" onClick={() => setAddError('')}>✕</button>
-        </div>
-      )}
-
-      {showBanner && (
-        <div className="add-banner">
-          <div className="add-banner-text">
-            <div className="add-banner-title">Adding &ldquo;{bannerGame}&rdquo;</div>
-            <div className="add-banner-body">
-              If this game exists on BoardGameGeek, we&apos;ll pull its scores, crunch some numbers,
-              and make it searchable here. This usually takes a few minutes — check back soon.
-            </div>
-          </div>
-          <button className="add-banner-close" onClick={() => setShowBanner(false)}>✕</button>
         </div>
       )}
 
