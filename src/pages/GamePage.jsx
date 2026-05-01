@@ -6,6 +6,8 @@ import { addRecentlyViewed } from '../components/RecentlyViewed';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -169,13 +171,13 @@ const GamePage = (props) => {
     }
   }, [props.data.game?.name, result?.id]);
 
-  // Auto-refresh while scores are still being crunched
+  // Live-update while scores are being crunched
   useEffect(() => {
     if (props.data.game?.totalScores !== 0) return;
-    const interval = setInterval(() => {
-      props.loadGame(id);
-    }, 60000);
-    return () => clearInterval(interval);
+    const unsubscribe = onSnapshot(doc(db, 'games', id), (snap) => {
+      if ((snap.data()?.totalScores ?? 0) > 0) props.loadGame(id);
+    });
+    return unsubscribe;
   }, [props.data.game?.totalScores, id, props.loadGame]);
 
   const derivedStats = useMemo(() => {
