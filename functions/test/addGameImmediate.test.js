@@ -68,6 +68,7 @@ test('returns 404 when addGame returns undefined and Firestore has no match', as
   const res = makeRes();
   await handler(makeReq('POST', { term: 'UnknownGame' }), res);
   expect(res.status).toHaveBeenCalledWith(404);
+  expect(res.json).toHaveBeenCalledWith({ error: 'Game not found on BoardGameGeek' });
 });
 
 test('returns 500 when addGame throws', async () => {
@@ -97,4 +98,5 @@ test('returns 404 when addGame returns undefined and numeric-ID doc does not exi
   const res = makeRes();
   await handler(makeReq('POST', { term: '12345' }), res);
   expect(res.status).toHaveBeenCalledWith(404);
+  expect(res.json).toHaveBeenCalledWith({ error: 'Game not found on BoardGameGeek' });
 });
