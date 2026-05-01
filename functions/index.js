@@ -74,3 +74,8 @@ exports.runAutomaticGameUpdates = onSchedule(
     await automatic.runAutomaticGameUpdates();
   }
 );
+
+exports.addGameImmediate = onRequest(
+  { memory: '512MiB', timeoutSeconds: 120, secrets: ['BGG_API_KEY'] },
+  require('./addGameHandler').handler
+);

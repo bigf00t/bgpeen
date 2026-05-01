@@ -26,6 +26,10 @@
         "function": "recordGameView"
       },
       {
+        "source": "/api/add-game",
+        "function": "addGameImmediate"
+      },
+      {
         "source": "/:id/:name/**",
         "function": "serveOgTags"
       },
