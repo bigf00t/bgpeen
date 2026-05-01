@@ -1,5 +1,6 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
@@ -78,4 +79,9 @@ exports.runAutomaticGameUpdates = onSchedule(
 exports.addGameImmediate = onRequest(
   { memory: '512MiB', timeoutSeconds: 120, secrets: ['BGG_API_KEY'] },
   require('./addGameHandler').handler
+);
+
+exports.onGameCreated = onDocumentCreated(
+  { document: 'games/{gameId}', memory: '1GiB', timeoutSeconds: 540, secrets: ['BGG_API_KEY'] },
+  require('./gameCreatedHandler').handler
 );
