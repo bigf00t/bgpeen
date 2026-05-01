@@ -176,7 +176,7 @@ const GamePage = (props) => {
       props.loadGame(id);
     }, 60000);
     return () => clearInterval(interval);
-  }, [props.data.game?.totalScores, id]);
+  }, [props.data.game?.totalScores, id, props.loadGame]);
 
   const derivedStats = useMemo(() => {
     if (!result?.scores) return null;
