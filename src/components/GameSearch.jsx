@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { collection, addDoc } from 'firebase/firestore';
 import * as actions from '../store/actions';
-import { db } from '../firebase';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getGameSlug } from '../utils';
@@ -20,6 +18,8 @@ const GameSearch = (props) => {
   const [placeholder, setPlaceholder] = useState('Search games and scores...');
   const [bannerGame, setBannerGame] = useState('');
   const [showBanner, setShowBanner] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [showcaseIndex, setShowcaseIndex] = useState(0);
   const [showcaseFading, setShowcaseFading] = useState(false);
@@ -119,19 +119,52 @@ const GameSearch = (props) => {
       alert('Never in a million years.');
       return;
     }
-    await addDoc(collection(db, 'searches'), {
-      term: inputValue,
-      completed: false,
-      date: new Date(),
-    });
-    setBannerGame(inputValue);
-    setShowBanner(true);
+    const term = inputValue.trim();
+    setAdding(true);
+    setAddError('');
     setInputValue('');
     setOpen(false);
+    try {
+      const res = await fetch('/api/add-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ term }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        navigate(`/${data.id}/${getGameSlug({ name: data.name })}`);
+      } else {
+        setAddError(data.error || 'Game not found on BoardGameGeek.');
+      }
+    } catch {
+      setAddError('Network error — please try again.');
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
     <>
+      {adding && (
+        <div className="add-banner add-banner--loading">
+          <div className="add-banner-spinner" />
+          <div className="add-banner-text">
+            <div className="add-banner-title">Looking up game on BoardGameGeek…</div>
+            <div className="add-banner-body">This usually takes 5–30 seconds.</div>
+          </div>
+        </div>
+      )}
+
+      {addError && (
+        <div className="add-banner add-banner--error">
+          <div className="add-banner-text">
+            <div className="add-banner-title">Couldn&apos;t add game</div>
+            <div className="add-banner-body">{addError}</div>
+          </div>
+          <button className="add-banner-close" onClick={() => setAddError('')}>✕</button>
+        </div>
+      )}
+
       {showBanner && (
         <div className="add-banner">
           <div className="add-banner-text">

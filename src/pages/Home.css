@@ -571,3 +571,29 @@
     top: 0;
   }
 }
+
+/* ── Add-game banners ── */
+.add-banner--error {
+  background: #3a1a1a;
+  border-color: #c62828;
+}
+
+.add-banner--loading {
+  background: #1a2a3a;
+  border-color: #1565c0;
+}
+
+.add-banner-spinner {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: #7986cb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 14px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
