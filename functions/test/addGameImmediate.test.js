@@ -27,12 +27,14 @@ test('returns 400 for missing term', async () => {
   const res = makeRes();
   await handler(makeReq('POST', {}), res);
   expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({ error: 'Missing term' });
 });
 
 test('returns 400 for whitespace-only term', async () => {
   const res = makeRes();
   await handler(makeReq('POST', { term: '   ' }), res);
   expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({ error: 'Missing term' });
 });
 
 test('returns 200 with id/name when addGame succeeds', async () => {
@@ -73,4 +75,26 @@ test('returns 500 when addGame throws', async () => {
   const res = makeRes();
   await handler(makeReq('POST', { term: 'Catan' }), res);
   expect(res.status).toHaveBeenCalledWith(500);
+  expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add game' });
+});
+
+test('returns 200 from Firestore doc when addGame returns undefined and term is numeric', async () => {
+  addGame.addGame.mockResolvedValue(undefined);
+  getFirestore.mockReturnValue({
+    collection: () => ({ doc: () => ({ get: jest.fn().mockResolvedValue({ exists: true, id: '12345', data: () => ({ name: 'Catan' }) }) }) }),
+  });
+  const res = makeRes();
+  await handler(makeReq('POST', { term: '12345' }), res);
+  expect(res.status).toHaveBeenCalledWith(200);
+  expect(res.json).toHaveBeenCalledWith({ id: '12345', name: 'Catan' });
+});
+
+test('returns 404 when addGame returns undefined and numeric-ID doc does not exist', async () => {
+  addGame.addGame.mockResolvedValue(undefined);
+  getFirestore.mockReturnValue({
+    collection: () => ({ doc: () => ({ get: jest.fn().mockResolvedValue({ exists: false }) }) }),
+  });
+  const res = makeRes();
+  await handler(makeReq('POST', { term: '12345' }), res);
+  expect(res.status).toHaveBeenCalledWith(404);
 });
