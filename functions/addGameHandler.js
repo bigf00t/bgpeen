@@ -1,16 +1,54 @@
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const addGame = require('./addGame');
+
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+async function isRateLimited(ip) {
+  const db = getFirestore();
+  const safeIp = ip.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const ref = db.collection('_rateLimits').doc(`addGame_${safeIp}`);
+  try {
+    return await db.runTransaction(async (t) => {
+      const snap = await t.get(ref);
+      const data = snap.data() ?? {};
+      const now = Date.now();
+      if (!data.windowStart || now - data.windowStart > RATE_LIMIT_WINDOW_MS) {
+        t.set(ref, { windowStart: now, count: 1 });
+        return false;
+      }
+      if (data.count >= RATE_LIMIT_MAX) return true;
+      t.update(ref, { count: FieldValue.increment(1) });
+      return false;
+    });
+  } catch (e) {
+    console.error('Rate limit check failed:', e);
+    return false; // fail open
+  }
+}
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+
   const term = (req.body?.term || '').trim();
   if (!term) {
     res.status(400).json({ error: 'Missing term' });
     return;
   }
+
+  if (process.env.FUNCTIONS_EMULATOR !== 'true') {
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+      || req.socket?.remoteAddress
+      || 'unknown';
+    if (await isRateLimited(ip)) {
+      res.status(429).json({ error: 'Too many requests — try again in an hour.' });
+      return;
+    }
+  }
+
   try {
     const game = await addGame.addGame(term);
     if (game) {

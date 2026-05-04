@@ -152,7 +152,7 @@ const GamePage = (props) => {
   // Results arrive from Redux
   useEffect(() => {
     if (_.isEmpty(filters)) return;
-    if (props.data?.game?.results && Object.keys(props.data.game.results).length > 1) {
+    if (props.data?.game?.results && Object.keys(props.data.game.results).length > 0) {
       setResult(props.data.game.results[getResultId()]);
       setResultLoading(false);
     }
@@ -172,13 +172,15 @@ const GamePage = (props) => {
   }, [props.data.game?.name, result?.id]);
 
   // Live-update while scores are being crunched
+  const loadGameRef = useRef(props.loadGame);
+  useEffect(() => { loadGameRef.current = props.loadGame; });
   useEffect(() => {
     if (props.data.game?.totalScores !== 0) return;
     const unsubscribe = onSnapshot(doc(db, 'games', id), (snap) => {
-      if ((snap.data()?.totalScores ?? 0) > 0) props.loadGame(id);
+      if ((snap.data()?.totalScores ?? 0) > 0) loadGameRef.current(id);
     });
     return unsubscribe;
-  }, [props.data.game?.totalScores, id, props.loadGame]);
+  }, [props.data.game?.totalScores, id]);
 
   const derivedStats = useMemo(() => {
     if (!result?.scores) return null;
@@ -217,8 +219,8 @@ const GamePage = (props) => {
   if (result === null) {
     if (props.data.game?.totalScores === 0) {
       return (
-        <Box display="flex" flexDirection="column" pt="64px" alignItems="center">
-          <Box display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3}>
+        <Box display="flex" flexDirection="column" pt="64px" pb="48px" alignItems="center" gap={3}>
+          <Box display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3} pb={0}>
             <Image
               src={props.data.game.thumbnail}
               duration={0}
@@ -229,10 +231,15 @@ const GamePage = (props) => {
               {props.data.game.name}
             </Typography>
           </Box>
-          <Alert severity="info" sx={{ maxWidth: 500, mx: 3 }}>
-            We&apos;re crunching the numbers — this usually takes 5–10 minutes.
-            This page will refresh automatically.
-          </Alert>
+          <CircularProgress size={32} thickness={3} sx={{ color: '#7986cb' }} />
+          <Box sx={{ textAlign: 'center', color: '#888', maxWidth: 400, px: 3 }}>
+            <Typography sx={{ fontSize: '0.95rem', mb: 0.5 }}>
+              Fetching play data from BoardGameGeek…
+            </Typography>
+            <Typography sx={{ fontSize: '0.8rem', color: '#666' }}>
+              This usually takes 10–30 seconds. Initial data will load first — full score history builds in the background.
+            </Typography>
+          </Box>
         </Box>
       );
     }
@@ -360,10 +367,6 @@ const GamePage = (props) => {
           </React.Suspense>
         </div>
 
-        <div className="rv-data-source">
-          data provided by{' '}
-          <a href="https://boardgamegeek.com" target="_blank" rel="noreferrer">boardgamegeek.com</a>
-        </div>
 
       </div>
     </Fade>

@@ -3,6 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // All game data is public read-only. Writes come from Admin SDK (Cloud Functions)
     // which bypasses rules entirely.
+    match /_rateLimits/{doc} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read;
       allow write: if false;

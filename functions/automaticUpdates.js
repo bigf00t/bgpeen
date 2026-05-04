@@ -126,10 +126,7 @@ const addSearchedGames = async (searches, maxPages) => {
 
       await util.delay();
 
-      if (newGame) {
-        const newPlays = await update_plays.updateGamePlays(newGame, batch, maxPages);
-        await update_results.updateResults(newGame, batch, newPlays, false);
-      } else {
+      if (!newGame) {
         console.info(`No game added for search "${search.term}"`);
       }
     } catch (err) {

@@ -7,6 +7,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import Header from './components/Header';
 import Home from './pages/Home';
+import './App.css';
+import bggLogo from './assets/powered-by-bgg.png';
 const GamePage = React.lazy(() => import('./pages/GamePage'));
 const Contact = React.lazy(() => import('./pages/Contact'));
 
@@ -43,6 +45,11 @@ function App() {
               <Route path="/dev" element={<Home />} />
               <Route path="/contact" element={<React.Suspense fallback={null}><Contact /></React.Suspense>} />
             </Routes>
+            <footer className="app-footer">
+              <a href="https://boardgamegeek.com" target="_blank" rel="noreferrer">
+                <img src={bggLogo} alt="Powered by BGG" className="bgg-logo" />
+              </a>
+            </footer>
           </div>
         </ThemeProvider>
       </StyledEngineProvider>

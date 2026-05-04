@@ -4,6 +4,7 @@ import * as actions from '../store/actions';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getGameSlug } from '../utils';
+import { getAppCheckToken } from '../firebase';
 
 const fmtCount = (n) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n));
 
@@ -17,6 +18,7 @@ const GameSearch = (props) => {
   const [open, setOpen] = useState(false);
   const [placeholder, setPlaceholder] = useState('Search games and scores...');
   const [adding, setAdding] = useState(false);
+  const [addingTerm, setAddingTerm] = useState('');
   const [addError, setAddError] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [showcaseIndex, setShowcaseIndex] = useState(0);
@@ -114,13 +116,18 @@ const GameSearch = (props) => {
     }
     const term = inputValue.trim();
     setAdding(true);
+    setAddingTerm(term);
     setAddError('');
     setInputValue('');
     setOpen(false);
     try {
+      const appCheckToken = await getAppCheckToken();
       const res = await fetch('/api/add-game', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(appCheckToken ? { 'X-Firebase-AppCheck': appCheckToken } : {}),
+        },
         body: JSON.stringify({ term }),
       });
       if (res.ok) {
@@ -144,8 +151,8 @@ const GameSearch = (props) => {
         <div className="add-banner add-banner--loading">
           <div className="add-banner-spinner" />
           <div className="add-banner-text">
-            <div className="add-banner-title">Looking up game on BoardGameGeek…</div>
-            <div className="add-banner-body">This usually takes 5–30 seconds.</div>
+            <div className="add-banner-title">Looking up &ldquo;{addingTerm}&rdquo; on BoardGameGeek…</div>
+            <div className="add-banner-body">Searching BoardGameGeek…</div>
           </div>
         </div>
       )}
@@ -153,7 +160,7 @@ const GameSearch = (props) => {
       {addError && (
         <div className="add-banner add-banner--error">
           <div className="add-banner-text">
-            <div className="add-banner-title">Couldn&apos;t add game</div>
+            <div className="add-banner-title">Couldn&apos;t find &ldquo;{addingTerm}&rdquo;</div>
             <div className="add-banner-body">{addError}</div>
           </div>
           <button className="add-banner-close" onClick={() => setAddError('')}>✕</button>

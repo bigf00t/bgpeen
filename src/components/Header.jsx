@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import Link from '@mui/material/Link';
 
@@ -92,8 +93,9 @@ const Header = () => {
             <Link
               component={RouterLink}
               to="/contact"
-              sx={{ fontSize: '0.72rem', color: '#888', textDecoration: 'none', '&:hover': { color: '#ccc' } }}
+              sx={{ fontSize: '0.72rem', color: '#888', textDecoration: 'none', '&:hover': { color: '#ccc' }, display: 'flex', alignItems: 'center', gap: '4px' }}
             >
+              <EmailOutlinedIcon sx={{ fontSize: 13 }} />
               Contact
             </Link>
           </Box>
