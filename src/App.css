@@ -1,6 +1,7 @@
 .menu-icon { width: 36px; height: 36px; transform: translateY(-4px); }
 
-.app-footer { text-align: center; padding: 0 0 32px; }
+.App { display: flex; flex-direction: column; min-height: 100vh; }
+.app-footer { text-align: center; padding: 0 0 32px; margin-top: auto; }
 .bgg-logo { height: 36px; width: auto; filter: brightness(0) invert(0.55); transition: filter 0.15s; display: block; margin: 0 auto; }
 .bgg-logo:hover { filter: brightness(0) invert(0.8); }
 

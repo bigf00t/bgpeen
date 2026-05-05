@@ -1,6 +1,5 @@
 /* ── Layout ── */
 .measure-layout {
-  min-height: calc(100vh - 56px);
 }
 
 .measure-top {

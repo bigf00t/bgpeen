@@ -5,7 +5,7 @@ import * as actions from '../store/actions';
 import { addRecentlyViewed } from '../components/RecentlyViewed';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -36,6 +36,8 @@ const GamePage = (props) => {
 
   const { id, name } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const justAdded = !!location.state?.justAdded;
 
   const getResultId = () => {
     if (filters.players) {
@@ -171,16 +173,16 @@ const GamePage = (props) => {
     }
   }, [props.data.game?.name, result?.id]);
 
-  // Live-update while scores are being crunched
+  // Live-update while scores are being crunched (only for freshly-added games)
   const loadGameRef = useRef(props.loadGame);
   useEffect(() => { loadGameRef.current = props.loadGame; });
   useEffect(() => {
-    if (props.data.game?.totalScores !== 0) return;
+    if (!justAdded || (props.data.game?.totalScores ?? 0) > 0) return;
     const unsubscribe = onSnapshot(doc(db, 'games', id), (snap) => {
       if ((snap.data()?.totalScores ?? 0) > 0) loadGameRef.current(id);
     });
     return unsubscribe;
-  }, [props.data.game?.totalScores, id]);
+  }, [justAdded, props.data.game?.totalScores, id]);
 
   const derivedStats = useMemo(() => {
     if (!result?.scores) return null;
@@ -217,7 +219,7 @@ const GamePage = (props) => {
 
   // ── Loading / error states ──
   if (result === null) {
-    if (props.data.game?.totalScores === 0) {
+    if (justAdded) {
       return (
         <Box display="flex" flexDirection="column" pt="64px" pb="48px" alignItems="center" gap={3}>
           <Box display="flex" flexWrap="wrap" justifyContent="center" alignItems="center" p={3} pb={0}>

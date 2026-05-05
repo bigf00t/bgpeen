@@ -85,3 +85,8 @@ exports.onGameCreated = onDocumentCreated(
   { document: 'games/{gameId}', memory: '1GiB', timeoutSeconds: 540, secrets: ['BGG_API_KEY'] },
   require('./gameCreatedHandler').handler
 );
+
+exports.onContactCreated = onDocumentCreated(
+  { document: 'contacts/{contactId}', memory: '256MiB', secrets: ['GMAIL_APP_PASSWORD'] },
+  require('./contactNotifyHandler').handler
+);
