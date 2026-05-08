@@ -20,11 +20,11 @@ const getResultId = (params) => {
 };
 
 const calcPercentile = (scores, score) => {
-  const s = parseInt(score);
+  const targetScore = parseInt(score);
   const total = _.sum(_.values(scores));
   if (!total) return null;
   return (
-    (_.reduce(scores, (acc, c, key) => acc + (parseInt(key) < s ? c : 0) + (parseInt(key) === s ? c * 0.5 : 0), 0) *
+    (_.reduce(scores, (acc, c, key) => acc + (parseInt(key) < targetScore ? c : 0) + (parseInt(key) === targetScore ? c * 0.5 : 0), 0) *
       100) /
     total
   );

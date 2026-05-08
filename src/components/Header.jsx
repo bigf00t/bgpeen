@@ -90,14 +90,41 @@ const Header = () => {
                 </IconButton>
               </>
             )}
-            <Link
+            <Button
               component={RouterLink}
               to="/contact"
-              sx={{ fontSize: '0.72rem', color: '#888', textDecoration: 'none', '&:hover': { color: '#ccc' }, display: 'flex', alignItems: 'center', gap: '4px' }}
+              startIcon={<EmailOutlinedIcon sx={{ fontSize: '13px !important' }} />}
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid #3a3a3a',
+                borderRadius: '6px',
+                color: '#bbb',
+                fontSize: '0.72rem',
+                padding: '5px 12px 5px 10px',
+                textTransform: 'none',
+                fontFamily: 'inherit',
+                letterSpacing: '0.01em',
+                minWidth: 0,
+                '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: '#555', color: '#fff' },
+              }}
             >
-              <EmailOutlinedIcon sx={{ fontSize: 13 }} />
               Contact
-            </Link>
+            </Button>
+            <IconButton
+              component={RouterLink}
+              to="/contact"
+              sx={{
+                display: { xs: 'flex', sm: 'none' },
+                border: '1px solid #444',
+                borderRadius: '8px',
+                color: '#999',
+                padding: '7px 9px',
+                '&:hover': { borderColor: '#666', color: '#ccc' },
+              }}
+            >
+              <EmailOutlinedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
           </Box>
         </Box>
       </Toolbar>

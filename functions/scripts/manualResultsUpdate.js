@@ -14,7 +14,7 @@ exports.manualResultsUpdate = async (gameIds) => {
 
   const gamesSnapshot = await query.get();
 
-  const games = util.docsToArray(gamesSnapshot);
+  const games = util.snapshotToArray(gamesSnapshot);
 
   for (const game of games) {
     console.info(`Started updating results for: ${game.name}`);
@@ -24,7 +24,7 @@ exports.manualResultsUpdate = async (gameIds) => {
 
     const batch = firestore.batch();
 
-    await update.updateResults(game, batch, util.docsToArray(playsSnapshot), true);
+    await update.updateResults(game, batch, util.snapshotToArray(playsSnapshot), true);
 
     await batch.commit();
   }

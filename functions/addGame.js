@@ -23,9 +23,9 @@ exports.addGame = async (searchTerm) => {
 
   await util.delay();
 
-  let thingResult;
+  let bggThingResponse;
   try {
-    thingResult = await util.withRetry(() =>
+    bggThingResponse = await util.withRetry(() =>
       axios.get(`https://api.geekdo.com/xmlapi2/things?id=${gameId}`, {
         headers: { Authorization: `Bearer ${util.getApiKey()}` },
       })
@@ -35,7 +35,7 @@ exports.addGame = async (searchTerm) => {
     return;
   }
 
-  const item = convert.xml2js(thingResult.data, {
+  const item = convert.xml2js(bggThingResponse.data, {
     compact: true,
     attributesKey: '$',
   }).items.item;
@@ -48,22 +48,22 @@ exports.addGame = async (searchTerm) => {
   const name = Array.isArray(item.name)
     ? _.find(item.name, (name) => name.$.type === 'primary').$.value
     : item.name.$.value;
-  const suggestedplayerspoll = _.find(item.poll, (poll) => poll.$.name === 'suggested_numplayers');
-  if (!suggestedplayerspoll) {
+  const suggestedPlayersPoll = _.find(item.poll, (poll) => poll.$.name === 'suggested_numplayers');
+  if (!suggestedPlayersPoll) {
     console.warn(`No suggested_numplayers poll found for ${name} (${gameId}) — suggestedplayers will be empty`);
   }
-  const suggestedplayers = _.reduce(
-    suggestedplayerspoll?.results,
-    (redPoll, results) => {
-      redPoll[results.$.numplayers] = _.reduce(
+  const suggestedPlayers = _.reduce(
+    suggestedPlayersPoll?.results,
+    (pollAcc, results) => {
+      pollAcc[results.$.numplayers] = _.reduce(
         results.result,
-        (redResults, result) => {
-          redResults[result.$.value] = parseInt(result.$.numvotes);
-          return redResults;
+        (votesAcc, result) => {
+          votesAcc[result.$.value] = parseInt(result.$.numvotes);
+          return votesAcc;
         },
         {}
       );
-      return redPoll;
+      return pollAcc;
     },
     {}
   );
@@ -93,7 +93,7 @@ exports.addGame = async (searchTerm) => {
     minplayers: parseInt(item.minplayers.$.value),
     maxplayers: parseInt(item.maxplayers.$.value),
     playingtime: parseInt(item.playingtime.$.value),
-    suggestedplayers: suggestedplayers,
+    suggestedplayers: suggestedPlayers,
   };
 
   const newPlays = {
@@ -161,12 +161,10 @@ const getGameId = async (searchTerm) => {
     return null;
   }
 
-  // Only one result
   if (!Array.isArray(json.items.item)) {
     return json.items.item.$.id;
   }
 
-  // Get newest
   const foundGames = _(json.items.item)
     .filter((game) => game.yearpublished !== undefined)
     .orderBy([(game) => parseInt(game.yearpublished.$.value), (game) => parseInt(game.$.id)], ['desc', 'desc'])

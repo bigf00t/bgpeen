@@ -8,7 +8,7 @@ const update_results = require('../updateResults');
 exports.manualPlaysUpdate = async (gameIds, maxPages) => {
   const gamesSnapshot = await firestore.collection('games').where('id', 'in', gameIds).get();
 
-  const games = util.docsToArray(gamesSnapshot);
+  const games = util.snapshotToArray(gamesSnapshot);
 
   for (const game of games) {
     const batch = firestore.batch();

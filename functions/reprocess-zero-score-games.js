@@ -25,20 +25,20 @@ async function processGame(game) {
   console.log(`Processing: ${game.name} (${game.id})`);
 
   // Phase 1
-  const batch1 = db.batch();
-  const plays1 = await updatePlays.updateGamePlays(game, batch1, 5);
-  await updateResults.updateResults(game, batch1, plays1, false);
-  await batch1.commit();
+  const phase1Batch = db.batch();
+  const initialPlays = await updatePlays.updateGamePlays(game, phase1Batch, 5);
+  await updateResults.updateResults(game, phase1Batch, initialPlays, false);
+  await phase1Batch.commit();
 
   // Re-fetch between phases
   const snap = await db.collection('games').doc(game.id).get();
-  const game2 = { id: game.id, ...snap.data() };
+  const refreshedGame = { id: game.id, ...snap.data() };
 
   // Phase 2
-  const batch2 = db.batch();
-  const plays2 = await updatePlays.updateGamePlays(game2, batch2, 100);
-  await updateResults.updateResults(game2, batch2, plays2, false);
-  await batch2.commit();
+  const phase2Batch = db.batch();
+  const fullPlays = await updatePlays.updateGamePlays(refreshedGame, phase2Batch, 100);
+  await updateResults.updateResults(refreshedGame, phase2Batch, fullPlays, false);
+  await phase2Batch.commit();
 
   const finalSnap = await db.collection('games').doc(game.id).get();
   const { totalScores } = finalSnap.data() ?? {};

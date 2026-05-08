@@ -13,7 +13,7 @@ exports.manualGamesUpdate = async (gameIds) => {
 
   const gamesSnapshot = await query.get();
 
-  const games = util.docsToArray(gamesSnapshot);
+  const games = util.snapshotToArray(gamesSnapshot);
 
   let gameNum = 0;
   for (const game of games) {
@@ -24,7 +24,7 @@ exports.manualGamesUpdate = async (gameIds) => {
 
     const gameResultsRef = gameRef.collection('results');
     const gameResultsSnapshot = await gameResultsRef.get();
-    const gameResults = util.docsToArray(gameResultsSnapshot);
+    const gameResults = util.snapshotToArray(gameResultsSnapshot);
 
     console.log(`Deleting ${gameResults.length} results`);
 

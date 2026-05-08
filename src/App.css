@@ -5,6 +5,11 @@
 .bgg-logo { height: 36px; width: auto; filter: brightness(0) invert(0.55); transition: filter 0.15s; display: block; margin: 0 auto; }
 .bgg-logo:hover { filter: brightness(0) invert(0.8); }
 
+@media (max-width: 700px) {
+  body { overflow-x: hidden; }
+  .App { max-width: 100vw; }
+}
+
 @media (max-width: 640px) {
   .menu-icon { width: 26px; height: 26px; transform: translateY(-1px); }
 }

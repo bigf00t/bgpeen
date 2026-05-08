@@ -8,7 +8,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 const FilterDropdown = (props) => {
   const [value, setValue] = useState();
-  const [highlightValue, setHighlightValue] = useState('');
+  const [hoveredOption, setHighlightValue] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
 
   const handleValueChange = (event, newValue) => {
@@ -36,7 +36,7 @@ const FilterDropdown = (props) => {
   useEffect(() => { updateSearchParamsRef.current = updateSearchParams; }, [updateSearchParams]);
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Tab' && highlightValue) handleValueChange(event, highlightValue);
+    if (event.key === 'Tab' && hoveredOption) handleValueChange(event, hoveredOption);
   };
 
   const isDisabled = () => props.enabledByFilter && !searchParams.get(props.enabledByFilter);
@@ -59,6 +59,8 @@ const FilterDropdown = (props) => {
     }
   }, [value]);
 
+  if (isDisabled()) return null;
+
   return (
     <FormControl
       sx={{ m: 1, minWidth: 180, height: 60, flex: 3 }}
@@ -75,7 +77,6 @@ const FilterDropdown = (props) => {
         options={props.options}
         fullWidth
         getOptionLabel={(option) => (props.optionLabelFormat ? props.optionLabelFormat(option) : String(option))}
-        disabled={isDisabled()}
         renderInput={(params) => {
           params.inputProps.onKeyDown = handleKeyDown;
           params.inputProps.onClick = (event) => event.stopPropagation();

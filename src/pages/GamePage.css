@@ -4,6 +4,7 @@
 /* ── PAGE ── */
 .rv-page {
   max-width: 1100px;
+  min-width: 1100px;
   margin: 0 auto;
   padding: 0 32px 32px;
 }
@@ -77,10 +78,10 @@
   align-items: center;
   gap: 8px;
 }
-.rv-filters-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
-.rv-primary-filters { display: flex; align-items: center; gap: 8px; }
-.rv-advanced-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
-.rv-advanced-filters-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rv-filters-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+.rv-filters-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0; flex: 1; }
+.rv-filter-group { display: flex; align-items: center; gap: 8px; }
+.rv-filter-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.1); margin: 0 12px; flex-shrink: 0; }
 
 /* Shrink MUI dropdowns in v2 filters */
 .rv-filters-section .MuiFormControl-root { min-width: 118px !important; height: auto !important; margin: 0 !important; flex: unset !important; }
@@ -250,14 +251,14 @@
   overflow: hidden;
   padding: 20px 20px 0 4px;
   position: relative;
-  height: 320px;
+  height: 480px;
 }
 
 
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .rv-page { padding-left: 16px; padding-right: 16px; }
+  .rv-page { padding-left: 16px; padding-right: 16px; min-width: 0; margin-left: 0; margin-right: 0; }
 
   .rv-thumb-wrap { width: 64px; height: 78px; }
   .rv-header { flex-wrap: wrap; padding: 16px 0 8px; gap: 12px; }
@@ -278,45 +279,28 @@
   .rv-stats-secondary .rv-stddev-toggle { margin-left: 0; }
   .rv-stats-more-toggle { margin-left: 0; }
 
-  .rv-filters-section { flex-wrap: wrap; gap: 0; padding: 14px 0 0; }
+  .rv-filters-section { gap: 0; padding: 14px 0 0; }
   .rv-filters-label { display: none; }
-  .rv-primary-filters {
+  .rv-filters-row {
     overflow-x: auto;
     flex-wrap: nowrap;
     width: 100%;
-    padding-top: 20px;
-    padding-bottom: 4px;
-  }
-  .rv-primary-filters::-webkit-scrollbar { display: none; }
-  .rv-advanced-filters {
-    flex-wrap: nowrap;
-    align-items: center;
-    margin-left: 0;
-    flex-basis: 100%;
-    padding: 0 0 14px;
-    border-bottom: 1px solid #333;
-    gap: 0;
-    width: 100%;
-    overflow: hidden;
-  }
-  .rv-advanced-filters-inner {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    flex: 1;
     min-width: 0;
-    gap: 8px;
-    padding-top: 20px;
-    padding-bottom: 10px;
-    -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
-    mask-image: linear-gradient(to right, black 75%, transparent 100%);
+    overscroll-behavior-x: contain;
+    padding: 14px 0 14px;
+    border-bottom: 1px solid #333;
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    -webkit-overflow-scrolling: touch;
   }
-  .rv-advanced-filters-inner.scrolled-end {
+  .rv-filters-row.scrolled-end {
     -webkit-mask-image: none;
     mask-image: none;
   }
-  .rv-advanced-filters-inner::-webkit-scrollbar { display: none; }
+  .rv-filters-row::-webkit-scrollbar { display: none; }
+  .rv-filter-group { flex-shrink: 0; }
+  .rv-filter-sep { height: 28px; margin: 0 8px; flex-shrink: 0; }
   .rv-filters-section .MuiFormControl-root { min-width: 120px !important; }
-  .rv-filters-section .MuiFormControl-root:first-child { margin-left: 0 !important; }
 
   .rv-score-row { flex-wrap: nowrap; align-items: center; padding-top: 13px; padding-bottom: 14px; }
   .rv-score-label { display: none; }
@@ -326,6 +310,7 @@
 
   .rv-chart-scroll {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
   }
   .rv-chart-scroll::-webkit-scrollbar { display: none; }

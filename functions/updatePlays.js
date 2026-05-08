@@ -88,12 +88,12 @@ const getDatePlayIds = (plays, newDate, oldDate, playIds) => {
     return [];
   }
 
-  const newMinDatePlayIds = _(plays)
+  const playIdsOnDate = _(plays)
     .filter((play) => play.date === newDate)
     .map((play) => play.id)
     .value();
 
-  return newDate != oldDate ? newMinDatePlayIds : (Array.isArray(playIds) ? playIds : []).concat(newMinDatePlayIds);
+  return newDate != oldDate ? playIdsOnDate : (Array.isArray(playIds) ? playIds : []).concat(playIdsOnDate);
 };
 
 const getPlaysUrl = (game, gamePlays, details) =>
@@ -172,7 +172,6 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
   };
 };
 
-// Get formatted plays
 const getCleanPlaysFromJson = (plays) =>
   plays.map((play) => {
     const cleanPlayers = play.players ? _.map(play.players.player, (player) => ({ ...player.$ })) : [];
@@ -183,7 +182,6 @@ const getCleanPlaysFromJson = (plays) =>
     };
   });
 
-// Filter out plays that we've already recorded in a previous run
 const getNewPlays = (gamePlays, plays) => {
   const minDatePlayIds = Array.isArray(gamePlays.minDatePlayIds) ? gamePlays.minDatePlayIds : [];
   const maxDatePlayIds = Array.isArray(gamePlays.maxDatePlayIds) ? gamePlays.maxDatePlayIds : [];

@@ -14,7 +14,7 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 100, includeHi
   const searchesSnapshot = await firestore.collection('searches').where('completed', '!=', true).limit(maxGames).get();
 
   if (searchesSnapshot.size > 0) {
-    const searches = util.docsToArray(searchesSnapshot);
+    const searches = util.snapshotToArray(searchesSnapshot);
     await addSearchedGames(searches, maxPages);
     return;
   }
@@ -50,7 +50,7 @@ exports.runAutomaticGameUpdates = async (maxGames = 1, maxPages = 100, includeHi
       continue;
     }
 
-    const gamePlays = util.docsToArray(gamePlaysSnapshot);
+    const gamePlays = util.snapshotToArray(gamePlaysSnapshot);
 
     await updatePlaysForEligibleGames(gamePlays, maxPages);
 
@@ -67,7 +67,7 @@ const updatePlaysForEligibleGames = async (gamePlays, maxPages) => {
   let failed = 0;
 
   for (const gamePlay of gamePlays) {
-    // gamePlay.id is added by util.docsToArray()
+    // gamePlay.id is added by util.snapshotToArray()
     const gameSnapshot = await firestore.collection('games').doc(gamePlay.id).get();
     const game = { id: gameSnapshot.id, ...gameSnapshot.data() };
 

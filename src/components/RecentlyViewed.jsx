@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getGameSlug } from '../utils';
 
 const STORAGE_KEY = 'recentlyViewed';
-const MAX_RECENT = 8;
+const MAX_RECENT = 5;
 
 export const addRecentlyViewed = (game) => {
   try {

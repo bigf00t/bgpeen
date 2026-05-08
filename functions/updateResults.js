@@ -1,12 +1,13 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const firestore = getFirestore();
 
-const { mean, mode, median, std, mad, abs } = require('mathjs');
+const { mean } = require('mathjs');
 
 const _ = require('lodash');
 const dayjs = require('dayjs');
 
 const util = require('./util');
+const { combineScores, getResultsWithStats } = require('./resultStats');
 
 exports.updateResults = async (game, batch, newPlays, clear = false) => {
   if (newPlays.length === 0) {
@@ -19,7 +20,7 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
 
   const resultsSnapshot = await resultsRef.get();
 
-  const existingResults = clear ? [] : util.docsToArray(resultsSnapshot);
+  const existingResults = clear ? [] : util.snapshotToArray(resultsSnapshot);
   const existingAllResult = _.find(existingResults, (result) => result.id === 'all');
 
   const detailsRef = firestore.collection('details').doc(game.id);
@@ -47,25 +48,12 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
     return;
   }
 
-  // Get results from plays by player
   const playerResults = getPlayerResultsFromPlays(validPlays, gameType);
-
-  // Group into keyed results
   const keyedResults = getKeyedResultsFromPlayerResults(playerResults);
-
-  // Filter out keys that we don't want (low play count colors etc.)
   const filteredResults = filterResults(keyedResults);
-
-  // Combine with existing results
   const combinedResults = getCombinedResults(filteredResults, existingResults);
-
-  // Add stats to results
   const resultsWithStats = getResultsWithStats(combinedResults);
-
-  // Get all player counts with a recorded score
   const playerCounts = getCombinedPlayerCounts(resultsWithStats, existingResults);
-
-  // Add expected values to results
   const playerCountMeans = getPlayerCountMeans(resultsWithStats, existingResults, playerCounts);
   const results = getResultsWithExpected(resultsWithStats, playerCountMeans);
 
@@ -382,20 +370,6 @@ const getKeysFromResult = (result) => {
   return keys;
 };
 
-const combineScores = (existingScores, newScores) => {
-  if (newScores === undefined) {
-    return existingScores;
-  }
-
-  const scores = existingScores === undefined ? {} : { ...existingScores };
-
-  _.forOwn(newScores, (newCount, score) => {
-    scores[score] = _.defaultTo(scores[score], 0) + newCount;
-  });
-
-  return scores;
-};
-
 const getCombinedResults = (keyedResults, existingResults) => {
   let combinedResults = {};
 
@@ -468,56 +442,6 @@ const filterResults = (newResults) => {
   return filteredResults;
 };
 
-// Get outlier scores, based on double mad
-const calculateNewOutliers = (result) => {
-  // Put old outliers back in so we don't mess with the STD too much
-  const scoresAndOutliers = combineScores(result.scores, result.outlierScores);
-
-  const explodedScores = getExplodedScores(scoresAndOutliers);
-
-  const medianVal = median(explodedScores);
-  const madCutoff = 8;
-
-  const leftHalf = _.filter(explodedScores, (score) => score <= medianVal);
-  const rightHalf = _.filter(explodedScores, (score) => score >= medianVal);
-
-  // Floor at 1 to prevent division by zero when a single score dominates a half,
-  // which would collapse MAD to 0 and flag all other scores as infinite outliers.
-  const leftMad = Math.max(mad(leftHalf), 1);
-  const rightMad = Math.max(mad(rightHalf), 1);
-
-  console.info(`Left mad: ${leftMad} - Median: ${medianVal} - Right mad: ${rightMad} - Cutoff: ${madCutoff}`);
-  console.info(`Finding outlier scores < ${medianVal - leftMad * madCutoff} and > ${medianVal + rightMad * madCutoff}`);
-
-  const leftOutliers = _(leftHalf)
-    .filter((score) => abs(score - medianVal) / leftMad > madCutoff)
-    .uniq()
-    .value();
-  const rightOutliers = _(rightHalf)
-    .filter((score) => abs(score - medianVal) / rightMad > madCutoff)
-    .uniq()
-    .value();
-
-  const outliers = leftOutliers.concat(rightOutliers);
-  console.info(`Found ${outliers.length} outlier score values: `);
-  console.info(outliers);
-  console.info('-'.repeat(100));
-
-  return outliers;
-};
-
-// Add stats to each result
-const getResultsWithStats = (results) => {
-  // We only calc outliers on the "all" result, since it has all datapoints
-  if (!results.all) {
-    console.error('getResultsWithStats: no "all" result found, cannot calculate outliers');
-    return _.mapValues(results, (result) => addStatsToResult(result, []));
-  }
-  const newOutliers = calculateNewOutliers(results.all);
-
-  return _.mapValues(results, (result) => addStatsToResult(result, newOutliers));
-};
-
 const getPlayerCountMeans = (results, existingResults, playerCounts) => {
   return playerCounts.reduce((means, playerCount) => {
     const key = `count-${playerCount}`;
@@ -539,7 +463,6 @@ const getPlayerCountMeans = (results, existingResults, playerCounts) => {
   }, {});
 };
 
-// Add expected values to results
 const getResultsWithExpected = (results, playerCountMeans) => {
   return _.mapValues(results, (result) => {
     if (result.new || result.startPosition) {
@@ -585,90 +508,6 @@ const getResultsWithExpected = (results, playerCountMeans) => {
   });
 };
 
-// Calculates stats like mean and std
-const getStats = (explodedScores) => {
-  if (explodedScores.length === 0) {
-    return {};
-  }
-
-  const modeResult = mode(explodedScores);
-  // mathjs returns an array when multiple values share the highest frequency;
-  // use the median of the modes so the result is a single representative number.
-  const modeValue = Array.isArray(modeResult)
-    ? parseFloat(median(modeResult))
-    : parseFloat(modeResult);
-
-  return {
-    mean: parseFloat(mean(explodedScores)).toFixed(2),
-    std: parseFloat(std(explodedScores)).toFixed(2),
-    median: parseFloat(median(explodedScores)),
-    mode: modeValue,
-    mad: parseFloat(mad(explodedScores)),
-  };
-};
-
-const removeOutlierScores = (scores, outliers) => {
-  return _.pickBy(scores, (_, score) => !outliers.includes(parseInt(score)));
-};
-
-const getOutlierScores = (scores, outliers) => {
-  return _.pickBy(scores, (_, score) => outliers.includes(parseInt(score)));
-};
-
-// Fills in the stat section of the result, such as mean and std
-const addStatsToResult = (result, outliers) => {
-  // Re-evaluate the full distribution (current scores + previously flagged outliers)
-  // so that scores which are no longer anomalous can be promoted back.
-  const allScores = combineScores(result.scores, result.outlierScores);
-  const trimmedScores = removeOutlierScores(allScores, outliers);
-  const outlierScores = getOutlierScores(allScores, outliers);
-  const outlierScoreCount = _.sum(Object.values(outlierScores));
-
-  // Get stats based on trimmed scores. This will recalculate mean, std etc.
-  const explodedScores = getExplodedScores(trimmedScores);
-  const trimmedScoreCount = explodedScores.length;
-
-  const updated = {
-    ...result,
-    scores: trimmedScores,
-    scoreCount: trimmedScoreCount,
-    outlierScores,
-    outlierScoreCount,
-  };
-
-  if (result.wins !== undefined) {
-    // Get win percentage based on filtered wins
-    const trimmedWins = removeOutlierScores(result.wins, outliers);
-    updated.trimmedWinCount = _.sum(Object.values(trimmedWins));
-    updated.trimmedWinPercentage = ((updated.trimmedWinCount / trimmedScoreCount) * 100).toFixed(2);
-  }
-
-  if (result.tieBreakerWins !== undefined) {
-    // Get tieBreakerWinCount based on filtered tieBreakerWins
-    const trimmedTieBreakerWins = removeOutlierScores(result.tieBreakerWins, outliers);
-    updated.trimmedTieBreakerWinCount = _.sum(Object.values(trimmedTieBreakerWins));
-  }
-
-  if (result.sharedWins !== undefined) {
-    // Get sharedWinCount based on filtered sharedWins
-    const trimmedSharedWins = removeOutlierScores(result.sharedWins, outliers);
-    updated.trimmedSharedWinCount = _.sum(Object.values(trimmedSharedWins));
-  }
-
-  return { ...updated, ...getStats(explodedScores) };
-};
-
-// The expanded array of scores e.g. [23,23,23,4,4,7] instead of {23: 3, 4: 2, 7: 1}
-// Used for stat math like mean and std
-const getExplodedScores = (scores) =>
-  _.reduce(
-    scores,
-    (exploded, count, score) => {
-      return exploded.concat(_.fill(Array(count), parseInt(score)));
-    },
-    []
-  );
-
 const getCombinedPlayerCounts = (results, existingResults) =>
   _(getPlayerCounts(results).concat(getPlayerCounts(existingResults)))
     .uniq()
@@ -685,13 +524,6 @@ const getPlayerCounts = (results) =>
 
 // Exported for testing only
 exports._test = {
-  getExplodedScores,
-  getStats,
-  combineScores,
-  removeOutlierScores,
-  getOutlierScores,
-  calculateNewOutliers,
-  addStatsToResult,
   getGameType,
   getValidPlays,
   getColorKey,

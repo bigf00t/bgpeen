@@ -7,11 +7,11 @@ import { connect } from 'react-redux';
 import FilterDropdown from './FilterDropdown';
 
 const Filters = ({ data }) => {
-  const [validPlayerPlaces, setValidPlayerPlaces] = useState([]);
+  const [finishPositions, setValidPlayerPlaces] = useState([]);
   const [years, setYears] = useState([]);
   const [months, setMonths] = useState([]);
   const [colors, setColors] = useState([]);
-  const advInnerRef = useRef(null);
+  const filterRowRef = useRef(null);
 
   const [searchParams] = useSearchParams();
   const players = searchParams.get('players');
@@ -37,7 +37,7 @@ const Filters = ({ data }) => {
   }, []);
 
   useEffect(() => {
-    const el = advInnerRef.current;
+    const el = filterRowRef.current;
     if (!el) return;
     const onScroll = () => {
       const atEnd = el.scrollLeft + el.offsetWidth >= el.scrollWidth - 2;
@@ -55,33 +55,30 @@ const Filters = ({ data }) => {
 
   return (
     <div className="rv-filters-section">
-      <div className="rv-primary-filters">
-        <span className="rv-filters-label">Filter by</span>
-        <FilterDropdown
-          field="players"
-          dependentFilters={['start', 'finish', 'new']}
-          clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
-          label="Player Count"
-          options={data.playerCounts || []}
-        />
-        <FilterDropdown
-          field="finish"
-          enabledByFilter="players"
-          clearsFilters={['start', 'new']}
-          label="Finish Place"
-          options={validPlayerPlaces}
-          optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
-        />
-      </div>
-      <div className="rv-advanced-filters">
-        <span className="rv-filters-label">Advanced</span>
-        <div className="rv-advanced-filters-inner" ref={advInnerRef}>
+      <span className="rv-filters-label">Filter by</span>
+      <div className="rv-filters-row" ref={filterRowRef}>
+        <div className="rv-filter-group">
+          <FilterDropdown
+            field="players"
+            dependentFilters={['start', 'finish', 'new']}
+            clearsFilters={['start', 'finish', 'new', 'color', 'year', 'month']}
+            label="Player Count"
+            options={data.playerCounts || []}
+          />
+          <FilterDropdown
+            field="finish"
+            enabledByFilter="players"
+            clearsFilters={['start', 'new']}
+            label="Finish Place"
+            options={finishPositions}
+            optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
+          />
           <FilterDropdown
             field="start"
             enabledByFilter="players"
             clearsFilters={['finish', 'new']}
             label="Start Place"
-            options={validPlayerPlaces}
+            options={finishPositions}
             optionLabelFormat={(o) => (o ? ordinal(parseInt(o)) : '')}
           />
           <FilterDropdown
@@ -92,28 +89,38 @@ const Filters = ({ data }) => {
             options={['1']}
             optionLabelFormat={(o) => (o == '1' ? 'Yes' : 'No')}
           />
-          <FilterDropdown
-            field="color"
-            clearsFilters={['players', 'start', 'finish', 'year', 'month']}
-            label="Player Color"
-            options={colors}
-            optionLabelFormat={(o) => _.startCase(o)}
-          />
-          <FilterDropdown
-            field="year"
-            dependentFilters={['month']}
-            clearsFilters={['month', 'players', 'start', 'finish', 'color']}
-            label="Play Year"
-            options={years}
-          />
-          <FilterDropdown
-            field="month"
-            enabledByFilter="year"
-            label="Play Month"
-            options={months}
-            optionLabelFormat={(o) => toMonthName(o)}
-          />
         </div>
+        {colors.length > 0 && <>
+          <div className="rv-filter-sep" />
+          <div className="rv-filter-group">
+            <FilterDropdown
+              field="color"
+              clearsFilters={['players', 'start', 'finish', 'year', 'month']}
+              label="Player Color"
+              options={colors}
+              optionLabelFormat={(o) => _.startCase(o)}
+            />
+          </div>
+        </>}
+        {years.length > 0 && <>
+          <div className="rv-filter-sep" />
+          <div className="rv-filter-group">
+            <FilterDropdown
+              field="year"
+              dependentFilters={['month']}
+              clearsFilters={['month', 'players', 'start', 'finish', 'color']}
+              label="Play Year"
+              options={years}
+            />
+            <FilterDropdown
+              field="month"
+              enabledByFilter="year"
+              label="Play Month"
+              options={months}
+              optionLabelFormat={(o) => toMonthName(o)}
+            />
+          </div>
+        </>}
       </div>
     </div>
   );

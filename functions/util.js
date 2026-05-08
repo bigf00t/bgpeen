@@ -27,10 +27,9 @@ exports.withRetry = async (fn, { retries = 3, delayMs = 2000 } = {}) => {
   }
 };
 
-// From https://stackoverflow.com/questions/22707475/how-to-make-a-promise-from-settimeout
 exports.delay = (ms = 2000) => new Promise((resolve) => setTimeout(resolve, ms));
 
-exports.docsToArray = (snapshot) => {
+exports.snapshotToArray = (snapshot) => {
   const array = [];
 
   snapshot.forEach((doc) => {
