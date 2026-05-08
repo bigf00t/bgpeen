@@ -99,9 +99,43 @@ const stdDevPlugin = {
 };
 ChartJS.register(stdDevPlugin);
 
+const userScoresPlugin = {
+  id: 'rv2UserScores',
+  afterDatasetsDraw(chart, _, opts) {
+    if (!opts.scores?.length || !opts.labels?.length) return;
+    const { ctx, scales: { x, y } } = chart;
+    const labels = opts.labels;
+    const minLabel = labels[0];
+    const maxLabel = labels[labels.length - 1];
+    const barW = x.width / labels.length;
+
+    const byValue = {};
+    opts.scores.forEach((s) => { byValue[s] = (byValue[s] || 0) + 1; });
+
+    Object.entries(byValue).forEach(([sv, count]) => {
+      const val = parseInt(sv);
+      if (val < minLabel || val > maxLabel) return;
+      const xPos = x.left + (val - minLabel + 0.5) * barW;
+      for (let i = 0; i < count; i++) {
+        const yPos = y.bottom - 9 - i * 14;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(xPos, yPos, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(121,134,203,0.9)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+  },
+};
+ChartJS.register(userScoresPlugin);
+
 const STD_DEV_FALLBACK = 12;
 
-const ScoreChart = ({ result, score, percentile, onScoreClick }) => {
+const ScoreChart = ({ result, score, percentile, onScoreClick, userScores = [] }) => {
   const [showStdDev, setShowStdDev] = useState(false);
   const scrollRef = useRef(null);
 
@@ -219,9 +253,10 @@ const ScoreChart = ({ result, score, percentile, onScoreClick }) => {
         },
       },
       rv2StdDev: { show: showStdDev, mean, stdDev, labels },
+      rv2UserScores: { scores: userScores.map((s) => s.score), labels },
     },
     onClick: handleClick,
-  }), [labels, xTickDivisor, handleClick, showStdDev, mean, stdDev, backgroundColors, hoverBackgroundColors, barPcts]);
+  }), [labels, xTickDivisor, handleClick, showStdDev, mean, stdDev, backgroundColors, hoverBackgroundColors, barPcts, userScores]);
 
   const data = useMemo(() => ({
     labels,
@@ -278,6 +313,15 @@ const ScoreChart = ({ result, score, percentile, onScoreClick }) => {
             Your score: <strong>{userBin}</strong>
           </span>
         )}
+        {userScores.length > 0 && (
+          <span className="rv-chart-legend-item">
+            <span
+              className="rv-chart-legend-swatch"
+              style={{ background: 'rgba(121,134,203,0.9)', borderRadius: '50%' }}
+            />
+            Logged scores
+          </span>
+        )}
         <button
           className={`rv-stddev-toggle${showStdDev ? ' rv-stddev-toggle--on' : ''}`}
           onClick={() => setShowStdDev((v) => !v)}
@@ -299,6 +343,7 @@ ScoreChart.propTypes = {
   score: PropTypes.any,
   percentile: PropTypes.number,
   onScoreClick: PropTypes.func.isRequired,
+  userScores: PropTypes.array,
 };
 
 export default ScoreChart;
