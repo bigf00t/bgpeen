@@ -198,6 +198,30 @@
   min-height: 1.2em;
 }
 
+/* ── SAVE SCORE BUTTON ── */
+.rv-save-btn {
+  height: 48px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid rgba(121,134,203,0.45);
+  border-radius: 8px;
+  color: #7986cb;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.rv-save-btn:hover:not(:disabled) {
+  border-color: #7986cb;
+  color: #9fa8da;
+  background: rgba(121,134,203,0.08);
+}
+.rv-save-btn--disabled { opacity: 0.3; cursor: default; }
+.rv-save-btn--saved { border-color: #66bb6a; color: #66bb6a; }
+.rv-save-btn--error { border-color: #ef5350; color: #ef5350; }
+
 /* ── FILTER / RESULT LOADING ── */
 .rv-result-loading {
   opacity: 0.45;
