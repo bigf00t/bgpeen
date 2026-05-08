@@ -222,6 +222,42 @@
 .rv-save-btn--saved { border-color: #66bb6a; color: #66bb6a; }
 .rv-save-btn--error { border-color: #ef5350; color: #ef5350; }
 
+/* ── SCORE HISTORY ── */
+.rv-score-history {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #2a2d35;
+}
+.rv-score-history-title {
+  font-size: 0.72rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+}
+.rv-score-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rv-score-history-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.82rem;
+}
+.rv-score-history-score {
+  font-weight: 700;
+  color: #9fa8da;
+  font-size: 1rem;
+  min-width: 36px;
+}
+.rv-score-history-date { color: #555; font-size: 0.75rem; }
+.rv-score-history-pct { color: #888; font-size: 0.75rem; margin-left: auto; }
+
 /* ── FILTER / RESULT LOADING ── */
 .rv-result-loading {
   opacity: 0.45;

@@ -12,10 +12,14 @@ import Fade from '@mui/material/Fade';
 import Typography from '@mui/material/Typography';
 import Image from 'mui-image';
 
+import { useSelector } from 'react-redux';
 import Filters from '../components/Filters';
 import GameHeader from '../components/GameHeader';
 import PercentileBar from '../components/PercentileBar';
 import useGameResult, { getIntFromParam } from '../hooks/useGameResult';
+import useUserScores from '../hooks/useUserScores';
+import SaveScoreButton from '../components/SaveScoreButton';
+import ScoreHistory from '../components/ScoreHistory';
 const ScoreChart = React.lazy(() => import('../components/ScoreChart'));
 
 import './GamePage.css';
@@ -26,10 +30,15 @@ const GamePage = (props) => {
   const scoreDebounceRef = useRef(null);
   const scoreInputRef = useRef(null);
 
+  const user = useSelector((state) => state.auth.user);
+  const authLoading = useSelector((state) => state.auth.authLoading);
+
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const justAdded = !!location.state?.justAdded;
+
+  const { userScores } = useUserScores(id);
 
   const { filters, result, resultLoading } = useGameResult({
     id,
@@ -182,14 +191,32 @@ const GamePage = (props) => {
             placeholder="Score"
             onChange={handleScoreInput}
           />
+          {!authLoading && (
+            <SaveScoreButton
+              score={score}
+              gameId={id}
+              gameName={props.data.game?.name || ''}
+              gameThumbnail={props.data.game?.thumbnail || ''}
+            />
+          )}
           <PercentileBar score={score} percentile={percentile} />
         </div>
 
         <div className={resultLoading ? 'rv-result-loading' : ''}>
           <React.Suspense fallback={<CircularProgress size={40} color="inherit" />}>
-            <ScoreChart result={result} score={score} percentile={percentile} onScoreClick={handleScoreClick} />
+            <ScoreChart
+              result={result}
+              score={score}
+              percentile={percentile}
+              onScoreClick={handleScoreClick}
+              userScores={user ? userScores : []}
+            />
           </React.Suspense>
         </div>
+
+        {user && (
+          <ScoreHistory userScores={userScores} result={result} />
+        )}
 
       </div>
     </Fade>
