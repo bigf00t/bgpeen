@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 import { initializeAppCheck, ReCaptchaV3Provider, getToken } from 'firebase/app-check';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 // import { getPerformance } from 'firebase/performance';
 
 const firebaseConfig = {
@@ -62,3 +63,6 @@ export const db = initializeFirestore(firebaseApp, {
 if (isLocalhost) {
   connectFirestoreEmulator(db, 'localhost', 5002);
 }
+
+export const auth = getAuth(firebaseApp);
+export const googleProvider = new GoogleAuthProvider();

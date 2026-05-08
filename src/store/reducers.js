@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux';
+import authSlice from './authSlice';
 import { LOAD_GAMES, LOAD_GAME, PREFETCH_GAME, LOAD_RESULT, SET_GAME, LOAD_TOP_GAMES, LOAD_SCORE_STATS } from './types';
 
 const dataState = {
@@ -55,4 +56,4 @@ const data = (state = dataState, action) => {
   }
 };
 
-export default combineReducers({ data });
+export default combineReducers({ data, auth: authSlice.reducer });
