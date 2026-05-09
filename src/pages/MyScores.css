@@ -1,5 +1,6 @@
 .my-scores-page {
   max-width: 1100px;
+  min-width: 1100px;
   margin: 0 auto;
   padding: 32px 32px 64px;
 }
@@ -54,7 +55,7 @@
 }
 
 .my-scores-game-name {
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #ccc;
   line-height: 1.3;
@@ -65,19 +66,59 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #666;
+  color: #777;
 }
 
+.my-scores-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.my-scores-latest-score-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+}
+.my-scores-score-group {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+}
+.my-scores-latest-score-row .my-scores-percentile {
+  margin-left: auto;
+}
+.my-scores-latest-label {
+  font-size: 0.68rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.my-scores-avg-label {
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: flex-end;
+  margin-right: 2px;
+}
 .my-scores-recent {
   font-size: 1.4rem;
   font-weight: 800;
   color: #9fa8da;
   letter-spacing: -0.5px;
+  line-height: 1;
+}
+.my-scores-percentile {
+  font-size: 0.72rem;
 }
 
 .my-scores-sparkline { display: block; }
 
 @media (max-width: 700px) {
-  .my-scores-page { padding: 24px 16px 48px; }
+  .my-scores-page { padding: 24px 16px 48px; min-width: 0; margin-left: 0; margin-right: 0; }
   .my-scores-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .my-scores-latest-score-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .my-scores-latest-score-row .my-scores-percentile { margin-left: 0; }
 }

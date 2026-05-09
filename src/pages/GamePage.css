@@ -108,6 +108,10 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+.rv-score-input-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .rv-score-input {
   width: 105px;
   height: 48px;
@@ -117,7 +121,7 @@
   color: #fff;
   font-size: 0.78rem;
   line-height: 1.4375em;
-  padding: 6px 8px;
+  padding: 6px 30px 6px 8px;
   outline: none;
   font-family: inherit;
   transition: border-color 0.15s;
@@ -127,7 +131,7 @@
 .rv-score-input::-webkit-outer-spin-button,
 .rv-score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .rv-score-input:hover { border-color: rgba(255,255,255,0.6); }
-.rv-score-input:focus { border-color: #7986cb; border-width: 2px; padding: 6px 7px; }
+.rv-score-input:focus { border-color: #7986cb; border-width: 2px; padding: 6px 29px 6px 7px; }
 .rv-score-input::placeholder { color: transparent; font-size: 0.72rem; }
 
 /* ── PERCENTILE BAR ── */
@@ -200,27 +204,37 @@
 
 /* ── SAVE SCORE BUTTON ── */
 .rv-save-btn {
-  height: 48px;
-  padding: 0 14px;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  padding: 0;
   background: transparent;
-  border: 1px solid rgba(121,134,203,0.45);
-  border-radius: 8px;
-  color: #7986cb;
-  font-size: 0.78rem;
+  border: none;
+  color: rgba(121,134,203,0.45);
+  font-size: 0.8rem;
   font-family: inherit;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
 }
-.rv-save-btn:hover:not(:disabled) {
-  border-color: #7986cb;
-  color: #9fa8da;
-  background: rgba(121,134,203,0.08);
+.rv-save-btn:hover:not(:disabled) { color: #9fa8da; }
+.rv-save-btn--disabled { opacity: 0.25; cursor: default; }
+.rv-save-btn--saved { color: #66bb6a; }
+.rv-save-btn--error { color: #ef5350; }
+
+.rv-my-scores-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.82rem;
+  color: #7986cb;
+  text-decoration: none;
 }
-.rv-save-btn--disabled { opacity: 0.3; cursor: default; }
-.rv-save-btn--saved { border-color: #66bb6a; color: #66bb6a; }
-.rv-save-btn--error { border-color: #ef5350; color: #ef5350; }
+.rv-my-scores-link:hover { text-decoration: underline; }
 
 /* ── SCORE HISTORY ── */
 .rv-score-history {
@@ -287,6 +301,16 @@
   border-radius: 2px;
   flex-shrink: 0;
 }
+
+.rv-chart-scores-link {
+  margin-left: 6px;
+  font-size: 0.72rem;
+  color: #7986cb;
+  text-decoration: none;
+  opacity: 0.8;
+}
+.rv-chart-scores-link:hover { text-decoration: underline; opacity: 1; }
+.rv-scores-link-short { display: none; }
 
 .rv-stddev-toggle {
   margin-left: auto;
@@ -364,6 +388,7 @@
 
   .rv-score-row { flex-wrap: nowrap; align-items: center; padding-top: 13px; padding-bottom: 14px; }
   .rv-score-label { display: none; }
+  .rv-score-input-wrap { flex-shrink: 0; }
   .rv-score-input { width: 72px; font-size: 0.78rem; }
   .rv-score-input::placeholder { color: #777; font-size: 0.78rem; }
   .rv-pct-result { flex-basis: auto; flex: 1; margin-left: 8px; transform: translateY(-4px); min-width: 0; }
@@ -375,4 +400,8 @@
   }
   .rv-chart-scroll::-webkit-scrollbar { display: none; }
   .rv-chart-wrap { min-width: 700px; }
+  .rv-scores-link-full { display: none; }
+  .rv-scores-link-short { display: inline; }
+  .rv-chart-legend { flex-direction: column; gap: 6px; position: relative; padding-right: 80px; }
+  .rv-stddev-toggle { position: absolute; bottom: 0; right: 0; margin-left: 0; }
 }

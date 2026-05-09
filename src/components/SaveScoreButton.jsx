@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { signInWithPopup } from 'firebase/auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { auth, googleProvider, db } from '../firebase';
 import PropTypes from 'prop-types';
 
-const SaveScoreButton = ({ score, gameId, gameName, gameThumbnail }) => {
+const SaveScoreButton = ({ score, gameId, gameName, gameThumbnail, percentile, filters = {} }) => {
   const user = useSelector((state) => state.auth.user);
   const [status, setStatus] = useState('idle');
 
   const disabled = score === '' || score == null;
+
+  const activeFilters = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== '' && v != null && v !== false)
+  );
 
   const doSave = async (uid) => {
     await addDoc(collection(db, 'users', uid, 'scores'), {
@@ -17,6 +22,8 @@ const SaveScoreButton = ({ score, gameId, gameName, gameThumbnail }) => {
       gameName,
       gameThumbnail: gameThumbnail || '',
       score: Number(score),
+      percentile: percentile != null ? Math.round(percentile) : null,
+      filters: Object.keys(activeFilters).length ? activeFilters : null,
       date: serverTimestamp(),
     });
   };
@@ -46,11 +53,17 @@ const SaveScoreButton = ({ score, gameId, gameName, gameThumbnail }) => {
     }
   };
 
-  const label =
-    status === 'saved' ? 'Saved ✓' :
-    status === 'saving' ? 'Saving…' :
+  const content =
+    status === 'saved' ? '✓' :
+    status === 'saving' ? '…' :
+    status === 'error' ? '!' :
+    <SaveOutlinedIcon sx={{ fontSize: 18 }} />;
+
+  const title =
     status === 'error' ? 'Save failed — try again' :
-    'Save score';
+    !user && !disabled ? 'Sign in with Google to save score' :
+    !disabled ? 'Save score' :
+    undefined;
 
   return (
     <button
@@ -62,9 +75,9 @@ const SaveScoreButton = ({ score, gameId, gameName, gameThumbnail }) => {
       ].filter(Boolean).join(' ')}
       onClick={handleClick}
       disabled={disabled || status === 'saving'}
-      title={!user && !disabled ? 'Sign in with Google to save' : undefined}
+      title={title}
     >
-      {label}
+      {content}
     </button>
   );
 };
@@ -74,6 +87,8 @@ SaveScoreButton.propTypes = {
   gameId: PropTypes.string.isRequired,
   gameName: PropTypes.string.isRequired,
   gameThumbnail: PropTypes.string,
+  percentile: PropTypes.number,
+  filters: PropTypes.object,
 };
 
 export default SaveScoreButton;

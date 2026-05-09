@@ -12,23 +12,17 @@ import MenuItem from '@mui/material/MenuItem';
 import SearchIcon from '@mui/icons-material/Search';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import Link from '@mui/material/Link';
 import { useSelector } from 'react-redux';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
 const Header = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isGamePage = location.pathname.length > 1;
-
   const user = useSelector((state) => state.auth.user);
   const authLoading = useSelector((state) => state.auth.authLoading);
   const [menuAnchor, setMenuAnchor] = React.useState(null);
-
-  const handleSearch = () => navigate('/');
-  const handleSignIn = () => signInWithPopup(auth, googleProvider).catch(() => {});
+  const handleSignIn = () => signInWithPopup(auth, googleProvider);
   const handleSignOut = async () => { await signOut(auth); setMenuAnchor(null); };
 
   return (
@@ -66,43 +60,6 @@ const Header = () => {
           </Link>
 
           <Box display="flex" alignItems="center" gap="16px" ml="auto">
-            {isGamePage && (
-              <>
-                <Button
-                  onClick={handleSearch}
-                  startIcon={<SearchIcon sx={{ fontSize: '13px !important' }} />}
-                  sx={{
-                    display: { xs: 'none', sm: 'flex' },
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid #3a3a3a',
-                    borderRadius: '6px',
-                    color: '#bbb',
-                    fontSize: '0.72rem',
-                    padding: '5px 12px 5px 10px',
-                    textTransform: 'none',
-                    fontFamily: 'inherit',
-                    letterSpacing: '0.01em',
-                    minWidth: 0,
-                    '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: '#555', color: '#fff' },
-                  }}
-                >
-                  Find another game
-                </Button>
-                <IconButton
-                  onClick={handleSearch}
-                  sx={{
-                    display: { xs: 'flex', sm: 'none' },
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    color: '#999',
-                    padding: '7px 9px',
-                    '&:hover': { borderColor: '#666', color: '#ccc' },
-                  }}
-                >
-                  <SearchIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </>
-            )}
             <Button
               component={RouterLink}
               to="/contact"

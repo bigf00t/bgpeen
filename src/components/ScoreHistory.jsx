@@ -1,15 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
-const computePercentile = (score, resultScores) => {
-  const total = Object.values(resultScores).reduce((a, b) => a + b, 0);
-  if (!total) return null;
-  const pct = (Object.entries(resultScores).reduce((acc, [k, c]) => {
-    const ki = parseInt(k);
-    return acc + (ki < score ? c : 0) + (ki === score ? c * 0.5 : 0);
-  }, 0) * 100) / total;
-  return Math.round(pct);
-};
+import { computePercentile, formatPercentileLabel } from '../utils/scores';
 
 const formatDate = (timestamp) => {
   if (!timestamp?.toDate) return '';
@@ -33,7 +24,7 @@ const ScoreHistory = ({ userScores, result }) => {
               <span className="rv-score-history-date">{formatDate(entry.date)}</span>
               {pct !== null && (
                 <span className="rv-score-history-pct">
-                  {pct >= 50 ? `Better than ${pct}%` : `Worse than ${100 - pct}%`}
+                  {formatPercentileLabel(pct)}
                 </span>
               )}
             </li>

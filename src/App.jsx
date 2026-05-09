@@ -16,6 +16,7 @@ import { setUser } from './store/authSlice';
 const GamePage = React.lazy(() => import('./pages/GamePage'));
 const Contact = React.lazy(() => import('./pages/Contact'));
 const MyScores = React.lazy(() => import('./pages/MyScores'));
+const GameScoreHistory = React.lazy(() => import('./pages/GameScoreHistory'));
 
 function App() {
   const dispatch = useDispatch();
@@ -31,6 +32,7 @@ function App() {
     });
     return unsub;
   }, [dispatch]);
+
 
   const theme = React.useMemo(
     () =>
@@ -64,6 +66,7 @@ function App() {
               <Route path="/dev" element={<Home />} />
               <Route path="/contact" element={<React.Suspense fallback={null}><Contact /></React.Suspense>} />
               <Route path="/scores" element={<React.Suspense fallback={null}><MyScores /></React.Suspense>} />
+              <Route path="/scores/:gameId" element={<React.Suspense fallback={null}><GameScoreHistory /></React.Suspense>} />
             </Routes>
             <footer className="app-footer">
               <a href="https://boardgamegeek.com" target="_blank" rel="noreferrer">

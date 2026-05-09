@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { Link as RouterLink } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -11,25 +12,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-const getPercentileColor = (pct) =>
-  (pct ?? 0) < 33 ? '#ef5350' : (pct ?? 0) < 66 ? '#ffc107' : '#66bb6a';
-
-const pctToColor = (pct, alpha = 0.7) => {
-  const t = Math.min(100, Math.max(0, pct)) / 100;
-  let r, g, b;
-  if (t < 0.5) {
-    const u = t * 2;
-    r = Math.round(239 + (255 - 239) * u);
-    g = Math.round(83  + (193 - 83)  * u);
-    b = Math.round(80  + (7   - 80)  * u);
-  } else {
-    const u = (t - 0.5) * 2;
-    r = Math.round(255 + (102 - 255) * u);
-    g = Math.round(193 + (187 - 193) * u);
-    b = Math.round(7   + (106 - 7)   * u);
-  }
-  return `rgba(${r},${g},${b},${alpha})`;
-};
+import { pctToColor } from '../utils/colors';
 
 // 6 sections: -3σ→-2σ, -2σ→-1σ, -1σ→0, 0→+1σ, +1σ→+2σ, +2σ→+3σ
 const BANDS = [
@@ -99,43 +82,36 @@ const stdDevPlugin = {
 };
 ChartJS.register(stdDevPlugin);
 
-const userScoresPlugin = {
-  id: 'rv2UserScores',
+const userAvgPlugin = {
+  id: 'rv2UserAvg',
   afterDatasetsDraw(chart, _, opts) {
-    if (!opts.scores?.length || !opts.labels?.length) return;
+    if (opts.score == null || !opts.labels?.length) return;
     const { ctx, scales: { x, y } } = chart;
     const labels = opts.labels;
     const minLabel = labels[0];
     const maxLabel = labels[labels.length - 1];
+    const val = Math.round(opts.score);
+    if (val < minLabel || val > maxLabel) return;
     const barW = x.width / labels.length;
-
-    const byValue = {};
-    opts.scores.forEach((s) => { byValue[s] = (byValue[s] || 0) + 1; });
-
-    Object.entries(byValue).forEach(([sv, count]) => {
-      const val = parseInt(sv);
-      if (val < minLabel || val > maxLabel) return;
-      const xPos = x.left + (val - minLabel + 0.5) * barW;
-      for (let i = 0; i < count; i++) {
-        const yPos = y.bottom - 9 - i * 14;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(xPos, yPos, 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(121,134,203,0.9)';
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-        ctx.lineWidth = 1.5;
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-    });
+    const xLeft  = x.left + (val - minLabel) * barW;
+    const xRight = xLeft + barW;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(121,134,203,0.85)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(xLeft,  y.top); ctx.lineTo(xLeft,  y.bottom);
+    ctx.moveTo(xRight, y.top); ctx.lineTo(xRight, y.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
   },
 };
-ChartJS.register(userScoresPlugin);
+ChartJS.register(userAvgPlugin);
 
 const STD_DEV_FALLBACK = 12;
 
-const ScoreChart = ({ result, score, percentile, onScoreClick, userScores = [] }) => {
+const ScoreChart = ({ result, score, percentile, onScoreClick, userAvgScore = null, scoresPath = null }) => {
   const [showStdDev, setShowStdDev] = useState(false);
   const scrollRef = useRef(null);
 
@@ -189,7 +165,7 @@ const ScoreChart = ({ result, score, percentile, onScoreClick, userScores = [] }
   [labels, userBin, avgBin, barPcts]);
 
   const avgColor = 'rgba(180,190,240,0.9)';
-  const scoreColor = getPercentileColor(percentile);
+  const scoreColor = pctToColor(percentile ?? 0);
 
   const handleClick = useMemo(() => (_, elements) => {
     if (elements.length > 0) onScoreClick(labels[elements[0].index]);
@@ -253,10 +229,10 @@ const ScoreChart = ({ result, score, percentile, onScoreClick, userScores = [] }
         },
       },
       rv2StdDev: { show: showStdDev, mean, stdDev, labels },
-      rv2UserScores: { scores: userScores.map((s) => s.score), labels },
+      rv2UserAvg: { score: userAvgScore, labels },
     },
     onClick: handleClick,
-  }), [labels, xTickDivisor, handleClick, showStdDev, mean, stdDev, backgroundColors, hoverBackgroundColors, barPcts, userScores]);
+  }), [labels, xTickDivisor, handleClick, showStdDev, mean, stdDev, backgroundColors, hoverBackgroundColors, barPcts, userAvgScore]);
 
   const data = useMemo(() => ({
     labels,
@@ -313,20 +289,26 @@ const ScoreChart = ({ result, score, percentile, onScoreClick, userScores = [] }
             Your score: <strong>{userBin}</strong>
           </span>
         )}
-        {userScores.length > 0 && (
+        {userAvgScore != null && (
           <span className="rv-chart-legend-item">
             <span
               className="rv-chart-legend-swatch"
-              style={{ background: 'rgba(121,134,203,0.9)', borderRadius: '50%' }}
+              style={{ background: 'rgba(121,134,203,0.85)', width: 2, borderRadius: 0 }}
             />
-            Logged scores
+            Your avg: <strong>{Math.round(userAvgScore)}</strong>
+            {scoresPath && (
+              <RouterLink to={scoresPath} className="rv-chart-scores-link">
+                <span className="rv-scores-link-full">view all your scores</span>
+                <span className="rv-scores-link-short">view all</span>
+              </RouterLink>
+            )}
           </span>
         )}
         <button
           className={`rv-stddev-toggle${showStdDev ? ' rv-stddev-toggle--on' : ''}`}
           onClick={() => setShowStdDev((v) => !v)}
         >
-          ±3 std devs {showStdDev ? 'on' : 'off'}
+          ±3 stdev
         </button>
       </div>
       <div className="rv-chart-scroll" ref={scrollRef}>
@@ -343,7 +325,8 @@ ScoreChart.propTypes = {
   score: PropTypes.any,
   percentile: PropTypes.number,
   onScoreClick: PropTypes.func.isRequired,
-  userScores: PropTypes.array,
+  userAvgScore: PropTypes.number,
+  scoresPath: PropTypes.string,
 };
 
 export default ScoreChart;

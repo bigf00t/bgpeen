@@ -1,38 +1,40 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { db } from '../firebase';
+import { pctToColor } from '../utils/colors';
+import { computeAvgScore, computePercentile, formatPercentileLabel, getResultIdFromFilters } from '../utils/scores';
 import './MyScores.css';
 
 const Sparkline = ({ scores }) => {
-  if (scores.length < 2) return null;
+  if (!scores.length) return null;
   const values = scores.map((s) => s.score);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
   const w = 80, h = 28, pad = 3;
-  const pts = scores
-    .slice()
-    .reverse()
-    .map((s, i) => {
-      const x = pad + (i / (scores.length - 1)) * (w - 2 * pad);
-      const y = pad + (1 - (s.score - min) / range) * (h - 2 * pad);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
+  const reversed = scores.slice().reverse();
+  const pointCoords = reversed.map((s, i) => ({
+    x: scores.length === 1 ? pad : pad + (i / (scores.length - 1)) * (w - 2 * pad),
+    y: scores.length === 1 ? h / 2 : pad + (1 - (s.score - min) / range) * (h - 2 * pad),
+  }));
+
   return (
     <svg width={w} height={h} className="my-scores-sparkline">
       <polyline
-        points={pts}
+        points={pointCoords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}
         fill="none"
         stroke="rgba(121,134,203,0.7)"
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+      {pointCoords.map((p, i) => (
+        <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="2.5" fill="rgba(121,134,203,0.9)" />
+      ))}
     </svg>
   );
 };
@@ -44,6 +46,7 @@ const MyScores = () => {
   const [allScores, setAllScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [gameResults, setGameResults] = useState({});
 
   useEffect(() => {
     if (authLoading) return;
@@ -62,6 +65,29 @@ const MyScores = () => {
     );
     return unsub;
   }, [user?.uid, authLoading, navigate]);
+
+  useEffect(() => {
+    const pairs = [...new Set(allScores.map((s) => `${s.gameId}:${getResultIdFromFilters(s.filters)}`))];
+    const missing = pairs.filter((key) => !(key in gameResults));
+    if (!missing.length) return;
+    Promise.all(
+      missing.map((key) => {
+        const sep = key.indexOf(':');
+        const gameId = key.slice(0, sep);
+        const resultId = key.slice(sep + 1);
+        return getDoc(doc(db, 'games', gameId, 'results', resultId)).then((snap) => ({
+          key,
+          scores: snap.exists() ? snap.data().scores : null,
+        }));
+      })
+    ).then((results) => {
+      setGameResults((prev) => {
+        const next = { ...prev };
+        results.forEach(({ key, scores }) => { next[key] = scores; });
+        return next;
+      });
+    });
+  }, [allScores]);
 
   const gameCards = useMemo(() => {
     const map = {};
@@ -106,12 +132,17 @@ const MyScores = () => {
         </p>
       ) : (
         <div className="my-scores-grid">
-          {gameCards.map(({ gameId, gameName, gameThumbnail, scores }) => (
+          {gameCards.map(({ gameId, gameName, gameThumbnail, scores }) => {
+            const avgScore = computeAvgScore(scores);
+            const scorePcts = scores.map((s) => {
+              const res = gameResults[`${gameId}:${getResultIdFromFilters(s.filters)}`];
+              return res ? computePercentile(s.score, res) : null;
+            }).filter((p) => p != null);
+            const avgPct = scorePcts.length ? Math.round(scorePcts.reduce((a, b) => a + b, 0) / scorePcts.length) : null;
+            return (
             <RouterLink
               key={gameId}
-              to={`/${gameId}/${encodeURIComponent(
-                (gameName || '').toLowerCase().replace(/\s+/g, '-')
-              )}`}
+              to={`/scores/${gameId}`}
               className="my-scores-card"
             >
               <div className="my-scores-card-header">
@@ -124,13 +155,30 @@ const MyScores = () => {
                 )}
                 <span className="my-scores-game-name">{gameName}</span>
               </div>
-              <span className="my-scores-recent">{scores[0].score}</span>
+              <div className="my-scores-latest">
+                <span className="my-scores-latest-score-row">
+                  <span className="my-scores-score-group">
+                    <span className="my-scores-avg-label">my avg</span>
+                    <span className="my-scores-recent">{avgScore}</span>
+                  </span>
+                  {avgPct != null && (
+                    <span
+                      className="my-scores-percentile"
+                      style={{ color: pctToColor(avgPct) }}
+                    >
+                      {formatPercentileLabel(avgPct)}
+                    </span>
+                  )}
+                </span>
+              </div>
               <Sparkline scores={scores} />
               <div className="my-scores-meta">
                 <span>{scores.length} {scores.length === 1 ? 'play' : 'plays'}</span>
+                <span>{scores[0].date?.toDate?.().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) ?? ''}</span>
               </div>
             </RouterLink>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

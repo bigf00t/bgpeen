@@ -13,13 +13,13 @@ import Typography from '@mui/material/Typography';
 import Image from 'mui-image';
 
 import { useSelector } from 'react-redux';
+import { computeAvgScore, computePercentile } from '../utils/scores';
 import Filters from '../components/Filters';
 import GameHeader from '../components/GameHeader';
 import PercentileBar from '../components/PercentileBar';
 import useGameResult, { getIntFromParam } from '../hooks/useGameResult';
 import useUserScores from '../hooks/useUserScores';
 import SaveScoreButton from '../components/SaveScoreButton';
-import ScoreHistory from '../components/ScoreHistory';
 const ScoreChart = React.lazy(() => import('../components/ScoreChart'));
 
 import './GamePage.css';
@@ -77,15 +77,8 @@ const GamePage = (props) => {
 
   // Score or result changed → recalculate percentile
   useEffect(() => {
-    if (!score || _.isEmpty(result)) { setPercentile(null); return; }
-    const total = _.sum(_.values(result.scores));
-    if (!total) { setPercentile(null); return; }
-    const newPct = (_.reduce(
-      result.scores,
-      (acc, c, s) => acc + (parseInt(s) < score ? c : 0) + (parseInt(s) === score ? c * 0.5 : 0),
-      0
-    ) * 100) / total;
-    setPercentile(newPct);
+    if (!score || _.isEmpty(result?.scores)) { setPercentile(null); return; }
+    setPercentile(computePercentile(score, result.scores));
   }, [score, result]);
 
   // Page title
@@ -184,21 +177,25 @@ const GamePage = (props) => {
 
         <div className="rv-score-row">
           <span className="rv-score-label">Score</span>
-          <input
-            ref={scoreInputRef}
-            className="rv-score-input"
-            type="number"
-            placeholder="Score"
-            onChange={handleScoreInput}
-          />
-          {!authLoading && (
-            <SaveScoreButton
-              score={score}
-              gameId={id}
-              gameName={props.data.game?.name || ''}
-              gameThumbnail={props.data.game?.thumbnail || ''}
+          <div className="rv-score-input-wrap">
+            <input
+              ref={scoreInputRef}
+              className="rv-score-input"
+              type="number"
+              placeholder="Score"
+              onChange={handleScoreInput}
             />
-          )}
+            {!authLoading && (
+              <SaveScoreButton
+                score={score}
+                gameId={id}
+                gameName={props.data.game?.name || ''}
+                gameThumbnail={props.data.game?.thumbnail || ''}
+                percentile={percentile}
+                filters={filters}
+              />
+            )}
+          </div>
           <PercentileBar score={score} percentile={percentile} />
         </div>
 
@@ -209,14 +206,11 @@ const GamePage = (props) => {
               score={score}
               percentile={percentile}
               onScoreClick={handleScoreClick}
-              userScores={user ? userScores : []}
+              userAvgScore={user && userScores.length ? computeAvgScore(userScores) : null}
+              scoresPath={user && userScores.length ? `/scores/${id}` : null}
             />
           </React.Suspense>
         </div>
-
-        {user && (
-          <ScoreHistory userScores={userScores} result={result} />
-        )}
 
       </div>
     </Fade>

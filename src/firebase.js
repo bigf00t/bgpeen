@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 import { initializeAppCheck, ReCaptchaV3Provider, getToken } from 'firebase/app-check';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
 // import { getPerformance } from 'firebase/performance';
 
 const firebaseConfig = {
@@ -66,3 +66,8 @@ if (isLocalhost) {
 
 export const auth = getAuth(firebaseApp);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+if (isLocalhost) {
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+}

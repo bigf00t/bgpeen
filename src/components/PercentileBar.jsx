@@ -1,5 +1,6 @@
 import React, { useRef, useLayoutEffect } from 'react';
 import PropTypes from 'prop-types';
+import { formatPercentileLabel } from '../utils/scores';
 
 const QUIPS = [
   [1,   'quite possibly one of the worst in the world!'],
@@ -29,8 +30,7 @@ const PercentileBar = ({ score, percentile }) => {
     : 0;
 
   const coverWidth = hasScore ? `${100 - pct}%` : '100%';
-  const bubbleText = !hasScore ? '' :
-    pct >= 50 ? `better than ${pct}% of players` : `worse than ${100 - pct}% of players`;
+  const bubbleText = !hasScore ? '' : formatPercentileLabel(pct, { ofPlayers: true });
   const quipText = hasScore ? `You're ${getQuip(pct)}` : 'How good are you? Enter your score!';
 
   useLayoutEffect(() => {
