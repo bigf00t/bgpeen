@@ -81,6 +81,11 @@ exports.addGameImmediate = onRequest(
   require('./addGameHandler').handler
 );
 
+exports.importBggScores = onRequest(
+  { memory: '512MiB', timeoutSeconds: 300, secrets: ['BGG_API_KEY'] },
+  require('./importBggHandler').handler
+);
+
 exports.onGameCreated = onDocumentCreated(
   { document: 'games/{gameId}', memory: '1GiB', timeoutSeconds: 540, secrets: ['BGG_API_KEY'] },
   require('./gameCreatedHandler').handler

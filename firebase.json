@@ -34,6 +34,10 @@
         "function": "addGameImmediate"
       },
       {
+        "source": "/api/import-bgg-scores",
+        "function": "importBggScores"
+      },
+      {
         "source": "/:id/:name/**",
         "function": "serveOgTags"
       },
