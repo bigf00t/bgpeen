@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc } from 'firebase/firestore';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { pctToColor } from '../utils/colors';
 import { computeAvgScore, computePercentile, formatPercentileLabel, getResultIdFromFilters } from '../utils/scores';
 import './MyScores.css';
@@ -47,6 +47,12 @@ const MyScores = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [gameResults, setGameResults] = useState({});
+  const [bggUsername, setBggUsername] = useState('');
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [importStatus, setImportStatus] = useState('idle');
+  const [importResult, setImportResult] = useState(null);
+  const [importError, setImportError] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -89,6 +95,49 @@ const MyScores = () => {
     });
   }, [allScores]);
 
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      if (snap.exists()) setBggUsername(snap.data().bggUsername || '');
+    });
+  }, [user?.uid]);
+
+  const saveUsername = async (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) { setEditingUsername(false); return; }
+    setBggUsername(trimmed);
+    setEditingUsername(false);
+    await setDoc(doc(db, 'users', user.uid), { bggUsername: trimmed }, { merge: true });
+  };
+
+  const handleImport = async () => {
+    if (!bggUsername || importStatus === 'importing') return;
+    setImportStatus('importing');
+    setImportResult(null);
+    setImportError(null);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/import-bgg-scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bggUsername }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Error ${res.status}`);
+      }
+      const data = await res.json();
+      setImportResult(data);
+      setImportStatus('done');
+    } catch (err) {
+      setImportError(err.message);
+      setImportStatus('error');
+    }
+  };
+
   const gameCards = useMemo(() => {
     const map = {};
     allScores.forEach((s) => {
@@ -126,6 +175,62 @@ const MyScores = () => {
   return (
     <div className="my-scores-page">
       <h1 className="my-scores-title">My Scores</h1>
+      <div className="bgg-import">
+        <div className="bgg-import-row">
+          <span className="bgg-import-label">BGG Username:</span>
+          {editingUsername ? (
+            <input
+              className="bgg-import-input"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveUsername(editValue);
+                if (e.key === 'Escape') setEditingUsername(false);
+              }}
+              onBlur={() => saveUsername(editValue)}
+              autoFocus
+            />
+          ) : bggUsername ? (
+            <>
+              <span className="bgg-import-username">{bggUsername}</span>
+              <button
+                className="bgg-import-edit-btn"
+                onClick={() => { setEditValue(bggUsername); setEditingUsername(true); }}
+                title="Edit username"
+              >
+                ✎
+              </button>
+            </>
+          ) : (
+            <input
+              className="bgg-import-input"
+              value={editValue}
+              placeholder="your BGG username"
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && editValue.trim()) saveUsername(editValue);
+              }}
+              onBlur={() => { if (editValue.trim()) saveUsername(editValue); }}
+            />
+          )}
+          <button
+            className={`bgg-import-btn${importStatus === 'importing' ? ' bgg-import-btn--loading' : ''}`}
+            onClick={handleImport}
+            disabled={!bggUsername || importStatus === 'importing'}
+          >
+            {importStatus === 'importing' ? 'Importing…' : 'Import from BGG'}
+          </button>
+        </div>
+        {importStatus === 'done' && importResult && (
+          <p className="bgg-import-result">
+            Imported {importResult.imported} score{importResult.imported !== 1 ? 's' : ''}
+            {importResult.skipped > 0 ? `, ${importResult.skipped} already imported` : ''}
+          </p>
+        )}
+        {importStatus === 'error' && (
+          <p className="bgg-import-error">{importError || 'Import failed — try again'}</p>
+        )}
+      </div>
       {gameCards.length === 0 ? (
         <p className="my-scores-empty">
           No scores logged yet. Enter a score on any game page and click &ldquo;Save score&rdquo;.

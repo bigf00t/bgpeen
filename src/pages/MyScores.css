@@ -121,4 +121,83 @@
   .my-scores-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .my-scores-latest-score-row { flex-direction: column; align-items: flex-start; gap: 2px; }
   .my-scores-latest-score-row .my-scores-percentile { margin-left: 0; }
+  .bgg-import-btn { margin-left: 0; }
+}
+
+.bgg-import {
+  margin-bottom: 28px;
+  padding: 14px 18px;
+  background: #1e2028;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+}
+
+.bgg-import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bgg-import-label {
+  font-size: 0.78rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.bgg-import-username {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.bgg-import-input {
+  background: #2a2d35;
+  border: 1px solid #3a3d45;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.85rem;
+  padding: 5px 10px;
+  font-family: inherit;
+  outline: none;
+  width: 160px;
+}
+.bgg-import-input:focus { border-color: #7986cb; }
+
+.bgg-import-edit-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+  line-height: 1;
+}
+.bgg-import-edit-btn:hover { color: #aaa; }
+
+.bgg-import-btn {
+  background: rgba(121, 134, 203, 0.12);
+  border: 1px solid rgba(121, 134, 203, 0.3);
+  border-radius: 6px;
+  color: #9fa8da;
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  margin-left: auto;
+  transition: background 0.15s;
+}
+.bgg-import-btn:hover:not(:disabled) { background: rgba(121, 134, 203, 0.22); }
+.bgg-import-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.bgg-import-result {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #7bc67e;
+}
+
+.bgg-import-error {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #ef5350;
 }
