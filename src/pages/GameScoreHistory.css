@@ -211,6 +211,51 @@
 .gsh-delta.gsh-delta--up { color: #66bb6a; }
 .gsh-delta.gsh-delta--down { color: #ef5350; }
 
+.gsh-delete-cell {
+  width: 1px;
+  white-space: nowrap;
+  padding-left: 4px !important;
+}
+
+.gsh-delete-btn {
+  background: rgba(239, 83, 80, 0.08);
+  border: 1px solid rgba(239, 83, 80, 0.28);
+  color: #e57373;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  line-height: 1.4;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.gsh-delete-btn:hover { background: rgba(239, 83, 80, 0.16); border-color: rgba(239, 83, 80, 0.5); }
+
+.gsh-confirm-delete-btn {
+  background: rgba(239, 83, 80, 0.12);
+  border: 1px solid rgba(239, 83, 80, 0.35);
+  border-radius: 4px;
+  color: #ef5350;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-right: 4px;
+}
+.gsh-confirm-delete-btn:hover:not(:disabled) { background: rgba(239, 83, 80, 0.22); }
+.gsh-confirm-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.gsh-cancel-delete-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.gsh-cancel-delete-btn:hover { color: #aaa; }
+
 @media (max-width: 700px) {
   .gsh-page { padding: 16px 16px 48px; min-width: 0; width: 100%; }
   .gsh-header { flex-wrap: wrap; padding: 0 0 8px; gap: 12px; width: 100%; }

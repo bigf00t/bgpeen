@@ -174,7 +174,9 @@ const getPageResult = async (game, gamePlays, details, playsUrl, page, maxPages)
 
 const getCleanPlaysFromJson = (plays) =>
   plays.map((play) => {
-    const cleanPlayers = play.players ? _.map(play.players.player, (player) => ({ ...player.$ })) : [];
+    const raw = play.players?.player;
+    const playersArr = raw ? (Array.isArray(raw) ? raw : [raw]) : [];
+    const cleanPlayers = playersArr.map((player) => ({ ...player.$ }));
     return {
       ...play.$,
       players: cleanPlayers,

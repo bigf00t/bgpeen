@@ -218,10 +218,12 @@ ${plays}
   </play>`
   );
 
-  const makeDb = ({ existingIds = [], thumbnail = '', resultScores = null } = {}) => {
+  const defaultResultScores = { '47': 5, '52': 10 };
+
+  const makeDb = ({ existingIds = [], thumbnail = '', resultScores = defaultResultScores, gameExists = true } = {}) => {
     const mockSet = jest.fn().mockResolvedValue();
     const mockGet = jest.fn().mockResolvedValue({
-      exists: !!resultScores,
+      exists: resultScores !== null,
       data: () => ({ scores: resultScores }),
     });
     const mockWhere = jest.fn().mockReturnValue({
@@ -239,7 +241,7 @@ ${plays}
     });
     const mockCollection = jest.fn().mockReturnValue({ doc: mockDoc, where: mockWhere });
     const mockGetAll = jest.fn().mockResolvedValue([
-      { id: '266192', exists: !!thumbnail, data: () => ({ thumbnail }) },
+      { id: '266192', exists: gameExists, data: () => ({ thumbnail }) },
     ]);
     return { collection: mockCollection, getAll: mockGetAll, _mockSet: mockSet };
   };
@@ -250,7 +252,7 @@ ${plays}
     getFirestore.mockReturnValue(db);
 
     const result = await importBggScores('uid123', 'testuser');
-    expect(result).toEqual({ imported: 1, skipped: 0 });
+    expect(result).toEqual({ imported: 1, skipped: 0, notInDb: [], noResult: [] });
     expect(db._mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
         gameId: '266192',
@@ -268,7 +270,27 @@ ${plays}
     getFirestore.mockReturnValue(db);
 
     const result = await importBggScores('uid123', 'testuser');
-    expect(result).toEqual({ imported: 0, skipped: 1 });
+    expect(result).toEqual({ imported: 0, skipped: 1, notInDb: [], noResult: [] });
+    expect(db._mockSet).not.toHaveBeenCalled();
+  });
+
+  test('reports games not in the database', async () => {
+    axios.get.mockResolvedValue({ data: singlePlayXml });
+    const db = makeDb({ gameExists: false });
+    getFirestore.mockReturnValue(db);
+
+    const result = await importBggScores('uid123', 'testuser');
+    expect(result).toEqual({ imported: 0, skipped: 0, notInDb: ['Wingspan'], noResult: [] });
+    expect(db._mockSet).not.toHaveBeenCalled();
+  });
+
+  test('reports games with no matching result doc', async () => {
+    axios.get.mockResolvedValue({ data: singlePlayXml });
+    const db = makeDb({ resultScores: null });
+    getFirestore.mockReturnValue(db);
+
+    const result = await importBggScores('uid123', 'testuser');
+    expect(result).toEqual({ imported: 0, skipped: 0, notInDb: [], noResult: ['Wingspan'] });
     expect(db._mockSet).not.toHaveBeenCalled();
   });
 
@@ -278,6 +300,6 @@ ${plays}
     getFirestore.mockReturnValue(db);
 
     const result = await importBggScores('uid123', 'testuser');
-    expect(result).toEqual({ imported: 0, skipped: 0 });
+    expect(result).toEqual({ imported: 0, skipped: 0, notInDb: [], noResult: [] });
   });
 });

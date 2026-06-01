@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, setDoc, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { auth, db } from '../firebase';
@@ -53,6 +53,8 @@ const MyScores = () => {
   const [importStatus, setImportStatus] = useState('idle');
   const [importResult, setImportResult] = useState(null);
   const [importError, setImportError] = useState(null);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -73,11 +75,18 @@ const MyScores = () => {
   }, [user?.uid, authLoading, navigate]);
 
   useEffect(() => {
-    const pairs = [...new Set(allScores.map((s) => `${s.gameId}:${getResultIdFromFilters(s.filters)}`))];
-    const missing = pairs.filter((key) => !(key in gameResults));
-    if (!missing.length) return;
+    const toFetch = new Set();
+    allScores.forEach((s) => {
+      const primary = `${s.gameId}:${getResultIdFromFilters(s.filters)}`;
+      if (!(primary in gameResults)) toFetch.add(primary);
+      if (s.filters?.players) {
+        const fallback = `${s.gameId}:count-${s.filters.players}`;
+        if (!(fallback in gameResults)) toFetch.add(fallback);
+      }
+    });
+    if (!toFetch.size) return;
     Promise.all(
-      missing.map((key) => {
+      [...toFetch].map((key) => {
         const sep = key.indexOf(':');
         const gameId = key.slice(0, sep);
         const resultId = key.slice(sep + 1);
@@ -135,6 +144,24 @@ const MyScores = () => {
     } catch (err) {
       setImportError(err.message);
       setImportStatus('error');
+    }
+  };
+
+  const handleDeleteScores = async (source) => {
+    setBulkDeleting(true);
+    try {
+      const ref = source
+        ? query(collection(db, 'users', user.uid, 'scores'), where('source', '==', source))
+        : collection(db, 'users', user.uid, 'scores');
+      const snap = await getDocs(ref);
+      for (let i = 0; i < snap.docs.length; i += 500) {
+        const batch = writeBatch(db);
+        snap.docs.slice(i, i + 500).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteConfirm(null);
     }
   };
 
@@ -218,14 +245,29 @@ const MyScores = () => {
             onClick={handleImport}
             disabled={!bggUsername || importStatus === 'importing'}
           >
+            {importStatus === 'importing' && (
+              <span className="bgg-import-spinner" />
+            )}
             {importStatus === 'importing' ? 'Importing…' : 'Import from BGG'}
           </button>
         </div>
         {importStatus === 'done' && importResult && (
-          <p className="bgg-import-result">
-            Imported {importResult.imported} score{importResult.imported !== 1 ? 's' : ''}
-            {importResult.skipped > 0 ? `, ${importResult.skipped} already imported` : ''}
-          </p>
+          <>
+            <p className="bgg-import-result">
+              Imported {importResult.imported} score{importResult.imported !== 1 ? 's' : ''}
+              {importResult.skipped > 0 ? `, ${importResult.skipped} already imported` : ''}
+            </p>
+            {importResult.notInDb?.length > 0 && (
+              <p className="bgg-import-detail">
+                <strong>Not in database:</strong> {importResult.notInDb.join(', ')}
+              </p>
+            )}
+            {importResult.noResult?.length > 0 && (
+              <p className="bgg-import-detail">
+                <strong>No score data:</strong> {importResult.noResult.join(', ')}
+              </p>
+            )}
+          </>
         )}
         {importStatus === 'error' && (
           <p className="bgg-import-error">{importError || 'Import failed — try again'}</p>
@@ -239,8 +281,14 @@ const MyScores = () => {
         <div className="my-scores-grid">
           {gameCards.map(({ gameId, gameName, gameThumbnail, scores }) => {
             const avgScore = computeAvgScore(scores);
+            const lookupResult = (s) => {
+              const primary = gameResults[`${gameId}:${getResultIdFromFilters(s.filters)}`];
+              if (primary != null) return primary;
+              if (s.filters?.players) return gameResults[`${gameId}:count-${s.filters.players}`] ?? null;
+              return null;
+            };
             const scorePcts = scores.map((s) => {
-              const res = gameResults[`${gameId}:${getResultIdFromFilters(s.filters)}`];
+              const res = lookupResult(s);
               return res ? computePercentile(s.score, res) : null;
             }).filter((p) => p != null);
             const avgPct = scorePcts.length ? Math.round(scorePcts.reduce((a, b) => a + b, 0) / scorePcts.length) : null;
@@ -284,6 +332,36 @@ const MyScores = () => {
             </RouterLink>
             );
           })}
+        </div>
+      )}
+      {gameCards.length > 0 && (
+        <div className="my-scores-manage">
+          {bulkDeleteConfirm ? (
+            <span className="my-scores-manage-confirm">
+              {bulkDeleteConfirm === 'imported' ? 'Delete all imported scores?' : 'Delete all scores?'}
+              {' '}
+              <button
+                className="my-scores-confirm-btn"
+                onClick={() => handleDeleteScores(bulkDeleteConfirm === 'imported' ? 'bgg' : null)}
+                disabled={bulkDeleting}
+              >
+                {bulkDeleting ? 'Deleting…' : 'Confirm'}
+              </button>
+              {' '}
+              <button className="my-scores-cancel-btn" onClick={() => setBulkDeleteConfirm(null)}>Cancel</button>
+            </span>
+          ) : (
+            <>
+              {allScores.some((s) => s.source === 'bgg') && (
+                <button className="my-scores-delete-btn" onClick={() => setBulkDeleteConfirm('imported')}>
+                  Delete imported scores
+                </button>
+              )}
+              <button className="my-scores-delete-btn" onClick={() => setBulkDeleteConfirm('all')}>
+                Delete all scores
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -68,8 +68,11 @@ exports.addGame = async (searchTerm) => {
     {}
   );
 
-  const thumbnail = await util.uploadGameImage('thumbnails', item.$.id, item.thumbnail._text);
-  const image = await util.uploadGameImage('images', item.$.id, item.image._text);
+  const thumbnailUrl = item.thumbnail?._text;
+  const imageUrl = item.image?._text;
+
+  const thumbnail = thumbnailUrl ? await util.uploadGameImage('thumbnails', item.$.id, thumbnailUrl) : null;
+  const image = imageUrl ? await util.uploadGameImage('images', item.$.id, imageUrl) : null;
 
   const newGame = {
     id: item.$.id,
@@ -86,9 +89,9 @@ exports.addGame = async (searchTerm) => {
   };
 
   const newDetails = {
-    bggThumbnail: item.thumbnail._text,
-    bggImage: item.image._text,
-    description: item.description._text,
+    bggThumbnail: thumbnailUrl,
+    bggImage: imageUrl,
+    description: item.description?._text ?? '',
     yearpublished: parseInt(item.yearpublished.$.value),
     minplayers: parseInt(item.minplayers.$.value),
     maxplayers: parseInt(item.maxplayers.$.value),

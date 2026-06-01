@@ -409,12 +409,35 @@ describe('getValidPlays', () => {
     expect(getValidPlays([play], details, 'highest-wins')).toHaveLength(0);
   });
 
-  test('too few players → excluded', () => {
-    // minplayers = 2, playerCount = 1
+  test('1-player (solo) play is always included regardless of minplayers', () => {
+    // details has minplayers: 2, but solo plays bypass the player count check
     const play = makePlay({
       playerCount: 1,
       players: [{ score: '100', win: '1', color: 'red', new: '0', startposition: '1' }],
     });
+    expect(getValidPlays([play], details, 'highest-wins')).toHaveLength(1);
+  });
+
+  test('solo play with win=0 is still included (win check skipped for 1 player)', () => {
+    const play = makePlay({
+      playerCount: 1,
+      players: [{ score: '100', win: '0', color: 'red', new: '0', startposition: '1' }],
+    });
+    expect(getValidPlays([play], details, 'highest-wins')).toHaveLength(1);
+  });
+
+  test('solo play passes lowest-wins even without win flag', () => {
+    const play = makePlay({
+      playerCount: 1,
+      players: [{ score: '50', win: '0', color: 'red', new: '0', startposition: '1' }],
+    });
+    expect(getValidPlays([play], details, 'lowest-wins')).toHaveLength(1);
+  });
+
+  test('2-player play below minplayers → excluded (minplayers check still applies)', () => {
+    // minplayers = 2 in details, so playerCount 1 is now allowed but a play
+    // with playerCount 0 or impossible values would still be excluded
+    const play = makePlay({ playerCount: 5 }); // maxplayers = 4
     expect(getValidPlays([play], details, 'highest-wins')).toHaveLength(0);
   });
 
@@ -623,6 +646,13 @@ describe('getKeysFromResult', () => {
     const keys = getKeysFromResult(result);
     const colorKeys = Object.keys(keys).filter((k) => k.startsWith('color-'));
     expect(colorKeys).toHaveLength(0);
+  });
+
+  test('solo play only generates count-1, no sub-keys or aggregates', () => {
+    const result = { playerCount: 1, finishPosition: 1, startPosition: 1, year: 2023, month: 4, color: 'red', score: 80, id: 'p1', new: 1 };
+    const keys = getKeysFromResult(result);
+    expect(keys).toHaveProperty('count-1');
+    expect(Object.keys(keys)).toEqual(['count-1']);
   });
 });
 

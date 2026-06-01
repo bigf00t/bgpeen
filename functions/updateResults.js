@@ -161,10 +161,12 @@ const getValidPlays = (plays, details, gameType) => {
   console.info(`Removed ${removedPlays} plays for being incomplete`);
   totalRemovedPlays = plays.length - validPlays.length;
 
-  // There weren't too many or too few players
+  // There weren't too many or too few players.
+  // Solo plays (playerCount === 1) are always allowed regardless of minplayers,
+  // since many games support a solo mode even when minplayers > 1 on BGG.
   validPlays = _.filter(
     validPlays,
-    (play) => play.playerCount >= details.minplayers && play.playerCount <= details.maxplayers
+    (play) => play.playerCount === 1 || (play.playerCount >= details.minplayers && play.playerCount <= details.maxplayers)
   );
   removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
   console.info(`Removed ${removedPlays} plays for having too few or too many players`);
@@ -202,17 +204,17 @@ const getValidPlays = (plays, details, gameType) => {
   console.info(`Removed ${removedPlays} because more than one player had a score of 0`);
   totalRemovedPlays = plays.length - validPlays.length;
 
-  // Lowest score is winner
+  // Lowest score is winner (skipped for solo plays — no win flag expected)
   if (gameType === 'lowest-wins') {
-    validPlays = _.filter(validPlays, (play) => parseInt(_.minBy(play.players, (player) => parseInt(player.score)).win) === 1);
+    validPlays = _.filter(validPlays, (play) => play.playerCount === 1 || parseInt(_.minBy(play.players, (player) => parseInt(player.score)).win) === 1);
     removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
     console.info(`Removed ${removedPlays} because the lowest scoring player was not the winner`);
     totalRemovedPlays = plays.length - validPlays.length;
   }
 
-  // Highest score is winner
+  // Highest score is winner (skipped for solo plays — no win flag expected)
   if (gameType === 'highest-wins') {
-    validPlays = _.filter(validPlays, (play) => parseInt(_.maxBy(play.players, (player) => parseInt(player.score)).win) === 1);
+    validPlays = _.filter(validPlays, (play) => play.playerCount === 1 || parseInt(_.maxBy(play.players, (player) => parseInt(player.score)).win) === 1);
     removedPlays = plays.length - (validPlays.length + totalRemovedPlays);
     console.info(`Removed ${removedPlays} because the highest scoring player was not the winner`);
   }
@@ -344,27 +346,34 @@ const getColorKey = (color) => {
 };
 
 const getKeysFromResult = (result) => {
-  let keys = { all: ['wins', 'tieBreakerWins', 'sharedWins'] };
+  // Solo plays are a separate category — exclude them from aggregate keys
+  // (all, year, color) so they don't pollute multiplayer distributions.
+  const isSolo = result.playerCount === 1;
+  let keys = isSolo ? {} : { all: ['wins', 'tieBreakerWins', 'sharedWins'] };
   if (result.playerCount) {
     keys[`count-${result.playerCount}`] = ['playerCount', 'tieBreakerWins', 'sharedWins'];
-    if (result.startPosition && !isNaN(result.startPosition) && result.startPosition <= result.playerCount) {
-      keys[`count-${result.playerCount}-start-${result.startPosition}`] = ['playerCount', 'startPosition', 'wins'];
-    }
-    if (result.finishPosition) {
-      keys[`count-${result.playerCount}-finish-${result.finishPosition}`] = ['playerCount', 'finishPosition'];
-    }
-    if (result.new > 0) {
-      keys[`count-${result.playerCount}-new`] = ['playerCount', 'new', 'wins'];
-    }
-  }
-  if (result.year) {
-    keys[`year-${result.year}`] = ['year'];
-    if (result.month) {
-      keys[`year-${result.year}-month-${result.month}`] = ['year', 'month'];
+    if (!isSolo) {
+      if (result.startPosition && !isNaN(result.startPosition) && result.startPosition <= result.playerCount) {
+        keys[`count-${result.playerCount}-start-${result.startPosition}`] = ['playerCount', 'startPosition', 'wins'];
+      }
+      if (result.finishPosition) {
+        keys[`count-${result.playerCount}-finish-${result.finishPosition}`] = ['playerCount', 'finishPosition'];
+      }
+      if (result.new > 0) {
+        keys[`count-${result.playerCount}-new`] = ['playerCount', 'new', 'wins'];
+      }
     }
   }
-  if (result.color) {
-    keys[getColorKey(result.color)] = ['color', 'wins', 'playerCounts'];
+  if (!isSolo) {
+    if (result.year) {
+      keys[`year-${result.year}`] = ['year'];
+      if (result.month) {
+        keys[`year-${result.year}-month-${result.month}`] = ['year', 'month'];
+      }
+    }
+    if (result.color) {
+      keys[getColorKey(result.color)] = ['color', 'wins', 'playerCounts'];
+    }
   }
 
   return keys;

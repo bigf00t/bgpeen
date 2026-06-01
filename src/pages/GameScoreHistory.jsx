@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import { Bar, Line } from 'react-chartjs-2';
@@ -40,6 +40,8 @@ const GameScoreHistory = () => {
   const [gameInfo, setGameInfo] = useState(null);
   const [resultMap, setResultMap] = useState({});
   const [chartType, setChartType] = useState('bar');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const chartScrollRef = useRef(null);
   const tableScrollRef = useRef(null);
 
@@ -49,14 +51,14 @@ const GameScoreHistory = () => {
 
     const q = query(
       collection(db, 'users', user.uid, 'scores'),
+      where('gameId', '==', gameId),
       orderBy('date', 'asc')
     );
     const unsub = onSnapshot(q, (snap) => {
-      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      const forGame = all.filter((s) => s.gameId === gameId);
-      setScores(forGame);
-      if (forGame.length) {
-        setGameInfo({ name: forGame[0].gameName, thumbnail: forGame[0].gameThumbnail });
+      const scores = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setScores(scores);
+      if (scores.length) {
+        setGameInfo({ name: scores[0].gameName, thumbnail: scores[0].gameThumbnail });
       }
       setLoading(false);
     });
@@ -74,11 +76,18 @@ const GameScoreHistory = () => {
 
   useEffect(() => {
     if (!gameId || !scores.length) return;
-    const resultIds = [...new Set(scores.map((s) => getResultIdFromFilters(s.filters)))];
-    const missing = resultIds.filter((rid) => !(rid in resultMap));
-    if (!missing.length) return;
+    const toFetch = new Set();
+    scores.forEach((s) => {
+      const primary = getResultIdFromFilters(s.filters);
+      if (!(primary in resultMap)) toFetch.add(primary);
+      if (s.filters?.players) {
+        const fallback = `count-${s.filters.players}`;
+        if (!(fallback in resultMap)) toFetch.add(fallback);
+      }
+    });
+    if (!toFetch.size) return;
     Promise.all(
-      missing.map((rid) =>
+      [...toFetch].map((rid) =>
         getDoc(doc(db, 'games', gameId, 'results', rid)).then((snap) => ({
           rid,
           scores: snap.exists() ? snap.data().scores : null,
@@ -124,7 +133,22 @@ const GameScoreHistory = () => {
   const chartLabels = scores.map((s) => formatDate(s.date));
   const chartValues = scores.map((s) => s.score);
 
-  const getScoreResult = (s) => resultMap[getResultIdFromFilters(s.filters)] ?? null;
+  const handleDeleteScore = async (id) => {
+    setDeletingId(id);
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'scores', id));
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
+  };
+
+  const getScoreResult = (s) => {
+    const primary = resultMap[getResultIdFromFilters(s.filters)];
+    if (primary != null) return primary;
+    if (s.filters?.players) return resultMap[`count-${s.filters.players}`] ?? null;
+    return null;
+  };
   const getScorePct = (s) => { const r = getScoreResult(s); return r ? computePercentile(s.score, r) : null; };
 
   const barColors = scores.map((s) => {
@@ -285,6 +309,7 @@ const GameScoreHistory = () => {
                 <th>Percentile</th>
                 <th>Avg</th>
                 <th>Change</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -313,6 +338,22 @@ const GameScoreHistory = () => {
                       {delta != null && delta !== 0
                         ? `${delta > 0 ? '▲' : '▼'} ${Math.abs(delta)}`
                         : delta === 0 ? '—' : ''}
+                    </td>
+                    <td className="gsh-delete-cell">
+                      {confirmDeleteId === s.id ? (
+                        <>
+                          <button
+                            className="gsh-confirm-delete-btn"
+                            onClick={() => handleDeleteScore(s.id)}
+                            disabled={deletingId === s.id}
+                          >
+                            {deletingId === s.id ? '…' : 'Delete'}
+                          </button>
+                          <button className="gsh-cancel-delete-btn" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                        </>
+                      ) : (
+                        <button className="gsh-delete-btn" onClick={() => setConfirmDeleteId(s.id)}>✕</button>
+                      )}
                     </td>
                   </tr>
                 );

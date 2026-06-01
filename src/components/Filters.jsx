@@ -18,7 +18,7 @@ const Filters = ({ data }) => {
   const year = searchParams.get('year');
 
   useEffect(() => {
-    setValidPlayerPlaces(players ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
+    setValidPlayerPlaces(players && parseInt(players) > 1 ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
   }, [players]);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const Filters = ({ data }) => {
 
   useEffect(() => {
     if (!data) return;
-    setValidPlayerPlaces(players ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
+    setValidPlayerPlaces(players && parseInt(players) > 1 ? _.range(1, parseInt(players) + 1).map((f) => f.toString()) : []);
     setYears(_.uniq((data.months || []).map((m) => m.split('-')[0])));
     setColors((data.colors || []).map((c) => c.trim().toLowerCase().replace(/ /g, '-').replace(/[.']/g, '')));
   }, []);

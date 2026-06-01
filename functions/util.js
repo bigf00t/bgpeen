@@ -20,7 +20,9 @@ exports.withRetry = async (fn, { retries = 3, delayMs = 2000 } = {}) => {
       return await fn();
     } catch (err) {
       if (attempt === retries) throw err;
-      const wait = delayMs * 2 ** (attempt - 1);
+      const is429 = err.response?.status === 429;
+      const retryAfter = is429 ? parseInt(err.response?.headers?.['retry-after'] || '0') * 1000 : 0;
+      const wait = retryAfter || delayMs * 2 ** (attempt - 1);
       console.warn(`Attempt ${attempt} failed, retrying in ${wait}ms: ${err.message}`);
       await new Promise((resolve) => setTimeout(resolve, wait));
     }

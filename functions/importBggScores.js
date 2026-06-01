@@ -90,6 +90,7 @@ const fetchAllBggPlays = async (bggUsername) => {
       : [];
     plays.push(...batch);
     if (batch.length < 100) break;
+    await util.delay(1000);
     page++;
   }
 
@@ -128,22 +129,28 @@ const importBggScores = async (uid, bggUsername) => {
     scoredPlays.push({ playId, gameId, gameName, score, dateStr, filters, resultId });
   }
 
-  if (scoredPlays.length === 0) return { imported: 0, skipped: 0 };
+  if (scoredPlays.length === 0) return { imported: 0, skipped: 0, notInDb: [], noResult: [] };
 
-  // Batch-fetch thumbnails
+  // Batch-fetch game docs — null means game is not in the database
   const uniqueGameIds = [...new Set(scoredPlays.map((p) => p.gameId))];
-  const thumbnailMap = {};
+  const gameDataMap = {};
   for (let i = 0; i < uniqueGameIds.length; i += 100) {
     const chunk = uniqueGameIds.slice(i, i + 100);
     const refs = chunk.map((id) => db.collection('games').doc(id));
     const snaps = await db.getAll(...refs);
     snaps.forEach((snap) => {
-      thumbnailMap[snap.id] = snap.exists ? snap.data().thumbnail || '' : '';
+      gameDataMap[snap.id] = snap.exists ? { thumbnail: snap.data().thumbnail || '' } : null;
     });
   }
 
-  // Batch-fetch result docs for percentile computation
-  const uniqueResultKeys = [...new Set(scoredPlays.map((p) => `${p.gameId}:${p.resultId}`))];
+  const notInDbNames = new Map();
+  scoredPlays.forEach((p) => { if (gameDataMap[p.gameId] === null) notInDbNames.set(p.gameId, p.gameName); });
+
+  const playsInDb = scoredPlays.filter((p) => gameDataMap[p.gameId] !== null);
+  if (playsInDb.length === 0) return { imported: 0, skipped: 0, notInDb: [...notInDbNames.values()], noResult: [] };
+
+  // Batch-fetch result docs — null means no matching result for this filter combo
+  const uniqueResultKeys = [...new Set(playsInDb.map((p) => `${p.gameId}:${p.resultId}`))];
   const resultMap = {};
   await Promise.all(
     uniqueResultKeys.map(async (key) => {
@@ -160,6 +167,12 @@ const importBggScores = async (uid, bggUsername) => {
     })
   );
 
+  const noResultNames = new Map();
+  playsInDb.forEach((p) => { if (resultMap[`${p.gameId}:${p.resultId}`] === null) noResultNames.set(p.gameId, p.gameName); });
+
+  const eligiblePlays = playsInDb.filter((p) => resultMap[`${p.gameId}:${p.resultId}`] !== null);
+  if (eligiblePlays.length === 0) return { imported: 0, skipped: 0, notInDb: [...notInDbNames.values()], noResult: [...noResultNames.values()] };
+
   // Get existing BGG imports for this user (dedup)
   const existingSnap = await db
     .collection('users')
@@ -173,7 +186,7 @@ const importBggScores = async (uid, bggUsername) => {
   let imported = 0;
   let skipped = 0;
 
-  for (const p of scoredPlays) {
+  for (const p of eligiblePlays) {
     const docId = `bgg_${p.playId}`;
     if (existingIds.has(docId)) {
       skipped++;
@@ -181,7 +194,7 @@ const importBggScores = async (uid, bggUsername) => {
     }
 
     const resultScores = resultMap[`${p.gameId}:${p.resultId}`];
-    const percentile = resultScores ? computePercentile(p.score, resultScores) : null;
+    const percentile = computePercentile(p.score, resultScores);
     const [y, m, d] = p.dateStr.split('-').map(Number);
     const date = Timestamp.fromDate(new Date(y, m - 1, d));
 
@@ -193,7 +206,7 @@ const importBggScores = async (uid, bggUsername) => {
       .set({
         gameId: p.gameId,
         gameName: p.gameName,
-        gameThumbnail: thumbnailMap[p.gameId] || '',
+        gameThumbnail: gameDataMap[p.gameId].thumbnail,
         score: p.score,
         percentile,
         filters: p.filters,
@@ -204,7 +217,7 @@ const importBggScores = async (uid, bggUsername) => {
     imported++;
   }
 
-  return { imported, skipped };
+  return { imported, skipped, notInDb: [...notInDbNames.values()], noResult: [...noResultNames.values()] };
 };
 
 module.exports = {

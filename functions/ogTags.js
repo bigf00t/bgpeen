@@ -79,6 +79,12 @@ const getHtmlWithTags = (game, params, percentile) => {
 exports.serveOgTags = async (req, res) => {
   try {
     const params = parseParams(req.path);
+
+    if (!params.id || !/^\d+$/.test(params.id)) {
+      res.status(404).send('Not found');
+      return;
+    }
+
     const cacheKey = getCacheKey(req.path);
     const db = getFirestore();
 

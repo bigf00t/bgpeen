@@ -24,6 +24,17 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace('/api/record-view', ''),
       },
+      '/api/import-bgg-scores': {
+        target: 'http://127.0.0.1:5001/bgpeen-1fc16/us-central1/importBggScores',
+        changeOrigin: true,
+        rewrite: (path) => path.replace('/api/import-bgg-scores', ''),
+        configure: (proxy) => {
+          proxy.on('error', (_err, _req, res) => {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Functions emulator not running' }));
+          });
+        },
+      },
     },
   },
 });
