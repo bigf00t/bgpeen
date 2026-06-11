@@ -62,8 +62,16 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   const updatedColors = getUpdatedColors(allResults);
   const updatedMonths = getUpdatedMonths(allResults);
 
-  const newScoresCount = results.all.scoreCount - game.totalScores;
-  const newOutlierScoreCount = results.all.outlierScoreCount - (existingAllResult?.outlierScoreCount || 0);
+  // For solo-only games, results.all is never written — fall back to count-1
+  const primaryResult = results.all || results['count-1'];
+  if (!primaryResult) {
+    console.error('No primary result found after processing — skipping update');
+    return;
+  }
+
+  const existingPrimaryResult = existingAllResult || _.find(existingResults, (r) => r.id === 'count-1');
+  const newScoresCount = primaryResult.scoreCount - (game.totalScores || 0);
+  const newOutlierScoreCount = primaryResult.outlierScoreCount - (existingPrimaryResult?.outlierScoreCount || 0);
   console.info(`Ignoring ${newOutlierScoreCount} outlier scores`);
   console.info(`Adding ${newScoresCount} new scores to results`);
 
@@ -72,10 +80,10 @@ exports.updateResults = async (game, batch, newPlays, clear = false) => {
   });
 
   batch.update(firestore.collection('games').doc(game.id), {
-    totalScores: results.all.scoreCount,
+    totalScores: primaryResult.scoreCount,
     totalValidPlays: _.defaultTo(game.totalValidPlays, 0) + validPlays.length,
     totalInvalidPlays: _.defaultTo(game.totalInvalidPlays, 0) + invalidPlaysCount,
-    mean: parseFloat(results.all.mean),
+    mean: parseFloat(primaryResult.mean),
     playerCounts: playerCounts,
     gameType: gameType,
     colors: updatedColors,

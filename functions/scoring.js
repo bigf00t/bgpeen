@@ -59,8 +59,9 @@ const getFromCache = async (cacheKey) => {
 
 const setToCache = async (cacheKey, data, contentType, { makePublic = false } = {}) => {
   const file = getStorage().bucket(BUCKET).file(cacheKey);
-  await file.save(data, { contentType, resumable: false });
-  if (makePublic) await file.makePublic();
+  const saveOptions = { contentType, resumable: false };
+  if (makePublic) saveOptions.predefinedAcl = 'publicRead';
+  await file.save(data, saveOptions);
 };
 
 module.exports = { BUCKET, getResultId, calcPercentile, getPercentileQuip, existsInCache, getFromCache, setToCache };
