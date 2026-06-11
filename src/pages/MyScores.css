@@ -1,0 +1,278 @@
+.my-scores-page {
+  max-width: 1100px;
+  min-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+}
+
+.my-scores-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 28px;
+  color: #fff;
+}
+
+.my-scores-empty {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 48px;
+  text-align: center;
+}
+
+.my-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.my-scores-card {
+  background: #1e2028;
+  border-radius: 12px;
+  padding: 16px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.my-scores-card:hover { border-color: #333; }
+
+.my-scores-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.my-scores-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #2a2d35;
+}
+
+.my-scores-game-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ccc;
+  line-height: 1.3;
+}
+
+.my-scores-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.my-scores-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.my-scores-latest-score-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+}
+.my-scores-score-group {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+}
+.my-scores-latest-score-row .my-scores-percentile {
+  margin-left: auto;
+}
+.my-scores-latest-label {
+  font-size: 0.68rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.my-scores-avg-label {
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: flex-end;
+  margin-right: 2px;
+}
+.my-scores-recent {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #9fa8da;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.my-scores-percentile {
+  font-size: 0.72rem;
+}
+
+.my-scores-sparkline { display: block; }
+
+@media (max-width: 700px) {
+  .my-scores-page { padding: 24px 16px 48px; min-width: 0; margin-left: 0; margin-right: 0; }
+  .my-scores-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .my-scores-latest-score-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .my-scores-latest-score-row .my-scores-percentile { margin-left: 0; }
+  .bgg-import-btn { margin-left: 0; }
+}
+
+.bgg-import {
+  margin-bottom: 28px;
+  padding: 14px 18px;
+  background: #1e2028;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+}
+
+.bgg-import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bgg-import-label {
+  font-size: 0.78rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.bgg-import-username {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.bgg-import-input {
+  background: #2a2d35;
+  border: 1px solid #3a3d45;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.85rem;
+  padding: 5px 10px;
+  font-family: inherit;
+  outline: none;
+  width: 160px;
+}
+.bgg-import-input:focus { border-color: #7986cb; }
+
+.bgg-import-edit-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+  line-height: 1;
+}
+.bgg-import-edit-btn:hover { color: #aaa; }
+
+.bgg-import-btn {
+  background: rgba(121, 134, 203, 0.12);
+  border: 1px solid rgba(121, 134, 203, 0.3);
+  border-radius: 6px;
+  color: #9fa8da;
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  margin-left: auto;
+  transition: background 0.15s;
+}
+.bgg-import-btn:hover:not(:disabled) { background: rgba(121, 134, 203, 0.22); }
+.bgg-import-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.bgg-import-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(159, 168, 218, 0.3);
+  border-top-color: #9fa8da;
+  border-radius: 50%;
+  animation: bgg-spin 0.7s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes bgg-spin {
+  to { transform: rotate(360deg); }
+}
+
+.bgg-import-result {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #7bc67e;
+}
+
+.bgg-import-error {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #ef5350;
+}
+
+.my-scores-manage {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.my-scores-delete-btn {
+  background: rgba(239, 83, 80, 0.08);
+  border: 1px solid rgba(239, 83, 80, 0.3);
+  border-radius: 6px;
+  color: #e57373;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.my-scores-delete-btn:hover { background: rgba(239, 83, 80, 0.16); border-color: rgba(239, 83, 80, 0.5); }
+
+.my-scores-manage-confirm {
+  font-size: 0.78rem;
+  color: #aaa;
+}
+
+.my-scores-confirm-btn {
+  background: rgba(239, 83, 80, 0.12);
+  border: 1px solid rgba(239, 83, 80, 0.35);
+  border-radius: 6px;
+  color: #ef5350;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.my-scores-confirm-btn:hover:not(:disabled) { background: rgba(239, 83, 80, 0.22); }
+.my-scores-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.my-scores-cancel-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 0.75rem;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.my-scores-cancel-btn:hover { color: #aaa; }
+
+.bgg-import-detail {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #666;
+}
+.bgg-import-detail strong {
+  color: #888;
+  font-weight: 600;
+}
