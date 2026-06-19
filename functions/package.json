@@ -21,7 +21,7 @@
     "firebase-functions": "^7.2.5",
     "lodash": "^4.17.21",
     "mathjs": "^10.1.1",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^9.0.1",
     "xml-js": "^1.6.11"
   },
   "overrides": {
